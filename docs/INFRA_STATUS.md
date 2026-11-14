@@ -38,7 +38,7 @@ See [backup and recovery](BACKUP_RECOVERY.md).
 
 | Item | State |
 | --- | --- |
-| deploy, rollback, plan and status commands with explicit commit, pre/post-checks and automatic return | Implemented and unit-tested (scripts/test_deploy.py in CI). On the VPS, status, plan and refusal paths were run read-only on 14 November 2026 against the real deployment (running 8be005f, all checks passing). A live deploy/rollback round trip has not been run yet |
+| deploy, rollback, plan and status commands with explicit commit, pre/post-checks and automatic return | Implemented and unit-tested (scripts/test_deploy.py in CI). On the VPS, status, plan and refusal paths were run read-only on 14 November 2026 against the real deployment (running 8be005f, all checks passing). A live rollback to bc4c681 was run on 14 November 2026 at 22:39 UTC: the pre-checks passed, a pre-update snapshot was taken, bc4c681 was started and the overlapping-read post-check failed (22 of 42 requests returned 503, the concurrency fault fixed in PR 8), and the script returned to 8be005f by itself; all checks passed again afterwards and the data was unchanged. The success path of deploy (build and restart onto a newer commit) has not been run live |
 | External monitor (GitHub Actions every 30 minutes) | Added in this change; first scheduled run happens after it reaches main |
 | VPS monitor timer (readiness, certificate, backup age, disk) | Units added in infra/systemd; the check ran manually on the VPS with every check passing; timer not installed yet |
 | Alert channel for the VPS-side monitor | Not chosen; failures show in systemctl --failed and the journal |
@@ -49,7 +49,7 @@ See [deploy, rollback and monitoring](DEPLOY_ROLLBACK.md).
 
 - Frontend, and the Vercel rewrite of /api to https://api.flareledger.fun plus any CORS policy.
 - Application CI for the frontend; the backend and infrastructure workflows run.
-- A live deploy/rollback rehearsal, the VPS monitor installation and an alert channel.
+- A live success-path deploy rehearsal, the VPS monitor installation and an alert channel.
 - Confirmed shutdown time. The VPS lease ends on 1 December 2026; the exact hour is
   not confirmed.
 - Independent scientific review of the corpus.

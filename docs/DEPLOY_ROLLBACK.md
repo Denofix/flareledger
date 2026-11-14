@@ -94,4 +94,6 @@ backup); backup before build before restart; return to the previous image after 
 failed post-check or a failed restart; manual-recovery reporting when the return
 fails; rollback without a build; and the monitor thresholds and retry rule. It runs in
 the infrastructure workflow. See [INFRA_STATUS.md](INFRA_STATUS.md) for what has and
-has not been exercised on the server.
+has not been exercised on the server. The overlapping-read check was shown to work on the
+real server: the deliberate rollback to the revision before PR 8 failed it and the script
+returned to the newer image on its own.

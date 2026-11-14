@@ -34,12 +34,22 @@ The LLM is disabled and the budget is USD 0. Ask returns a structured 503.
 
 See [backup and recovery](BACKUP_RECOVERY.md).
 
+## Deploy, rollback and monitoring
+
+| Item | State |
+| --- | --- |
+| deploy, rollback, plan and status commands with explicit commit, pre/post-checks and automatic return | Implemented and unit-tested (scripts/test_deploy.py in CI). On the VPS, status, plan and refusal paths were run read-only on 14 November 2026 against the real deployment (running 8be005f, all checks passing). A live deploy/rollback round trip has not been run yet |
+| External monitor (GitHub Actions every 30 minutes) | Added in this change; first scheduled run happens after it reaches main |
+| VPS monitor timer (readiness, certificate, backup age, disk) | Units added in infra/systemd; the check ran manually on the VPS with every check passing; timer not installed yet |
+| Alert channel for the VPS-side monitor | Not chosen; failures show in systemctl --failed and the journal |
+
+See [deploy, rollback and monitoring](DEPLOY_ROLLBACK.md).
+
 ## Not done
 
 - Frontend, and the Vercel rewrite of /api to https://api.flareledger.fun plus any CORS policy.
 - Application CI for the frontend; the backend and infrastructure workflows run.
-- Explicit deploy and rollback commands, pre/post-update checks, external monitoring
-  of readiness and TLS, and alerting when the newest successful backup is too old.
+- A live deploy/rollback rehearsal, the VPS monitor installation and an alert channel.
 - Confirmed shutdown time. The VPS lease ends on 1 December 2026; the exact hour is
   not confirmed.
 - Independent scientific review of the corpus.

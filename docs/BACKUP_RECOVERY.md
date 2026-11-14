@@ -157,9 +157,16 @@ here once known.
 Migration order if the API must keep running elsewhere:
 
 1. Pull a fresh snapshot to the laptop and verify it.
-2. On the new host, clone the repository at the snapshot's application SHA and
-   build the image.
-3. Run scripts/restore_snapshot.py there, then restore into the live project's volume.
+2. On the new host, clone the repository (the current main carries the recovery
+   tools) and create a separate application worktree at the snapshot's revision:
+   git worktree add ../flareledger-at-snapshot <revision from manifest.json>.
+3. From the tooling checkout, run scripts/restore_snapshot.py <snapshot>
+   --project-dir ../flareledger-at-snapshot --build, the same command as in the
+   restore section above, and confirm the counts. Do not use --cleanup if you want to
+   keep the result to inspect. Creating the live project's state volume from the
+   verified snapshot is then the unscripted step described under "Recover the live
+   service"; do not run the recovery tools from the old revision's checkout, which
+   does not contain them.
 4. Point api.flareledger.fun at the new host (A record), obtain a certificate, and
    configure ingress as in [the production runbook](../infra/proxy/PRODUCTION.md).
 5. Verify ready and the counts, update the Vercel rewrite target if the hostname

@@ -17,3 +17,6 @@ Backup and recovery tools, described in [backup and recovery](../docs/BACKUP_REC
 | restore_snapshot.py | Any Docker host | Restore into a separate Compose project and verify it |
 | snapshot_tools.py | Anywhere | Shared verification; `verify DIRECTORY` checks a snapshot offline |
 | test_snapshots.py | CI, local | Tests verification, tampering detection and retention |
+| replace_database.py | VPS host | Replace the running API's database from a verified snapshot, with rollback |
+| rehearse_replace.py | Any Docker host | Rehearse replacement and rollback on a separate project and volume |
+| test_replace.py | CI, local | Tests the swap scripts for real and the replacement flow with a fake Docker host |

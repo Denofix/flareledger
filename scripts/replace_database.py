@@ -176,7 +176,11 @@ def target(project: str) -> tuple[str, str, str]:
 
 
 def probe(cid: str) -> dict:
-    return json.loads(run(["docker", "exec", cid, "python", "-c", PROBE]).strip().splitlines()[-1])
+    """What the API serves now. An API that answers 503 or cannot be reached is "unavailable"."""
+    try:
+        return json.loads(run(["docker", "exec", cid, "python", "-c", PROBE]).strip().splitlines()[-1])
+    except (ReplaceError, ValueError, IndexError):
+        return {"ready": "unavailable"}
 
 
 def running_seed(cid: str) -> str:

@@ -126,27 +126,76 @@ docker compose --project-name <name> down --volumes. A snapshot taken before the
 revision field existed needs --revision <full SHA> after you confirm which release was
 running.
 
-## Recover the live service
+## Replace the live database
 
-Replacing the live database is not scripted and has not been rehearsed; only the
-separate-project restore above is verified. If the live volume is lost, the safest
-path is:
+scripts/replace_database.py puts a verified snapshot into the running API's state
+volume. It was rehearsed on a separate project and volume (see below); it has not been
+run against the live project, and it should only be used when the live database is
+damaged, lost or must be rolled back to a snapshot. Normal releases never touch the
+database.
 
-1. Pull or locate the newest verified snapshot and run
-   python scripts/snapshot_tools.py verify on it.
-2. Create a worktree at its application revision.
-3. Rehearse with restore_snapshot.py --project-dir <worktree> --build without
-   --cleanup and confirm the counts.
-4. Stop only the FlareLedger API: docker compose -f compose.yaml -f compose.prod.yaml stop api.
-5. Rename nothing and delete nothing. Create a new state volume by the same copy step
-   as restore_snapshot.py (flareledger.sqlite3 into /app/state, owner 10001), point
-   the live project at it, and keep the old volume until the new one is proven.
-6. Start the API, check the counts above, then check
-   https://api.flareledger.fun/api/health/ready from outside.
+```sh
+cd ~/flareledger-ops
+python3 scripts/replace_database.py replace /path/to/flareledger-daily-<stamp>
+python3 scripts/replace_database.py replace /path/to/flareledger-daily-<stamp> --execute --public-url https://api.flareledger.fun
+python3 scripts/replace_database.py rollback --execute --public-url https://api.flareledger.fun
+```
 
-Never run docker compose down -v or system prune against the live project.
-A snapshot restored into a read-only directory fails with 503 because a WAL-mode
-database needs a writable directory; the restore script uses the writable state volume.
+Without --execute the command only verifies the snapshot and prints the target
+project, container, volume and image. With --execute it:
+
+1. verifies the snapshot offline (checksums, integrity, corpus counts and points) and
+   refuses it if its corpus is not the one the running API serves
+   (--allow-corpus-change is for a deliberate corpus change only);
+2. takes a pre-update snapshot of the current database;
+3. stops only the API container (the public API is down for about half a minute);
+4. copies the snapshot file next to the live one, checks its SHA-256, moves the live
+   file aside as flareledger.sqlite3.replaced-<stamp> (kept, never deleted) and renames
+   the new file into place;
+5. starts the API and requires it to be ready and to serve exactly the snapshot's
+   investigations, records, trial_row records, series and points, and the public URL to
+   serve the same corpus version;
+6. if the swap or any check fails, stops the API, puts the kept file back and checks
+   that the state matches what it was before. A failure to put it back is reported as
+   ROLLBACK_FAILED with the safety backup's name.
+
+rollback restores the newest kept file (--stamp chooses another) with the same stop,
+restore, start and check. Kept files accumulate inside the volume (about the size of
+the database each); remove old ones by hand once they are no longer needed. The tool
+cannot judge schema compatibility between releases: it refuses a snapshot with a schema
+version the tooling does not know, and a snapshot from a different release than the
+running one is the operator's responsibility.
+
+### Rehearsal
+
+scripts/rehearse_replace.py drives the same commands against a new project named
+flareledger-restore-rehearsal-<id> with its own volume, no published port and no
+ingress, never the live project. Run it from the tooling checkout with --project-dir at
+a checkout of the snapshot's application revision, exactly as for restore_snapshot.py:
+
+```sh
+git worktree add ../flareledger-at-snapshot <revision from manifest.json>
+python3 scripts/rehearse_replace.py /path/to/flareledger-daily-<stamp> --project-dir ../flareledger-at-snapshot
+```
+
+It checks that a tampered snapshot is refused with the database unchanged, that a
+snapshot of another corpus is refused, that a valid snapshot replaces the database,
+that rollback restores the original file byte for byte, and that an accepted
+other-corpus snapshot which the API rejects is rolled back automatically. It prints
+REHEARSAL_OK only if all six steps pass and removes the rehearsal project afterwards
+(--keep leaves it). The variants are built in a temporary folder and never enter the
+real snapshot directory.
+
+Rehearsed on the VPS on 14 November 2026 from a fresh clone of this branch with the
+snapshot made by the daily timer: all six steps passed, the rehearsal project and
+volume were removed, and the live container and the list of Docker volumes were
+unchanged.
+
+If the whole volume is lost, create it from a snapshot with the separate-project
+restore above, then follow the steps for a new live project in the migration order below.
+Never run docker compose down -v or system prune against the live project. A snapshot
+placed in a read-only directory fails with 503 because a WAL-mode database needs a
+writable directory; the tools always use the writable state volume.
 
 ## VPS lease
 
@@ -186,3 +235,9 @@ destructive Docker command. The end-to-end backup, laptop pull and restore were
 exercised against the real database on the VPS on 14 November 2026; they are repeated
 for this revision of the tooling in INFRA_STATUS.md. Scheduled runs
 and the first systemd execution are recorded in INFRA_STATUS.md once observed.
+
+python scripts/test_replace.py runs the replacement swap and undo scripts for real against
+temporary directories and the replacement flow against a fake Docker host: refusal of
+tampered snapshots and other corpora, the order backup, stop, swap, start, return to the
+previous file after a failed check or swap, the manual-recovery report and the rollback
+command. It runs in the infrastructure workflow.

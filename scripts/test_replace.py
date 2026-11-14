@@ -266,6 +266,13 @@ class ReplaceFlowTests(unittest.TestCase):
         self.assertIn("ROLLED_BACK", err)
         self.assertEqual(self.host.live_sha(), self.original)
 
+    def test_an_api_that_answers_503_is_reported_in_plain_words_not_as_a_traceback(self):
+        snapshot = self.variant(marker=True)
+        self.host.unready.add(snap.sha256_file(snapshot / snap.DATABASE_NAME))
+        _, _, err = self.invoke("replace", str(snapshot), "--execute")
+        self.assertIn("does not serve what the snapshot contains", err)
+        self.assertNotIn("Traceback", err)
+
     def test_a_failed_swap_leaves_the_live_file_and_restarts_the_api(self):
         self.host.fail_swap = True
         code, _, err = self.invoke("replace", str(self.variant(marker=True)), "--execute")

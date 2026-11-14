@@ -32,4 +32,4 @@ These are coordination proposals. Confirm the implementer and availability in th
 
 ## Current open decisions
 
-The hosting address, deploy user, ingress route, LLM provider/model, and the GitHub usernames of Timofey and Ivan are not confirmed in this repository. No additional server or LLM purchase is required for repository preparation.
+The hosting address, deploy user, ingress route, LLM provider/model, and Ivan's GitHub username are not confirmed in this repository. No additional server or LLM purchase is required for repository preparation.

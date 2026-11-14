@@ -18,7 +18,7 @@ A full Vercel backend is a separate design choice. Verify its current Python run
 
 ## Domain steps
 
-The [domain guide in Russian](DOMAIN_SETUP_RU.md) explains how to connect the purchased domain after hosting is selected. Do not replace DNS with an example address. Use the actual VPS address or the DNS values Vercel displays for the imported project.
+The [domain guide](DOMAIN_SETUP.md) explains how to connect the purchased domain after hosting is selected. Do not replace DNS with an example address. Use the actual VPS address or the DNS values Vercel displays for the imported project.
 
 ## References
 

@@ -1,0 +1,23 @@
+name: Team task
+description: Define one implementation or documentation result.
+title: "[Task] "
+body:
+  - type: textarea
+    id: result
+    attributes:
+      label: Expected result
+      description: What should exist or work when this task is finished?
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance criteria
+      description: Describe observable completion and the relevant checks.
+    validations:
+      required: true
+  - type: textarea
+    id: dependencies
+    attributes:
+      label: Owner and dependencies
+      description: Confirm the implementer and record required inputs or blockers.

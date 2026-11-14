@@ -1,0 +1,104 @@
+{
+  "schema_version": 1,
+  "status": "reviewed_seed_included",
+  "filename": "FlareLedger_NASA_Demo_Data.json",
+  "target_repo_path": "data/demo/FlareLedger_NASA_Demo_Data.json",
+  "sha256": "3ec203666d317bb7ac3b82b14632ceaca81e5f89479ae7b152abe0e77723c286",
+  "byte_length": 13142154,
+  "assembled_on": "2026-11-14",
+  "statistics": {
+    "investigations": 10,
+    "experimental_tables": 9,
+    "original_table_data_rows_including_notes": 1132,
+    "normalized_table_records_including_non_trials": 1132,
+    "record_types": {
+      "trial_row": 647,
+      "flow_visualization_record": 4,
+      "source_note": 4,
+      "condition_definition": 4,
+      "condition_reference": 4,
+      "operating_condition_row": 469
+    },
+    "numerical_time_series": 6,
+    "time_series_points": 1844,
+    "droplet_diameter_series": 4,
+    "droplet_diameter_points": 1479,
+    "embedded_original_text_files": 10,
+    "additional_raw_telemetry_files": 1,
+    "additional_raw_telemetry_data_rows": 11450,
+    "external_public_file_catalog_entries": 8369,
+    "knowledge_cards": 8,
+    "source_records": 46,
+    "quality_issues": 13,
+    "synthetic_numeric_values": 0
+  },
+  "license_note": "Numerical PSI data retain the individual source licenses recorded in the seed. Root MIT does not relicense third-party data or media.",
+  "investigations": [
+    {
+      "id": "PSI-25",
+      "title": "Burning and Suppression of Solids - II",
+      "doi": "10.60555/4qc4-de67",
+      "version": 4
+    },
+    {
+      "id": "PSI-26",
+      "title": "Burning and Suppression of Solids",
+      "doi": "10.60555/58h4-dy80",
+      "version": 4
+    },
+    {
+      "id": "PSI-98",
+      "title": "Spacecraft Fire Safety Experiment-I",
+      "doi": "10.60555/0t15-1z43",
+      "version": 4
+    },
+    {
+      "id": "PSI-99",
+      "title": "Spacecraft Fire Experiment-II",
+      "doi": "10.60555/2chp-m469",
+      "version": 5
+    },
+    {
+      "id": "PSI-100",
+      "title": "Spacecraft Fire Experiment-III",
+      "doi": "10.60555/040q-4h36",
+      "version": 4
+    },
+    {
+      "id": "PSI-69",
+      "title": "Flame Extinguishment Experiment",
+      "doi": "10.60555/mbq8-0451",
+      "version": 5
+    },
+    {
+      "id": "PSI-101",
+      "title": "Smoke Aerosol Measurement Experiment-Reflight",
+      "doi": "10.60555/2np7-jv14",
+      "version": 4
+    },
+    {
+      "id": "PSI-102",
+      "title": "Smoke and Aerosol Measurement Experiment",
+      "doi": "10.60555/gd4k-8h62",
+      "version": 4
+    },
+    {
+      "id": "PSI-107",
+      "title": "Smoke Point In Co-flow Experiment",
+      "doi": "10.60555/9kbh-e962",
+      "version": 4
+    },
+    {
+      "id": "PSI-62",
+      "title": "Concurrent Flame Spread Modeling using Flamelet Generated Manifolds in Microgravity with Comparison to BASS Experiments using Two-Color Tomography",
+      "doi": "10.60555/e9xp-ex83",
+      "version": 1
+    }
+  ],
+  "source": "Reviewed FlareLedger NASA demo source file, included at target_repo_path. Verify sha256 before import.",
+  "ingestion_status": "not_implemented",
+  "raw_source_urls": [
+    "https://psi.nasa.gov/physci/repo/search?q=combustion",
+    "https://science.data.nasa.gov/about/license"
+  ]
+}

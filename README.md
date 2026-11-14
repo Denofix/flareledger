@@ -6,11 +6,15 @@ FlareLedger is a team project for the **2026 NASA Space Apps Challenge**, addres
 
 ## Current status
 
-This repository contains the monorepo layout, contribution rules, licensing, NASA
-demo seed, technical handoff, and setup instructions. The infrastructure branch adds
-Dockerfiles, local Compose and infrastructure checks; application source, dependency
-files and the importer are still pending. Container builds and application startup
-are not yet verified. See [infrastructure status](docs/INFRA_STATUS.md).
+The first backend provides explicit checksum-verified SQLite ingestion, investigation
+browsing, typed source records, measured series, lexical search and source-linked
+comparison. Native tests exercise the real corpus and backend backup restoration.
+See [backend setup](backend/README.md) and the [API handoff](docs/BACKEND_API.md).
+
+Dockerfiles, local Compose and infrastructure checks are present. The frontend,
+live LLM adapter and production deployment remain pending. Backend container builds
+are requested by the new CI workflow and require verification after publication.
+Full application startup is not yet verified. See [infrastructure status](docs/INFRA_STATUS.md).
 
 The registered project domain is **flareledger.fun**. Hosting, DNS routing, and HTTPS still need to be connected and verified. [Deployment decisions](docs/DEPLOYMENT.md) describe the options.
 
@@ -36,7 +40,7 @@ For a new Ubuntu VM, follow the [Ubuntu and GitHub setup guide](docs/SETUP_UBUNT
 
 | Path | Responsibility |
 | --- | --- |
-| `backend/` | Planned Python 3.12, FastAPI, SQLite, ingestion, retrieval, and optional LLM adapter |
+| `backend/` | Python 3.12, FastAPI, SQLite ingestion and source retrieval; live LLM adapter pending |
 | `frontend/` | Planned Vue 3, TypeScript, Vite, and evidence-aware charts |
 | `data/` | Dataset documentation, reviewed demo data, and local raw/processed files |
 | `infra/` | Docker, Compose, ingress, and deployment implementation |

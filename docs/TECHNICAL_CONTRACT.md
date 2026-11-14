@@ -2,7 +2,11 @@
 
 ## Implemented in this bootstrap
 
-The repository layout, contribution process, MIT code license, data license boundary, setup documentation, and repository-check command exist. The application and deployment interfaces below are the implementation target. Their commands must not be advertised as runnable until the corresponding files and code are merged.
+The repository layout, contribution process, MIT code license, data license boundary,
+setup documentation and infrastructure scaffold exist. The first backend and importer
+are implemented with pinned dependencies, lint, type checks and native tests.
+See [backend setup](../backend/README.md) and the [API handoff](BACKEND_API.md).
+Frontend, enabled LLM generation and production deployment remain implementation work.
 
 ## Backend target
 
@@ -18,9 +22,17 @@ The repository layout, contribution process, MIT code license, data license boun
 | State and corpus | DATABASE_PATH and DATA_DIR; writable SQLite state and read-only source corpus |
 | Initial checks | python -m ruff check .; python -m pytest -q once configured and meaningful tests exist |
 
-Readiness must not make an LLM call or re-import the corpus. Ingestion requires an explicit, documented, idempotent command, to be implemented by backend/data development. No importer command exists yet.
+From backend/, python -m app.ingest imports the checksum-verified English v2 seed
+using DATA_DIR and DATABASE_PATH. Repeating the identical import is a no-op.
+Readiness checks the installed corpus without LLM calls or re-importing data.
+Implemented checks are python -m ruff check ., python -m ruff format --check .,
+python -m mypy app and python -m pytest -q.
 
-LLM failure must not disable catalog, source access, or valid charts. Before generation is enabled, implement its complete timeout, rate limits, concurrency guard, and unavailable/insufficient-evidence responses. The environment example documents the proposed names and disabled defaults, not functioning safeguards.
+LLM failure must not disable catalog, source access or measured data. Ask currently
+returns a structured unavailable response and source retrieval, without generation.
+Before generation is enabled, implement its complete timeout, rate limits,
+concurrency guard and insufficient-evidence behavior. Reserved LLM environment names
+are not functioning safeguards for an enabled adapter in this release.
 
 ## Frontend target
 

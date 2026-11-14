@@ -4,7 +4,7 @@ FlareLedger is an independent NASA Space Apps hackathon project. Read README.md,
 
 ## Repository state
 
-This initial repository is a documentation and layout bootstrap. Inspect the current files before claiming that the application, dependencies, Docker images, importer, or deployment exist. Commands in the target contract become runnable only when their corresponding code and dependency files are added and verified.
+The backend and explicit corpus importer now exist with pinned dependencies and native tests. The frontend, live LLM adapter and production deployment remain pending. Inspect current files and recorded checks before claiming that Docker images build or a deployment exists. Commands become runnable only when their corresponding code and dependency files are added and verified.
 
 ## Implementation boundaries
 

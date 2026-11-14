@@ -17,7 +17,7 @@ review are separate from deployment.
 | English operations guide | Written | Rehearsal with the application |
 | Application CI | Deferred | Existing Python/npm commands and meaningful tests |
 | API-only production Compose | Prepared and configuration-tested | Real app, host network attachment |
-| Nginx HTTP/HTTPS and Certbot webroot | Local vhost tests passed | Host inspection, real issuance and renewal scheduler |
+| Nginx HTTP/HTTPS and Certbot webroot | Local tests and supplied host config inspected | Confirm Certbot volume identity, real issuance and renewal dry-run |
 | VPS deployment and DNS | Not performed | Server apply and external acceptance |
 
 ## Local validation on 14 November 2026
@@ -32,8 +32,10 @@ review are separate from deployment.
 - Nginx HTTP bootstrap, challenge route, local TLS, redirect, /api routing and
   upstream-failure isolation passed with temporary fixtures and a local certificate.
   This does not verify actual QResto configuration or real certificate renewal.
-- Production Compose boundaries and Certbot configuration parse passed; renewal
-  wrapper passes bash -n. The candidate timer is not installed or runtime-tested.
+- Production Compose boundary checks passed. Host evidence confirms an existing
+  unscoped Certbot renewal timer; duplicate client/timer templates have been removed.
+  Its successful coverage of the new lineage remains unverified until issuance
+  and a scoped renewal dry-run.
 - Existing repository checker reported 51 tracked text files and zero problems.
 - Working-tree and staged whitespace checks passed; smoke --help works.
 

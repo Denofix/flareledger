@@ -33,8 +33,6 @@ def main():
         print(f"{'PASS' if passed else 'FAIL'} {label}")
     if not all(checks.values()):
         raise SystemExit(1)
-    subprocess.run(["docker", "compose", "-f", "compose.certbot.yaml", "config", "--quiet"], cwd=ROOT, check=True)
-    print("PASS Certbot maintenance configuration parses; no volumes or services started")
 
 
 if __name__ == "__main__":

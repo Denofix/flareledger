@@ -30,6 +30,16 @@ qresto-production_certbot-certs -> /etc/letsencrypt, and
 qresto-production_certbot-webroot -> /var/www/certbot. Recheck them on the host.
 Do not upgrade the running Nginx or install a second renewal scheduler by default.
 
+Host output supplied on 14 November confirms Nginx 1.28.3, the conf.d/*.conf
+include and the existing qresto-certbot-renew.timer. Its service invokes
+/opt/qresto/infra/scripts/certbot/renew-production-certificates.sh, which runs
+unscoped certbot renew --quiet and reloads Nginx only when that command succeeds.
+It uses /opt/qresto/infra/docker-compose.production.yml and .env.production under
+project qresto-production. The running edge Nginx instead records the base.yml,
+release.yml and edge.yml files under /opt/feloza-edge. Confirm the effective
+Certbot mounts match the running Nginx mounts before issuance. Do not print the
+full interpolated Compose model or environment secrets to perform that check.
+
 ## Routing and persistence
 
 Production uses only compose.yaml plus compose.prod.yaml. Never add compose.dev.yaml.
@@ -50,8 +60,31 @@ docker network connect flareledger_ingress qresto-production-nginx-1
 Skip these commands if the network or attachment already exists. Do not replace
 Nginx's other networks. The unique upstream alias is flareledger-api:8000. Leave
 proxy configuration inactive until the network is prepared. Record a fixed image
-tag/digest after real builds; the draft Certbot latest tag must also be replaced
-with the tested version/digest before scheduling production maintenance.
+tag/digest after real builds. Reuse the existing Certbot image and volume setup;
+this project does not introduce another certificate client or scheduler.
+
+For persistent attachment, the host edge.yml is the maintained override; state/base.yml
+and state/release.yml are recorded snapshots and should not be edited for this task.
+Merge these fields into edge.yml without removing its current image, mounts or
+entrypoint (it currently uses JSON syntax, which is valid YAML):
+
+```yaml
+services:
+  nginx:
+    networks:
+      - outside
+      - flareledger_ingress
+networks:
+  flareledger_ingress:
+    name: flareledger_ingress
+    external: true
+```
+
+Validate the same three-file edge model with its original env file before applying.
+The existing outside network must remain. Do not run an unrestricted up command:
+the base snapshot contains stopped QResto services and dependency chains. A manual
+network connect can avoid recreating Nginx now; edge.yml preserves the intent for
+future approved recreations. Current host files have not been edited by this PR.
 
 Start the API only after its source/dependencies and explicit importer are verified:
 
@@ -82,10 +115,10 @@ docker exec qresto-production-nginx-1 nginx -s reload
 Verify a temporary challenge file is reachable from another device at
 http://api.flareledger.fun/.well-known/acme-challenge/TEST_NAME. Certbot must write
 to the same webroot seen by Nginx. Only after DNS and HTTP are confirmed, use the
-existing approved Certbot client or the maintenance Compose (after volume checks):
+existing Certbot service, after verifying its effective volume names:
 
 ```sh
-docker compose -f compose.certbot.yaml run --rm certbot certonly --webroot -w /var/www/certbot --cert-name api.flareledger.fun -d api.flareledger.fun
+sudo docker compose --project-name qresto-production --env-file /opt/qresto/infra/.env.production --file /opt/qresto/infra/docker-compose.production.yml run --rm --no-deps certbot certonly --webroot -w /var/www/certbot --cert-name api.flareledger.fun -d api.flareledger.fun
 ```
 
 The account owner supplies the contact address and accepts any applicable ACME
@@ -96,29 +129,21 @@ Run nginx -t before reload; keep the previous working configuration for rollback
 
 ## Renewal
 
-First determine whether an existing Certbot timer/container already renews all
-lineages. Prefer extending its tested reload mechanism instead of adding a competing
-scheduler. The target behavior is a twice-daily renewal check, followed by a validated
-Nginx reload after successful renewal, without stopping QResto. A dedicated check is:
+The existing timer checks twice daily (03:17 and 15:17 in the server's configured
+timezone, with up to 30 minutes random delay). Its script renews all due lineages,
+then reloads Nginx. Once the new webroot lineage is issued into the same certificate
+volume, it should be covered by that renewal command. Confirm with a scoped dry-run:
 
 ```sh
-docker compose -f compose.certbot.yaml run --rm certbot renew --cert-name api.flareledger.fun
-docker exec qresto-production-nginx-1 nginx -t
-docker exec qresto-production-nginx-1 nginx -s reload
+sudo docker compose --project-name qresto-production --env-file /opt/qresto/infra/.env.production --file /opt/qresto/infra/docker-compose.production.yml run --rm --no-deps certbot renew --cert-name api.flareledger.fun --dry-run
 ```
 
-In automation, chain the operations with success checks: never reload after a failed
-renewal or failed nginx -t. A successful no-op renewal may also cause a harmless
-reload with this simple sequence. Finalize the host scheduler only after inspecting
-existing jobs. Run a renewal dry-run, record its result and check the installed
-scheduler. Neither automated renewal nor a dry-run has been executed by this PR.
-
-If no existing scheduler is suitable, candidate host-side units are in
-infra/certbot/. The service assumes /srv/flareledger and invokes renew-api.sh as
-root with Docker and flock available. The wrapper scopes renewal to this certificate,
-checks each exit status and skips reload for --dry-run. Review/update the installation
-path and pin the Certbot image first. Install/enable the timer only after reconciling
-existing jobs; the files in this repository do not enable any host service.
+Do not install a FlareLedger timer or restart/replace the QResto schedule. The
+existing script does not run nginx -t before its reload; manually validate every
+proxy edit before reloading. Any change to shared renewal behavior belongs in the
+host infrastructure workflow. No issuance, renewal dry-run or scheduler change has
+been executed by this PR. Record the dry-run result and inspect the existing service
+journal after the first scheduled run containing this lineage.
 
 ## Frontend and acceptance
 

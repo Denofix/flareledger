@@ -1,0 +1,12 @@
+[Unit]
+Description=Run the daily FlareLedger SQLite backup
+
+[Timer]
+# UTC is explicit so the schedule does not depend on the server's timezone setting.
+OnCalendar=*-*-* 03:10:00 UTC
+RandomizedDelaySec=120
+Persistent=true
+Unit=flareledger-backup.service
+
+[Install]
+WantedBy=timers.target

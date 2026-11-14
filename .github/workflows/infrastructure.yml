@@ -31,6 +31,8 @@ jobs:
         run: docker compose -f compose.yaml -f compose.dev.yaml config --quiet
       - name: Test SQLite backup including an active WAL
         run: python scripts/test_backup.py
+      - name: Test snapshot verification and retention
+        run: python scripts/test_snapshots.py
       - name: Check Caddy routing with disposable test fixtures
         run: python scripts/test_caddy.py
       - name: Validate production isolation without deployment

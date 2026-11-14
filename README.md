@@ -11,12 +11,13 @@ browsing, typed source records, measured series, lexical search and source-linke
 comparison. Native tests exercise the real corpus and backend backup restoration.
 See [backend setup](backend/README.md) and the [API handoff](docs/BACKEND_API.md).
 
-Dockerfiles, local Compose and infrastructure checks are present. The frontend,
-live LLM adapter and production deployment remain pending. Backend container builds
-are requested by the new CI workflow and require verification after publication.
-Full application startup is not yet verified. See [infrastructure status](docs/INFRA_STATUS.md).
+The backend API runs on the VPS at https://api.flareledger.fun (readiness:
+`/api/health/ready`) with the verified corpus, verified SQLite snapshots (an off-VPS copy is pulled
+by the team laptop) and a tested restore procedure. The frontend and the live LLM adapter remain pending, and Ask
+returns a structured unavailable response. See [infrastructure status](docs/INFRA_STATUS.md)
+and [backup and recovery](docs/BACKUP_RECOVERY.md).
 
-The registered project domain is **flareledger.fun**. Hosting, DNS routing, and HTTPS still need to be connected and verified. [Deployment decisions](docs/DEPLOYMENT.md) describe the options.
+The registered project domain is **flareledger.fun**. The apex frontend on Vercel is not connected yet. The VPS lease ends on 1 December 2026. [Deployment decisions](docs/DEPLOYMENT.md) describe the layout.
 
 ## Start here
 
@@ -60,7 +61,7 @@ Python and frontend dependencies will be owned by their respective directories. 
 - **Data:** SQLite and a versioned, source-linked NASA demo corpus. Generated state stays outside Git.
 - **AI:** disabled by default; a free API is enabled only after its model, quota, and failure behavior are verified. The current LLM budget is **USD 0**, with no paid fallback.
 - **Deployment:** frontend on Vercel and API/SQLite on the VPS, as selected by the team.
-  DNS, backend HTTPS and production ingress remain unconfigured in this phase.
+  The API hostname, HTTPS and ingress are configured; the Vercel `/api` rewrite is not.
 
 The [technical contract](docs/TECHNICAL_CONTRACT.md) separates implemented commands from planned interfaces. Public project material uses English under the [language decision](docs/adr/0002-public-language.md).
 

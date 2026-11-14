@@ -1,9 +1,17 @@
 # API production deployment preparation
 
 The team selected frontend hosting on Vercel and API/SQLite on the existing VPS.
-The existing qresto-production-nginx-1 keeps ports 80/443. This package is a proposed
-configuration and local test, not proof of a deployment or certificate issuance.
-The backend application, importer and dependency files are still pending.
+The existing qresto-production-nginx-1 keeps ports 80/443.
+
+**Applied on 14 November 2026.** DNS (A record only), the certificate for
+api.flareledger.fun, the HTTPS vhost and a scoped renewal dry-run were completed.
+The API runs from /home/tymofii/flareledger in the Compose project flareledger
+(compose.yaml plus compose.prod.yaml) and was updated to commit 8be005f. Nginx is
+attached to flareledger_ingress both live and in the host edge.yml override, with
+backups under /var/backups/flareledger. Public ready returns 200, QResto and Feloza
+still answer, and port 8000 is not published. The sections below are the procedure
+that was followed and remain the rollback reference. Backup and recovery are in
+[docs/BACKUP_RECOVERY.md](../../docs/BACKUP_RECOVERY.md).
 
 ## Required read-only host inspection
 
@@ -158,7 +166,7 @@ backend owner. The API hostname itself remains publicly accessible through Nginx
 External checks: valid public TLS/hostname without disabling verification, health,
 catalog, unknown ID, Ask failure states and QResto's usual URLs before/after reload.
 Test /api through Vercel as well as the direct API hostname. Record the availability
-end date with the owner; it is not yet fixed.
+end date with the owner: the lease ends on 1 December 2026, exact time unconfirmed.
 
 Use the backup utility from [the local operations guide](../README.md), substituting
 compose.prod.yaml for compose.dev.yaml. Copy backups off the working volume with

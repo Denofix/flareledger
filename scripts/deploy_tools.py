@@ -18,6 +18,7 @@ from pathlib import Path
 from urllib.parse import urlsplit
 
 PUBLIC_API = "https://api.flareledger.fun"
+PUBLIC_WEB = "https://flareledger.fun"
 SITES = ("https://qresto.cfd", "https://feloza.pl")
 # (path, expected status). The unknown ID must stay a JSON 404, never a 5xx.
 CATALOG_PATHS = (
@@ -60,10 +61,34 @@ def public_ready(base: str = PUBLIC_API) -> tuple[Check, str | None]:
         payload = json.loads(body)
     except ValueError:
         return Check("public ready", False, f"HTTP {status}, not JSON"), None
+    if not isinstance(payload, dict):
+        return Check("public ready", False, f"HTTP {status}, JSON object required"), None
     version = payload.get("corpus_version")
     if status == 200 and payload.get("status") == "ready" and version:
         return Check("public ready", True, f"corpus {str(version)[:24]}"), version
     return Check("public ready", False, f"HTTP {status}: {str(payload)[:120]}"), None
+
+
+def frontend_checks(base: str, api_version: str | None) -> list[Check]:
+    """Check the static entry point, TLS and the real same-origin API rewrite.
+
+    Ask is deliberately not probed: its current 503 llm_unavailable is expected,
+    and monitoring must not consume model quota after generation is enabled.
+    """
+    base = base.rstrip("/")
+    status, body = http_get(base + "/")
+    html = body.decode("utf-8", "replace").lower()
+    shell = 'id="app"' in html and '<script' in html and 'src=' in html
+    page = Check("frontend page", status == 200 and shell,
+                 f"HTTP {status}, application shell {'present' if shell else 'missing'}")
+    tls = check_tls(base)
+    ready, version = public_ready(base)
+    checks = [page, Check("frontend TLS", tls.ok, tls.detail),
+              Check("frontend ready", ready.ok, ready.detail)]
+    if ready.ok and api_version is not None:
+        checks.append(Check("frontend corpus version", version == api_version,
+                            "matches direct API" if version == api_version else "differs from direct API"))
+    return checks
 
 
 def parallel_reads(base: str = PUBLIC_API, rounds: int = 6, workers: int = 8) -> Check:

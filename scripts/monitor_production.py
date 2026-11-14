@@ -1,8 +1,9 @@
-"""Check the public FlareLedger API, its TLS certificate and the age of the last backup.
+"""Check FlareLedger frontend/API HTTPS, readiness and the age of the last backup.
 
 Modes:
   external  public readiness (HTTP 200 and status ready), catalogue reads and the TLS
-            certificate. Needs no server access, so it can run from GitHub Actions.
+            certificate; frontend entry point, TLS and /api readiness with the
+            same corpus version. Needs no server access, so it can run from GitHub Actions.
   local     the same plus the age of the newest daily snapshot and free disk space.
             Runs on the VPS, for example from the systemd timer in infra/systemd.
 
@@ -32,9 +33,10 @@ def disk_check(path: Path) -> tools.Check:
     return tools.Check("disk space", free >= MIN_FREE_FRACTION, f"{free * 100:.0f}% free of {usage.total / 2**30:.0f} GiB")
 
 
-def collect(mode: str, public: str, snapshots: Path) -> list[tools.Check]:
-    ready, _ = tools.public_ready(public)
+def collect(mode: str, public: str, snapshots: Path, web: str = tools.PUBLIC_WEB) -> list[tools.Check]:
+    ready, version = tools.public_ready(public)
     checks = [ready, tools.check_tls(public)]
+    checks += tools.frontend_checks(web, version)
     if ready.ok:
         checks.append(tools.parallel_reads(public, rounds=1, workers=4))
     if mode == "local":
@@ -42,10 +44,10 @@ def collect(mode: str, public: str, snapshots: Path) -> list[tools.Check]:
     return checks
 
 
-def monitor(mode: str, public: str, snapshots: Path, attempts: int, interval: float, sleep=time.sleep) -> tuple[bool, list[tools.Check], int]:
+def monitor(mode: str, public: str, snapshots: Path, attempts: int, interval: float, sleep=time.sleep, web: str = tools.PUBLIC_WEB) -> tuple[bool, list[tools.Check], int]:
     checks: list[tools.Check] = []
     for number in range(1, attempts + 1):
-        checks = collect(mode, public, snapshots)
+        checks = collect(mode, public, snapshots, web)
         if all(check.ok for check in checks):
             return True, checks, number
         if number < attempts:
@@ -57,13 +59,14 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--mode", choices=("external", "local"), default="external")
     parser.add_argument("--public-url", default=tools.PUBLIC_API)
+    parser.add_argument("--web-url", default=tools.PUBLIC_WEB, help="frontend HTTPS origin; checks its /api rewrite too")
     parser.add_argument("--snapshots", type=Path, default=Path("/var/backups/flareledger/snapshots"))
     parser.add_argument("--attempts", type=int, default=3)
     parser.add_argument("--interval", type=float, default=60.0, help="seconds between attempts")
     args = parser.parse_args(argv)
     if args.attempts < 1:
         parser.error("--attempts must be at least 1")
-    ok, checks, used = monitor(args.mode, args.public_url, args.snapshots, args.attempts, args.interval)
+    ok, checks, used = monitor(args.mode, args.public_url, args.snapshots, args.attempts, args.interval, web=args.web_url)
     print(tools.render(checks))
     print(
         json.dumps(

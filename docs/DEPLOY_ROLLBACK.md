@@ -1,7 +1,9 @@
 # Deploy, rollback and monitoring
 
 Scope: the FlareLedger API on the VPS (Compose project flareledger, compose.yaml plus
-compose.prod.yaml). The frontend is deployed by Vercel and rolled back there.
+compose.prod.yaml). The frontend is deployed by Vercel and rolled back there. Denis confirmed frontend
+commit 1d258c9 from main at https://flareledger.fun/ (primary) and
+https://flareledger.vercel.app/ (Vercel alias). The backend image revision is independent.
 
 ## Principles
 
@@ -60,14 +62,22 @@ corpus use --allow-corpus-change, which then requires only that the API is ready
 
 ## Monitoring
 
-scripts/monitor_production.py checks readiness (HTTP 200 and status ready), a round of
+scripts/monitor_production.py checks the frontend HTML application shell and HTTPS
+certificate at https://flareledger.fun/, plus /api/health/ready through that origin.
+The proxied corpus_version must equal the directly queried API version. A 200 SPA
+HTML response on the readiness path fails. --web-url selects another frontend
+origin for a one-off check; the production default remains the primary domain.
+The monitor never calls /api/ask: its current 503 llm_unavailable is expected, and
+monitoring must not consume future LLM quota.
+
+It also checks direct API readiness (HTTP 200 and status ready), a round of
 catalogue reads and the certificate (failure under 10 days left, warning under 21).
 Each run tries three times, one minute apart, and fails only if all attempts fail, so
 one blip does not alert.
 
 | Where | What | How you see a problem |
 | --- | --- | --- |
-| GitHub Actions, every 30 minutes (.github/workflows/production-monitor.yml) | External readiness and certificate, read-only requests, no secrets | The failed workflow run, with GitHub's own notification to the people watching Actions |
+| GitHub Actions, every 30 minutes (.github/workflows/production-monitor.yml) | Frontend page/TLS, proxied readiness/corpus agreement, direct API readiness and certificate; read-only requests, no secrets | The failed workflow run, with GitHub's own notification to the people watching Actions |
 | VPS, every 30 minutes (flareledger-monitor.timer) | The same plus the age of the newest daily snapshot (limit 26 hours) and free disk (limit 10%) | systemctl --failed, journalctl -u flareledger-monitor.service |
 
 There is no chat or e-mail channel for the VPS-side check yet. Choose one before

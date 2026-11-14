@@ -1,6 +1,6 @@
 name: Production monitor
 
-# External check of the public API from outside the VPS. It sends a handful of
+# External check of the frontend and public API from outside the VPS. It sends a handful of
 # read-only GET requests, needs no secrets and changes nothing. A run fails only
 # when every one of three attempts, one minute apart, fails; the failed run is
 # the alert. Scheduled workflows run from the default branch.
@@ -18,7 +18,7 @@ concurrency:
 
 jobs:
   external:
-    name: Public API readiness and TLS
+    name: Frontend and API readiness and TLS
     runs-on: ubuntu-24.04
     timeout-minutes: 10
     steps:
@@ -30,5 +30,5 @@ jobs:
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1 # v6
         with:
           python-version: '3.12'
-      - name: Check readiness, catalogue reads and certificate
+      - name: Check website, frontend API rewrite, catalogue and TLS
         run: python scripts/monitor_production.py --mode external --attempts 3 --interval 60

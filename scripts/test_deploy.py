@@ -315,7 +315,7 @@ class MonitorTests(unittest.TestCase):
             self.assertTrue(tools.parallel_reads("https://x.invalid", rounds=2, workers=2).ok)
 
     def test_public_ready_rejects_non_json_and_not_ready(self):
-        for status, body in ((502, b"<html>bad gateway</html>"), (503, b'{"error": {"code": "corpus_unavailable"}}'),
+        for status, body in ((200, b"null"), (200, b"[]"), (502, b"<html>bad gateway</html>"), (503, b'{"error": {"code": "corpus_unavailable"}}'),
                              (200, b'{"status": "starting"}')):
             with mock.patch.object(tools, "http_get", lambda url, timeout=15.0, s=status, b=body: (s, b)):
                 check, version = tools.public_ready("https://x.invalid")
@@ -344,9 +344,12 @@ class MonitorTests(unittest.TestCase):
         with mock.patch.object(tools, "public_ready", lambda base: (tools.Check("public ready", True, ""), "v")), \
                 mock.patch.object(tools, "check_tls", lambda base: tools.Check("tls certificate", True, "")), \
                 mock.patch.object(tools, "parallel_reads", lambda *a, **k: tools.Check("parallel catalog reads", True, "")), \
-                mock.patch.object(tools, "backup_age", lambda *a, **k: tools.Check("daily backup age", True, "")):
+                mock.patch.object(tools, "backup_age", lambda *a, **k: tools.Check("daily backup age", True, "")), \
+                mock.patch.object(tools, "frontend_checks", lambda *a: [tools.Check("frontend ready", True, "")]):
             external = [c.name for c in monitor.collect("external", "u", Path("."))]
             local = [c.name for c in monitor.collect("local", "u", Path("."))]
+        self.assertIn("frontend ready", external)
+        self.assertIn("frontend ready", local)
         self.assertNotIn("daily backup age", external)
         self.assertIn("daily backup age", local)
         self.assertIn("disk space", local)
@@ -358,6 +361,45 @@ class MonitorTests(unittest.TestCase):
             code = monitor.main(["--attempts", "2", "--interval", "0"])
         self.assertEqual(code, 1)
         self.assertEqual(json.loads(out.getvalue().strip().splitlines()[-1])["ok"], False)
+
+
+class FrontendMonitorTests(unittest.TestCase):
+    def checks(self, *, shell=True, page_status=200, ready_status=200,
+               ready_body=b'{"status":"ready","corpus_version":"v1"}', tls=True):
+        calls = []
+        def get(url, timeout=15.0):
+            calls.append(url)
+            if url == "https://web.invalid/":
+                return page_status, b'<div id="app"></div><script src="/assets/app.js"></script>' if shell else b'<html>Error page</html>'
+            if url == "https://web.invalid/api/health/ready":
+                return ready_status, ready_body
+            raise AssertionError(url)
+        with mock.patch.object(tools, "http_get", get), \
+                mock.patch.object(tools, "check_tls", return_value=tools.Check("TLS", tls, "certificate")):
+            checks = tools.frontend_checks("https://web.invalid/", "v1")
+        self.assertFalse(any("/ask" in url for url in calls))
+        return {c.name: c for c in checks}
+
+    def test_static_page_and_real_rewrite_are_both_required(self):
+        self.assertTrue(all(c.ok for c in self.checks().values()))
+        self.assertFalse(self.checks(shell=False)["frontend page"].ok)
+        self.assertFalse(self.checks(page_status=503)["frontend page"].ok)
+        self.assertFalse(self.checks(ready_status=502)["frontend ready"].ok)
+
+    def test_spa_fallback_on_api_and_wrong_corpus_fail(self):
+        self.assertFalse(self.checks(ready_body=b'<div id="app"></div>')["frontend ready"].ok)
+        wrong = b'{"status":"ready","corpus_version":"old"}'
+        self.assertFalse(self.checks(ready_body=wrong)["frontend corpus version"].ok)
+
+    def test_frontend_certificate_failure_fails_the_run(self):
+        self.assertFalse(self.checks(tls=False)["frontend TLS"].ok)
+
+    def test_web_url_option_reaches_the_retried_check(self):
+        good = [tools.Check("frontend ready", True)]
+        with mock.patch.object(monitor, "collect", return_value=good) as collect, \
+                contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(monitor.main(["--web-url", "https://preview.invalid", "--attempts", "1"]), 0)
+        self.assertEqual(collect.call_args.args[3], "https://preview.invalid")
 
 
 if __name__ == "__main__":

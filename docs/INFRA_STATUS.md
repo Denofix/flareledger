@@ -7,6 +7,7 @@ verified; planned work is labelled as such.
 
 | Item | State | Evidence |
 | --- | --- | --- |
+| Frontend on Vercel | Published at https://flareledger.fun/ and https://flareledger.vercel.app/ from main commit 1d258c9, as confirmed by Denis | Public HTML and frontend-domain readiness/meta independently checked; readiness is HTTP 200 / ready, original corpus version retained |
 | API on the VPS | Running application commit 8be005f (image flareledger-api:8be005f) | /api/health/ready returns 200 with status ready; corpus 2026-11-14:90be248a... |
 | Compose project | flareledger, compose.yaml plus compose.prod.yaml, checkout /home/tymofii/flareledger | API is the only service; no host port is published |
 | Corpus import | Explicit python -m app.ingest, run once | 10 investigations, 1132 records (647 trial_row), 6 series, 1844 points |
@@ -45,10 +46,17 @@ See [backup and recovery](BACKUP_RECOVERY.md).
 
 See [deploy, rollback and monitoring](DEPLOY_ROLLBACK.md).
 
+Frontend monitor extension verified externally on 14 November 2026 at 23:06 UTC:
+frontend HTML shell, frontend and direct API TLS, readiness through flareledger.fun,
+matching corpus_version and all seven direct API read probes passed. The 28 local
+deploy/monitor regression tests passed. These are manual checks of this revision,
+not evidence that the expanded scheduled monitor or VPS timer is installed.
+
 ## Not done
 
-- Frontend, and the Vercel rewrite of /api to https://api.flareledger.fun plus any CORS policy.
-- Application CI for the frontend; the backend and infrastructure workflows run.
+- Scheduled execution of the expanded monitor after merge; the new checks cover the
+  frontend page/TLS, frontend-domain readiness and agreement with the direct API corpus.
+  Frontend CI and the Vercel same-origin /api rewrite now exist; no CORS change is required.
 - A live success-path deploy rehearsal, the VPS monitor installation and an alert channel.
 - Confirmed shutdown time. The VPS lease ends on 1 December 2026; the exact hour is
   not confirmed.

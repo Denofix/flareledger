@@ -1,8 +1,13 @@
 """Restore a FlareLedger snapshot into a separate Compose project and verify it.
 
-The restore project has its own state volume and no published port or ingress network,
-so it cannot touch the running API. It is meant to be run from a checkout whose
-data/demo corpus matches the snapshot and from which the snapshot's image tag exists.
+Run this script from any current checkout (it carries the tooling). Give it the
+application source of the snapshot's revision with --source-dir, for example a
+separate git worktree; that source supplies compose.yaml, the corpus under data/ and,
+with --build, the image. The restore project has its own state volume and no
+published port or ingress network, so the live API is never touched.
+
+Everything that can be refused is checked before any Docker command runs, and
+--cleanup only ever removes resources this run created.
 """
 
 from __future__ import annotations
@@ -10,6 +15,7 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import secrets
 import subprocess
 import sys
 import time
@@ -63,50 +69,95 @@ def run(command: list[str], env: dict | None = None, cwd: Path | None = None) ->
     return result.stdout
 
 
-def main() -> int:
+def exists(command: list[str]) -> bool:
+    """True when the command succeeds. A failing inspect means the resource is absent."""
+    try:
+        run(command)
+    except RestoreError:
+        return False
+    return True
+
+
+def check_source(source: Path, manifest: dict, revision: str | None) -> tuple[str, str]:
+    """Validate the application source before any Docker command. Returns (revision, release tag)."""
+    application = manifest["application"]
+    reference = application.get("image_reference") or application.get("image_tag") or ""
+    tag = tools.release_tag(reference)
+    expected = revision or application.get("revision")
+    if not expected:
+        raise RestoreError(
+            "This snapshot does not record the application revision; pass --revision <full SHA> "
+            "after confirming which release was running"
+        )
+    if not tools.FULL_SHA.match(expected):
+        raise RestoreError("The revision must be a full 40-character commit SHA")
+    if not (source / "compose.yaml").is_file():
+        raise RestoreError(f"{source} has no compose.yaml; pass the application checkout with --source-dir")
+    actual = tools.git_head(source)
+    if actual != expected:
+        raise RestoreError(
+            f"--source-dir is at {actual[:12]} but the snapshot was taken from {expected[:12]}. "
+            f"Create a matching checkout first: git worktree add <path> {expected}"
+        )
+    seed = json.loads((source / "data" / "demo" / "seed-reference.json").read_text(encoding="utf-8"))
+    if seed.get("sha256") != manifest["corpus"]["seed_sha256"]:
+        raise RestoreError("The source corpus does not match the snapshot corpus")
+    return expected, tag
+
+
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("snapshot", type=Path, help="snapshot directory (for example one pulled from off the VPS)")
-    parser.add_argument("--project", default=PROJECT_PREFIX, help=f"Compose project; must start with {PROJECT_PREFIX}")
-    parser.add_argument("--project-dir", type=Path, default=ROOT, help="checkout with compose.yaml and data/")
-    parser.add_argument("--cleanup", action="store_true", help="remove the restore containers, network and volume afterwards")
-    args = parser.parse_args()
-    if not args.project.startswith(PROJECT_PREFIX):
+    parser.add_argument("--source-dir", type=Path, default=ROOT, help="checkout of the snapshot's application revision")
+    parser.add_argument("--revision", help="full commit SHA; only for snapshots that predate the revision field")
+    parser.add_argument("--project", help=f"Compose project; must start with {PROJECT_PREFIX} (default: unique name)")
+    parser.add_argument("--build", action="store_true", help="build the image from --source-dir when it is missing")
+    parser.add_argument("--cleanup", action="store_true", help="remove what this run created afterwards")
+    args = parser.parse_args(argv)
+    project = args.project or f"{PROJECT_PREFIX}-{secrets.token_hex(3)}"
+    if not project.startswith(PROJECT_PREFIX):
         parser.error(f"--project must start with {PROJECT_PREFIX} so the live project is never touched")
     snapshot = args.snapshot.resolve()
-    project_dir = args.project_dir.resolve()
-    compose = ["docker", "compose", "--project-name", args.project, "--file", str(project_dir / "compose.yaml")]
+    source = args.source_dir.resolve()
+    compose = ["docker", "compose", "--project-name", project, "--file", str(source / "compose.yaml")]
+    volume = f"{project}_app_state"
+    created = False  # cleanup is allowed only after this run created the project
     status = 1
     try:
         manifest = tools.verify_snapshot(snapshot)
         facts = manifest["corpus"]
-        print(f"SNAPSHOT_OK | {snapshot.name} | corpus={facts['corpus_version']} | app={manifest['application']['image_tag']}")
-        seed = json.loads((project_dir / "data" / "demo" / "seed-reference.json").read_text(encoding="utf-8"))
-        if seed.get("sha256") != facts["seed_sha256"]:
-            raise RestoreError("The checkout corpus does not match the snapshot; check out the snapshot's application SHA")
-        image_tag = manifest["application"]["image_tag"]
-        run(["docker", "image", "inspect", image_tag])  # fails clearly if the image is missing
-        env = {"IMAGE_TAG": image_tag.rsplit(":", 1)[-1], "APP_ENV": "production", "LLM_ENABLED": "false"}
-        run(compose + ["create", "api"], env=env, cwd=project_dir)
-        volume = f"{args.project}_app_state"
+        revision, tag = check_source(source, manifest, args.revision)
+        reference = f"flareledger-api:{tag}"
+        print(f"SNAPSHOT_OK | {snapshot.name} | corpus={facts['corpus_version']} | revision={revision[:12]} | image={reference}")
+        # Never adopt, reuse or later delete a project that already exists.
+        if exists(["docker", "volume", "inspect", volume]) or run(
+            ["docker", "ps", "--all", "--quiet", "--filter", f"label=com.docker.compose.project={project}"]
+        ).strip():
+            raise RestoreError(f"Compose project {project} already exists; choose another --project or remove it yourself")
+        env = {"IMAGE_TAG": tag, "APP_ENV": "production", "LLM_ENABLED": "false"}
+        if not exists(["docker", "image", "inspect", reference]):
+            if not args.build:
+                raise RestoreError(f"Image {reference} is missing; build it from the source or pass --build")
+            run(compose + ["build", "api"], env=env, cwd=source)
+        created = True
+        run(compose + ["create", "api"], env=env, cwd=source)
         run(
             [
                 "docker", "run", "--rm", "--read-only", "--network", "none", "--user", "0",
                 "--entrypoint", "python",
                 "-v", f"{volume}:/app/state", "-v", f"{snapshot}:/snapshot:ro",
-                image_tag, "-c", COPY,
+                reference, "-c", COPY,
             ]
         )
-        run(compose + ["up", "-d", "api"], env=env, cwd=project_dir)
+        run(compose + ["up", "-d", "api"], env=env, cwd=source)
         for _ in range(45):
-            health = run(
-                compose + ["ps", "--format", "{{.Health}}", "api"], env=env, cwd=project_dir
-            ).strip()
+            health = run(compose + ["ps", "--format", "{{.Health}}", "api"], env=env, cwd=source).strip()
             if health == "healthy":
                 break
             time.sleep(2)
         else:
             raise RestoreError("The restored API did not become healthy within 90 seconds")
-        output = run(compose + ["exec", "-T", "api", "python", "-c", PROBE], env=env, cwd=project_dir)
+        output = run(compose + ["exec", "-T", "api", "python", "-c", PROBE], env=env, cwd=source)
         observed = json.loads(output.strip().splitlines()[-1])
         expected = {"ready": "ready", "corpus_version": facts["corpus_version"]} | {
             key: facts[key] for key in ("investigations", "records", "trial_rows", "series", "points")
@@ -116,18 +167,20 @@ def main() -> int:
             print(f"  {marker} {key}: restored={observed.get(key)} snapshot={value}")
         if observed != expected:
             raise RestoreError("Restored API does not match the verified snapshot")
-        print(f"RESTORE_OK | project={args.project} | volume={volume}")
+        print(f"RESTORE_OK | project={project} | volume={volume}")
         status = 0
     except (RestoreError, tools.SnapshotError, OSError, ValueError, KeyError) as error:
         print(f"RESTORE_FAILED | {error}", file=sys.stderr)
     finally:
-        if args.cleanup:
+        if args.cleanup and created:
             try:
-                run(compose + ["down", "--volumes", "--remove-orphans"], cwd=project_dir)
-                print(f"CLEANED | project={args.project}")
+                run(compose + ["down", "--volumes", "--remove-orphans"], cwd=source)
+                print(f"CLEANED | project={project}")
             except RestoreError as error:
                 print(f"CLEANUP_FAILED | {error}", file=sys.stderr)
                 status = 1
+        elif args.cleanup:
+            print(f"NOT_CLEANED | nothing was created by this run for project {project}", file=sys.stderr)
     return status
 
 

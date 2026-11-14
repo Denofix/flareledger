@@ -12,8 +12,8 @@ flareledger-pre-update-...), containing:
 | File | Purpose |
 | --- | --- |
 | flareledger.sqlite3 | Consistent copy made with the SQLite backup API, including committed WAL data |
-| manifest.json | Corpus version and counts, application checkout SHA, image tag and image ID, database SHA-256 |
-| seed-reference.json | The corpus manifest the database was imported from |
+| manifest.json | Corpus version and counts, application revision (full SHA), image reference and ID, database SHA-256 |
+| seed-reference.json | The corpus manifest the database was imported from, copied from the running container |
 | SHA256SUMS | Checksums of the three files above |
 
 Creation fails, and nothing is kept, unless SQLite integrity_check passes, the corpus
@@ -21,13 +21,20 @@ metadata and entity counts match, every measured point is present, and the seed
 manifest matches the database. The same offline verification runs again on the
 laptop and before every restore. It does not need the API or Docker.
 
-The manifest ties a snapshot to its image tag. To restore, the same image tag must
-exist and the checkout must carry the same data/demo corpus.
+The application revision is resolved from the running image's tag (the release tag is
+a commit abbreviation), never from whichever folder is checked out, so a rollback or a
+moved checkout cannot mislabel a snapshot. If the tag is not a commit SHA, unknown or
+ambiguous, the backup fails and logs why; pass --revision with the full SHA instead.
+To restore, the snapshot's revision must be available as an application checkout and
+the image must exist or be built from it.
 
 ## Automatic backup on the VPS
 
-scripts/backup_production.py runs on the Docker host. It runs scripts/backup_sqlite.py
-inside the API container, copies the result out of the Docker volume, writes the
+scripts/backup_production.py runs on the Docker host from a tooling checkout that is
+kept separate from the checkout the API is deployed from, so rolling the application
+back to an older commit never removes the backup scripts. It runs
+scripts/backup_sqlite.py inside the API container, copies the result and the container's
+seed-reference.json out of the Docker volume, writes the
 manifest and checksums, verifies the snapshot, moves it into place atomically, removes
 the temporary file from the volume and keeps the newest 7 snapshots of each kind.
 Older snapshots of the same kind are the only thing it ever deletes. A lock prevents
@@ -38,9 +45,12 @@ last-success-daily.json / last-success-pre-update.json, whose created_at shows h
 old the newest good snapshot is.
 
 Install once (systemd units are in [infra/systemd](../infra/systemd)). The unit files
-assume user tymofii and the checkout /home/tymofii/flareledger; edit them otherwise.
+assume user tymofii and the tooling checkout /home/tymofii/flareledger-ops; edit them
+otherwise. Keep that checkout on main and update it with git pull --ff-only.
 
 ```sh
+git clone https://github.com/Denofix/flareledger.git ~/flareledger-ops
+cd ~/flareledger-ops
 sudo install -d -o tymofii -g tymofii -m 700 /var/backups/flareledger/snapshots
 sudo install -m 644 infra/systemd/flareledger-backup.service infra/systemd/flareledger-backup.timer /etc/systemd/system/
 sudo systemctl daemon-reload
@@ -50,11 +60,11 @@ systemctl status flareledger-backup.service --no-pager
 systemctl list-timers flareledger-backup.timer
 ```
 
-The timer runs daily at 03:10 UTC, with Persistent=true so a missed run happens after
-a reboot. Before every API update, take a snapshot of the running version first:
+The timer runs daily at 03:10 UTC (UTC is written in the unit, so the server timezone
+does not matter), with Persistent=true so a missed run happens after a reboot. Before every API update, take a snapshot of the running version first:
 
 ```sh
-cd ~/flareledger
+cd ~/flareledger-ops
 python3 scripts/backup_production.py --dest /var/backups/flareledger/snapshots --kind pre-update
 ```
 
@@ -80,28 +90,41 @@ Never commit snapshots, databases or logs. Snapshots contain the full database.
 
 ## Restore into a separate project
 
-scripts/restore_snapshot.py restores a snapshot into the Compose project
-flareledger-restore with its own state volume, no published port and no ingress
-network, so the live API is not touched. It needs Docker, a checkout of the
-snapshot's application SHA (the data/demo corpus must match) and the snapshot's image
-tag, either already built or built from that checkout with docker compose build api.
+scripts/restore_snapshot.py restores a snapshot into a new Compose project named
+flareledger-restore-<random> with its own state volume, no published port and no
+ingress network, so the live API is not touched. Run it from a current checkout (it
+carries the tooling) and point --source-dir at a checkout of the snapshot's
+application revision: that checkout supplies compose.yaml, the corpus under data/ and
+the image build. A separate git worktree keeps the tooling and the old revision apart.
 
-From a computer with Docker, restoring a pulled snapshot:
+The script refuses, before running any Docker command, when the snapshot fails
+verification, when --source-dir is not at the snapshot's revision, when the corpus
+differs, or when the snapshot records no revision. It also refuses to use a Compose
+project or volume that already exists, and --cleanup removes only what that run
+created. An unsuccessful or refused run therefore never deletes someone else's project.
+
+From a computer with Docker and a pulled snapshot (Windows users can run the same
+commands in WSL or Git Bash):
 
 ```sh
 git clone https://github.com/Denofix/flareledger.git && cd flareledger
-git checkout --detach <checkout_sha from manifest.json>
-IMAGE_TAG=<tag from manifest.json> docker compose -f compose.yaml build api
-python3 scripts/restore_snapshot.py /path/to/flareledger-daily-<stamp> --cleanup
+REV=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['application']['revision'])" /path/to/snapshot/manifest.json)
+git worktree add ../flareledger-at-snapshot "$REV"
+python3 scripts/restore_snapshot.py /path/to/flareledger-daily-<stamp> --source-dir ../flareledger-at-snapshot --build --cleanup
 ```
+
+--build builds the image from the worktree when it is not already present. The image
+name is flareledger-api:<release tag>; Compose takes only the tag as IMAGE_TAG, and the
+script does this itself. Do not pass the full image reference as IMAGE_TAG.
 
 Expected output ends with OK lines for ready, corpus_version, investigations, records,
 trial_rows, series and points, then RESTORE_OK. For the current corpus those are
 10 investigations, 1132 records of which 647 are trial_row, 6 series and 1844 points.
 The script compares the restored API with the verified snapshot and exits non-zero on
-any difference. --cleanup removes only the flareledger-restore containers, network and
-volume afterwards; omit it to inspect the restored API. The project name must start
-with flareledger-restore.
+any difference. Omit --cleanup to inspect the restored API; remove it later with
+docker compose --project-name <name> down --volumes. A snapshot taken before the
+revision field existed needs --revision <full SHA> after you confirm which release was
+running.
 
 ## Recover the live service
 
@@ -111,8 +134,9 @@ path is:
 
 1. Pull or locate the newest verified snapshot and run
    python scripts/snapshot_tools.py verify on it.
-2. Check out its application SHA and build or select its image tag.
-3. Rehearse with restore_snapshot.py without --cleanup and confirm the counts.
+2. Create a worktree at its application revision.
+3. Rehearse with restore_snapshot.py --source-dir <worktree> --build without
+   --cleanup and confirm the counts.
 4. Stop only the FlareLedger API: docker compose -f compose.yaml -f compose.prod.yaml stop api.
 5. Rename nothing and delete nothing. Create a new state volume by the same copy step
    as restore_snapshot.py (flareledger.sqlite3 into /app/state, owner 10001), point
@@ -148,6 +172,10 @@ repository (the corpus is in Git), and note that the public API will be unavaila
 
 python scripts/test_snapshots.py tests verification, tampering detection, retention
 and the restore project-name guard with synthetic databases (no NASA data); it runs in
-the infrastructure workflow. The end-to-end backup, laptop pull and restore were
-exercised against the real database on the VPS on 14 November 2026. Scheduled runs
+the infrastructure workflow. The tests cover revision resolution
+(the image tag wins over the checked-out folder) and refusals: a wrong snapshot path, a
+revision mismatch, an existing restore project and a missing revision all fail with no
+destructive Docker command. The end-to-end backup, laptop pull and restore were
+exercised against the real database on the VPS on 14 November 2026; they are repeated
+for this revision of the tooling in INFRA_STATUS.md. Scheduled runs
 and the first systemd execution are recorded in INFRA_STATUS.md once observed.

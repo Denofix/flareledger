@@ -1,8 +1,13 @@
 """Create a verified FlareLedger SQLite snapshot on the VPS host.
 
 Runs on the Docker host (Linux). It uses the existing SQLite backup utility inside
-the running API container, copies the result out of the volume, verifies it offline,
-records a manifest and applies retention. Use --kind pre-update before an update.
+the running API container, copies the result and the corpus manifest out of that
+container, verifies the snapshot offline, records a manifest and applies retention.
+Use --kind pre-update before an update.
+
+The application revision is taken from the running image's tag, never from whichever
+folder happens to be checked out. Run this script from a stable tooling checkout
+that is kept separate from the checkout the API is deployed from.
 """
 
 from __future__ import annotations
@@ -21,13 +26,14 @@ import snapshot_tools as tools
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTAINER_BACKUPS = "/app/state/backups/"
+CONTAINER_SEED_REFERENCE = "/app/data/demo/seed-reference.json"
 
 
 class BackupError(Exception):
     pass
 
 
-def run(command: list[str], **kwargs) -> subprocess.CompletedProcess:
+def run(command: list[str], **kwargs) -> str:
     try:
         result = subprocess.run(command, capture_output=True, text=True, check=False, **kwargs)
     except OSError as error:
@@ -61,7 +67,25 @@ def lock(directory: Path):
     return handle
 
 
-def create_snapshot(container: str, project_dir: Path, dest: Path, kind: str) -> Path:
+def application_block(image_reference: str, image_id: str, repository: Path, override: str | None) -> dict:
+    """Describe the running application. The revision comes from the image, not the folder."""
+    tag = tools.release_tag(image_reference)
+    if override is not None:
+        if not tools.FULL_SHA.match(override):
+            raise BackupError("--revision must be a full 40-character commit SHA")
+        revision, source = override, "override"
+    else:
+        revision, source = tools.resolve_revision(repository, tag), "image-tag"
+    return {
+        "image_reference": image_reference,
+        "release_tag": tag,
+        "image_id": image_id,
+        "revision": revision,
+        "revision_source": source,
+    }
+
+
+def create_snapshot(container: str, repository: Path, dest: Path, kind: str, override: str | None) -> Path:
     utility = (ROOT / "scripts" / "backup_sqlite.py").read_text(encoding="utf-8")
     stdout = run(["docker", "exec", "-i", container, "python", "-"], input=utility)
     produced = stdout.splitlines()[0].strip() if stdout.strip() else ""
@@ -73,30 +97,24 @@ def create_snapshot(container: str, project_dir: Path, dest: Path, kind: str) ->
         run(["docker", "cp", f"{container}:{produced}", str(pending / tools.DATABASE_NAME)])
         # The copy is now outside the volume; drop the temporary in-volume file.
         run(["docker", "exec", container, "python", "-c", "import os,sys; os.unlink(sys.argv[1])", produced])
-        seed = project_dir / "data" / "demo" / "seed-reference.json"
-        shutil.copyfile(seed, pending / tools.SEED_REFERENCE_NAME)
+        # The corpus manifest the running API actually uses, not a file from some checkout.
+        run(["docker", "cp", f"{container}:{CONTAINER_SEED_REFERENCE}", str(pending / tools.SEED_REFERENCE_NAME)])
         facts = tools.database_facts(pending / tools.DATABASE_NAME)
-        source = json.loads(seed.read_text(encoding="utf-8"))
+        source = json.loads((pending / tools.SEED_REFERENCE_NAME).read_text(encoding="utf-8"))
         if source.get("sha256") != facts["seed_sha256"]:
-            raise BackupError("data/demo/seed-reference.json does not match the database corpus")
-        image_tag = run(["docker", "inspect", container, "--format", "{{.Config.Image}}"]).strip()
+            raise BackupError("The container's seed-reference.json does not match the database corpus")
+        image_reference = run(["docker", "inspect", container, "--format", "{{.Config.Image}}"]).strip()
         image_id = run(["docker", "inspect", container, "--format", "{{.Image}}"]).strip()
-        git_sha = run(["git", "-C", str(project_dir), "rev-parse", "HEAD"]).strip()
         manifest = {
             "format": tools.MANIFEST_FORMAT,
             "project": "flareledger",
             "kind": kind,
             "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
-            "application": {
-                "checkout_sha": git_sha,
-                "image_tag": image_tag,
-                "image_id": image_id,
-                "checkout_matches_image_tag": image_tag.rsplit(":", 1)[-1] == git_sha[: len(image_tag.rsplit(":", 1)[-1])],
-            },
+            "application": application_block(image_reference, image_id, repository, override),
             "corpus": facts,
             "database_sha256": tools.sha256_file(pending / tools.DATABASE_NAME),
             "database_bytes": (pending / tools.DATABASE_NAME).stat().st_size,
-            "note": "Backup of SQLite state only. Keep it with the matching image tag and corpus manifest.",
+            "note": "Backup of SQLite state only. Keep it with the matching image and corpus manifest.",
         }
         (pending / tools.MANIFEST_NAME).write_text(
             json.dumps(manifest, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n"
@@ -119,14 +137,17 @@ def log(dest: Path, entry: dict) -> None:
         handle.write(json.dumps(entry, sort_keys=True) + "\n")
 
 
-def main() -> int:
+def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--dest", type=Path, required=True, help="snapshot directory outside the Docker volume")
     parser.add_argument("--kind", choices=tools.KINDS, default="daily")
     parser.add_argument("--keep", type=int, default=7, help="snapshots of this kind to keep")
     parser.add_argument("--project", default="flareledger", help="Compose project name of the running API")
-    parser.add_argument("--project-dir", type=Path, default=ROOT, help="checkout holding data/demo/seed-reference.json")
-    args = parser.parse_args()
+    parser.add_argument(
+        "--repo", type=Path, default=ROOT, help="git checkout used only to resolve the image tag to a full SHA"
+    )
+    parser.add_argument("--revision", help="full commit SHA of the running image when its tag is not a commit SHA")
+    args = parser.parse_args(argv)
     if args.keep < 1:
         parser.error("--keep must be at least 1")
     args.dest.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -139,7 +160,7 @@ def main() -> int:
     with handle:
         try:
             container = find_container(args.project)
-            final = create_snapshot(container, args.project_dir.resolve(), args.dest, args.kind)
+            final = create_snapshot(container, args.repo.resolve(), args.dest, args.kind, args.revision)
             removed = tools.prune(args.dest, args.kind, args.keep)
         except (BackupError, tools.SnapshotError, OSError, ValueError) as error:
             log(args.dest, {"event": "backup_failed", "kind": args.kind, "error": str(error)})
@@ -151,7 +172,8 @@ def main() -> int:
             "kind": args.kind,
             "snapshot": final.name,
             "corpus_version": manifest["corpus"]["corpus_version"],
-            "image_tag": manifest["application"]["image_tag"],
+            "image": manifest["application"]["image_reference"],
+            "revision": manifest["application"]["revision"],
             "pruned": removed,
         }
         log(args.dest, status)

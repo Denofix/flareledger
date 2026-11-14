@@ -116,6 +116,11 @@ def verify_snapshot(directory: Path) -> dict:
     return manifest
 
 
+def application_image(manifest: dict) -> str:
+    application = manifest.get("application", {})
+    return application.get("image_reference") or application.get("image_tag") or "unknown"
+
+
 def snapshots(root: Path, kind: str) -> list[Path]:
     """Return snapshot directories of one kind, newest first."""
     if not root.is_dir():
@@ -141,6 +146,53 @@ def prune(root: Path, kind: str, keep: int) -> list[str]:
     return removed
 
 
+IMAGE_REFERENCE = re.compile(r"^flareledger-api:([A-Za-z0-9_][A-Za-z0-9_.-]{0,127})$")
+FULL_SHA = re.compile(r"^[a-f0-9]{40}$")
+
+
+def release_tag(image_reference: str) -> str:
+    """Return the part Compose expects in IMAGE_TAG from a full image reference.
+
+    Compose builds the image name as flareledger-api:${IMAGE_TAG}, so passing the
+    whole reference would produce flareledger-api:flareledger-api:<tag>.
+    """
+    match = IMAGE_REFERENCE.match(image_reference)
+    if match is None:
+        raise SnapshotError(f"Not a flareledger-api image reference: {image_reference!r}")
+    return match[1]
+
+
+def git_head(repository: Path) -> str:
+    return _git(repository, "rev-parse", "--verify", "HEAD")
+
+
+def resolve_revision(repository: Path, tag: str) -> str:
+    """Resolve a commit-style image tag to a full commit SHA in the given repository.
+
+    The running image, not the current folder, defines the application revision. Tags
+    that are not commit abbreviations, or that are unknown or ambiguous here, are
+    refused so the manifest never records a guessed revision.
+    """
+    if not re.fullmatch(r"[0-9a-f]{7,40}", tag):
+        raise SnapshotError(f"Image tag {tag!r} is not a commit SHA; pass the revision explicitly")
+    return _git(repository, "rev-parse", "--verify", "--quiet", f"{tag}^{{commit}}")
+
+
+def _git(repository: Path, *arguments: str) -> str:
+    import subprocess
+
+    try:
+        result = subprocess.run(
+            ["git", "-C", str(repository), *arguments], capture_output=True, text=True, check=False
+        )
+    except OSError as error:
+        raise SnapshotError(f"Cannot run git: {error}") from error
+    value = result.stdout.strip()
+    if result.returncode != 0 or not FULL_SHA.match(value):
+        raise SnapshotError(f"Cannot resolve a commit with git {' '.join(arguments[:3])}")
+    return value
+
+
 def utc_stamp(moment: datetime | None = None) -> str:
     return (moment or datetime.now(timezone.utc)).strftime("%Y%m%dT%H%M%SZ")
 
@@ -163,7 +215,7 @@ def main(argv: list[str] | None = None) -> int:
         f"corpus={corpus['corpus_version']} | investigations={corpus['investigations']} | "
         f"records={corpus['records']} | trial_rows={corpus['trial_rows']} | "
         f"series={corpus['series']} | points={corpus['points']} | "
-        f"image={manifest['application']['image_tag']}"
+        f"image={application_image(manifest)}"
     )
     return 0
 

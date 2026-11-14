@@ -23,7 +23,9 @@ class Repository:
     def connection(self) -> Iterator[sqlite3.Connection]:
         try:
             uri = self.settings.database_path.as_uri() + "?mode=ro"
-            with closing(sqlite3.connect(uri, uri=True, timeout=2)) as connection:
+            # FastAPI can move a request between workers, including dependency cleanup.
+            # Each request owns one connection; its operations remain sequential.
+            with closing(sqlite3.connect(uri, uri=True, timeout=2, check_same_thread=False)) as connection:
                 connection.row_factory = sqlite3.Row
                 connection.execute("PRAGMA query_only=ON")
                 self.metadata(connection)

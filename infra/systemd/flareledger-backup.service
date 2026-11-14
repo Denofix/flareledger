@@ -1,0 +1,12 @@
+[Unit]
+Description=Back up the FlareLedger SQLite state (verified snapshot)
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+User=tymofii
+WorkingDirectory=/home/tymofii/flareledger
+UMask=0077
+TimeoutStartSec=15min
+ExecStart=/usr/bin/python3 /home/tymofii/flareledger/scripts/backup_production.py --dest /var/backups/flareledger/snapshots --kind daily --keep 7 --project-dir /home/tymofii/flareledger

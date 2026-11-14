@@ -129,11 +129,10 @@ storage outside the volume with docker compose cp. Keep its matching corpus,
 manifest/source hashes, application SHA and image IDs. A backup on the same volume
 alone is not disaster recovery. Never commit runtime backups.
 
-Rehearse restore in a separate Compose project with a separate state volume and
-different localhost port. Supply the matching backup, corpus and application image,
-preserve UID permissions, then verify ready, records, sources and corpus_version.
-Do not overwrite the active database. A whole-application restore is still pending
-the real importer/schema; reading the test backup is not proof of that recovery.
+Production snapshots, retention, the off-VPS copy and the separate-project restore
+are scripted: see [backup and recovery](../docs/BACKUP_RECOVERY.md). The manual
+utility above remains the building block they use. Do not overwrite the active
+database.
 
 Before an update record the SHA, image IDs, corpus version and backup. Keep the
 previous images and corpus. Roll back by selecting the prior IMAGE_TAG without

@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the daily FlareLedger SQLite backup
+
+[Timer]
+OnCalendar=*-*-* 03:10:00
+RandomizedDelaySec=120
+Persistent=true
+Unit=flareledger-backup.service
+
+[Install]
+WantedBy=timers.target

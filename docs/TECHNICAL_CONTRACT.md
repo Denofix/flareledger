@@ -6,7 +6,8 @@ The repository layout, contribution process, MIT code license, data license boun
 setup documentation and infrastructure scaffold exist. The first backend and importer
 are implemented with pinned dependencies, lint, type checks and native tests.
 See [backend setup](../backend/README.md) and the [API handoff](BACKEND_API.md).
-Frontend, enabled LLM generation and production deployment remain implementation work.
+The backend is deployed on the VPS. Frontend and enabled LLM generation remain
+implementation work.
 
 ## Backend target
 
@@ -71,4 +72,6 @@ deployment change is included in this phase.
 
 If the current host proxy forwards to a loopback port, 127.0.0.1:18080 is only a candidate until confirmed free. A containerized ingress needs a reachable container upstream or an approved host gateway; its localhost is not the application container. Public 80/443 remain owned by the existing ingress.
 
-Manual deployment of a verified commit is sufficient for the first demo. Hosting, server IP, ingress implementation, DNS, and HTTPS remain open until checked. See [DEPLOYMENT.md](DEPLOYMENT.md).
+Manual deployment of a verified commit is sufficient for the first demo. The API
+is deployed this way at https://api.flareledger.fun; see [DEPLOYMENT.md](DEPLOYMENT.md),
+[INFRA_STATUS.md](INFRA_STATUS.md) and [BACKUP_RECOVERY.md](BACKUP_RECOVERY.md).

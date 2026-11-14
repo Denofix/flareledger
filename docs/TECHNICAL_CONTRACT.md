@@ -52,7 +52,10 @@ commands. See [infrastructure status](INFRA_STATUS.md).
 
 The team selected a Vercel frontend and VPS API/SQLite. The local Compose web is a
 development/fallback server. For the VPS, inspect existing ingress before selecting
-production isolation and routing. No deployment change is included in this phase.
+production isolation and routing. The proposed production override attaches API to
+the dedicated external flareledger_ingress network with alias flareledger-api;
+existing Nginx owns HTTPS. See [the runbook](../infra/proxy/PRODUCTION.md). No remote
+deployment change is included in this phase.
 
 If the current host proxy forwards to a loopback port, 127.0.0.1:18080 is only a candidate until confirmed free. A containerized ingress needs a reachable container upstream or an approved host gateway; its localhost is not the application container. Public 80/443 remain owned by the existing ingress.
 

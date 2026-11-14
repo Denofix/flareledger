@@ -33,5 +33,9 @@ jobs:
         run: python scripts/test_backup.py
       - name: Check Caddy routing with disposable test fixtures
         run: python scripts/test_caddy.py
+      - name: Validate production isolation without deployment
+        run: python scripts/check_production.py
+      - name: Test Nginx HTTP and HTTPS with disposable fixtures
+        run: python scripts/test_nginx.py
       - name: Describe check scope
-        run: echo 'Compose configuration, backup and isolated Caddy routing tests only. Application builds, scientific data, real API integration and deployment are not verified by this workflow.' >> "$GITHUB_STEP_SUMMARY"
+        run: echo 'Compose configuration, backup and isolated Caddy/Nginx routing tests only. Application builds, scientific data, real API integration, public certificates and deployment are not verified by this workflow.' >> "$GITHUB_STEP_SUMMARY"

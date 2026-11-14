@@ -2,9 +2,11 @@
 
 The team selected Vercel for the frontend at flareledger.fun and the existing VPS
 for FastAPI and persistent SQLite. This is the intended deployment architecture,
-not a completed deployment. DNS, backend hostname, HTTPS, server availability period
-and the final ingress arrangement still need confirmation. This infrastructure
-phase changes no remote service.
+not a completed deployment. The selected backend hostname is api.flareledger.fun;
+the existing Nginx keeps 80/443 and routes to API through a dedicated Docker network.
+DNS, HTTPS, server availability period and persistent ingress attachment still need
+verification. This infrastructure phase changes no remote service. See the
+[production runbook](../infra/proxy/PRODUCTION.md).
 
 ## Previous candidate
 
@@ -12,9 +14,10 @@ Hosting the built frontend and API together on QResto was the original candidate
 It remains a possible local/fallback layout, but is not the selected public frontend
 hosting route. Do not use the local Compose override as a production deployment.
 
-The VPS already has services using 80/443. Reusing its proxy versus temporarily
-stopping it has not been finalized for this release. Do not stop or modify existing
-services based on these instructions. No production Compose or ingress file is supplied.
+The VPS already has services using 80/443. The team selected reuse of that existing
+proxy without stopping QResto. compose.prod.yaml supplies API-only routing to the
+external flareledger_ingress network. Host inspection and explicit deployment are
+still required; no remote service has been modified by the infrastructure PR.
 
 ## Selected Vercel frontend and VPS backend
 

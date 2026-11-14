@@ -1,6 +1,7 @@
 # Infrastructure progress
 
-Owner: Timofey. Branch: infra/docker-ci. This phase is local infrastructure preparation.
+Owner: Timofey. Current branch: infra/production-api, following merged PR #4.
+This phase prepares production configuration and tests it locally.
 This package changes no server, DNS or Vercel setting. Git publication and team
 review are separate from deployment.
 
@@ -15,7 +16,9 @@ review are separate from deployment.
 | Smoke utility | Prepared, no LLM calls | Actual catalog, health and SPA routes |
 | English operations guide | Written | Rehearsal with the application |
 | Application CI | Deferred | Existing Python/npm commands and meaningful tests |
-| VPS deployment, DNS, HTTPS | Deferred | Final backend hostname and ingress decision |
+| API-only production Compose | Prepared and configuration-tested | Real app, host network attachment |
+| Nginx HTTP/HTTPS and Certbot webroot | Local tests and supplied host config inspected | Confirm Certbot volume identity, real issuance and renewal dry-run |
+| VPS deployment and DNS | Not performed | Server apply and external acceptance |
 
 ## Local validation on 14 November 2026
 
@@ -26,6 +29,13 @@ review are separate from deployment.
 - Caddy configuration and routing passed in disposable Docker containers: static
   files, SPA routes, API prefix/query, POST body, JSON 404 and upstream failure.
   The fixtures contain no application implementation or scientific data.
+- Nginx HTTP bootstrap, challenge route, local TLS, redirect, /api routing and
+  upstream-failure isolation passed with temporary fixtures and a local certificate.
+  This does not verify actual QResto configuration or real certificate renewal.
+- Production Compose boundary checks passed. Host evidence confirms an existing
+  unscoped Certbot renewal timer; duplicate client/timer templates have been removed.
+  Its successful coverage of the new lineage remains unverified until issuance
+  and a scoped renewal dry-run.
 - Existing repository checker reported 51 tracked text files and zero problems.
 - Working-tree and staged whitespace checks passed; smoke --help works.
 

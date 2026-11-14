@@ -1,0 +1,16 @@
+# Maintenance only. Confirm existing volumes and renewal ownership on the VPS first.
+name: flareledger-certbot
+services:
+  certbot:
+    image: certbot/certbot:latest
+    volumes:
+      - certificates:/etc/letsencrypt
+      - webroot:/var/www/certbot
+
+volumes:
+  certificates:
+    external: true
+    name: qresto-production_certbot-certs
+  webroot:
+    external: true
+    name: qresto-production_certbot-webroot

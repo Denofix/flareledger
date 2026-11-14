@@ -1,0 +1,11 @@
+[Unit]
+Description=Twice-daily FlareLedger API certificate renewal check
+
+[Timer]
+OnCalendar=*-*-* 00,12:15:00
+RandomizedDelaySec=3600
+Persistent=true
+Unit=flareledger-certbot.service
+
+[Install]
+WantedBy=timers.target

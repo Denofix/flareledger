@@ -18,7 +18,9 @@ not been built or run. See [progress](../docs/INFRA_STATUS.md).
 
 The team selected Vercel for the public frontend and the VPS for API/SQLite. The
 local web container is for development and fallback demos; it does not replace
-Vercel. No production override, DNS, certificate or server changes are included.
+Vercel. API-only production configuration and the Nginx/Certbot candidates are
+documented in [the production runbook](proxy/PRODUCTION.md); no DNS, certificate
+or server change has been applied.
 Follow [the contract](../docs/TECHNICAL_CONTRACT.md) and
 [deployment decision](../docs/DEPLOYMENT.md).
 

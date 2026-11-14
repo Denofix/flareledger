@@ -268,7 +268,7 @@ class RestoreSafetyTests(unittest.TestCase):
             source, _ = make_source(Path(folder))
             docker = FakeDocker(project_exists=True)
             code, errors = restore(
-                [str(Path(folder) / "no-such-snapshot"), "--source-dir", str(source), "--cleanup",
+                [str(Path(folder) / "no-such-snapshot"), "--project-dir", str(source), "--cleanup",
                  "--project", "flareledger-restore-existing"],
                 docker,
             )
@@ -282,7 +282,7 @@ class RestoreSafetyTests(unittest.TestCase):
             snapshot = make_snapshot(Path(folder), "flareledger-daily-20261114T031000Z-aaaaaaaa", second)
             docker = FakeDocker(project_exists=True)
             code, errors = restore(
-                [str(snapshot), "--source-dir", str(source), "--cleanup",
+                [str(snapshot), "--project-dir", str(source), "--cleanup",
                  "--project", "flareledger-restore-existing"],
                 docker,
             )
@@ -298,9 +298,9 @@ class RestoreSafetyTests(unittest.TestCase):
             snapshot = make_snapshot(Path(folder), "flareledger-daily-20261114T031000Z-aaaaaaaa", first)
             docker = FakeDocker()
             self.assertEqual(tools.git_head(source), second)
-            code, errors = restore([str(snapshot), "--source-dir", str(source), "--cleanup"], docker)
+            code, errors = restore([str(snapshot), "--project-dir", str(source), "--cleanup"], docker)
             self.assertEqual(code, 1)
-            self.assertIn("--source-dir is at", errors)
+            self.assertIn("--project-dir is at", errors)
             self.assertIn("git worktree add", errors)
             self.assertEqual(docker.calls, [])
 
@@ -313,7 +313,7 @@ class RestoreSafetyTests(unittest.TestCase):
             (snapshot / tools.MANIFEST_NAME).write_text(json.dumps(manifest), encoding="utf-8")
             tools.write_checksums(snapshot)
             docker = FakeDocker()
-            code, errors = restore([str(snapshot), "--source-dir", str(source)], docker)
+            code, errors = restore([str(snapshot), "--project-dir", str(source)], docker)
             self.assertEqual(code, 1)
             self.assertIn("--revision", errors)
             self.assertEqual(docker.calls, [])
@@ -323,7 +323,7 @@ class RestoreSafetyTests(unittest.TestCase):
             source, (first, second) = make_source(Path(folder))
             snapshot = make_snapshot(Path(folder), "flareledger-daily-20261114T031000Z-aaaaaaaa", second)
             docker = FakeDocker()
-            code, errors = restore([str(snapshot), "--source-dir", str(source), "--cleanup"], docker)
+            code, errors = restore([str(snapshot), "--project-dir", str(source), "--cleanup"], docker)
             self.assertEqual(code, 0, errors)
             compose_calls = [(c, e) for c, e in docker.calls if c[:2] == ["docker", "compose"]]
             self.assertTrue(compose_calls)
@@ -344,7 +344,7 @@ class RestoreSafetyTests(unittest.TestCase):
             snapshot = make_snapshot(Path(folder), "flareledger-daily-20261114T031000Z-aaaaaaaa", second)
             docker = FakeDocker()
             docker.probe["points"] = 2
-            code, errors = restore([str(snapshot), "--source-dir", str(source)], docker)
+            code, errors = restore([str(snapshot), "--project-dir", str(source)], docker)
             self.assertEqual(code, 1)
             self.assertIn("does not match", errors)
 

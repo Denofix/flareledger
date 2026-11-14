@@ -1,7 +1,7 @@
 """Restore a FlareLedger snapshot into a separate Compose project and verify it.
 
 Run this script from any current checkout (it carries the tooling). Give it the
-application source of the snapshot's revision with --source-dir, for example a
+application source of the snapshot's revision with --project-dir, for example a
 separate git worktree; that source supplies compose.yaml, the corpus under data/ and,
 with --build, the image. The restore project has its own state volume and no
 published port or ingress network, so the live API is never touched.
@@ -92,11 +92,11 @@ def check_source(source: Path, manifest: dict, revision: str | None) -> tuple[st
     if not tools.FULL_SHA.match(expected):
         raise RestoreError("The revision must be a full 40-character commit SHA")
     if not (source / "compose.yaml").is_file():
-        raise RestoreError(f"{source} has no compose.yaml; pass the application checkout with --source-dir")
+        raise RestoreError(f"{source} has no compose.yaml; pass the application checkout with --project-dir")
     actual = tools.git_head(source)
     if actual != expected:
         raise RestoreError(
-            f"--source-dir is at {actual[:12]} but the snapshot was taken from {expected[:12]}. "
+            f"--project-dir is at {actual[:12]} but the snapshot was taken from {expected[:12]}. "
             f"Create a matching checkout first: git worktree add <path> {expected}"
         )
     seed = json.loads((source / "data" / "demo" / "seed-reference.json").read_text(encoding="utf-8"))
@@ -108,17 +108,17 @@ def check_source(source: Path, manifest: dict, revision: str | None) -> tuple[st
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("snapshot", type=Path, help="snapshot directory (for example one pulled from off the VPS)")
-    parser.add_argument("--source-dir", type=Path, default=ROOT, help="checkout of the snapshot's application revision")
+    parser.add_argument("--project-dir", type=Path, default=ROOT, help="checkout of the snapshot's application revision")
     parser.add_argument("--revision", help="full commit SHA; only for snapshots that predate the revision field")
     parser.add_argument("--project", help=f"Compose project; must start with {PROJECT_PREFIX} (default: unique name)")
-    parser.add_argument("--build", action="store_true", help="build the image from --source-dir when it is missing")
+    parser.add_argument("--build", action="store_true", help="build the image from --project-dir when it is missing")
     parser.add_argument("--cleanup", action="store_true", help="remove what this run created afterwards")
     args = parser.parse_args(argv)
     project = args.project or f"{PROJECT_PREFIX}-{secrets.token_hex(3)}"
     if not project.startswith(PROJECT_PREFIX):
         parser.error(f"--project must start with {PROJECT_PREFIX} so the live project is never touched")
     snapshot = args.snapshot.resolve()
-    source = args.source_dir.resolve()
+    source = args.project_dir.resolve()
     compose = ["docker", "compose", "--project-name", project, "--file", str(source / "compose.yaml")]
     volume = f"{project}_app_state"
     created = False  # cleanup is allowed only after this run created the project

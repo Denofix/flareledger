@@ -111,6 +111,7 @@ def create_snapshot(container: str, repository: Path, dest: Path, kind: str, ove
             "kind": kind,
             "created_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
             "application": application_block(image_reference, image_id, repository, override),
+            "tooling": {"revision": tools.git_head(repository)},
             "corpus": facts,
             "database_sha256": tools.sha256_file(pending / tools.DATABASE_NAME),
             "database_bytes": (pending / tools.DATABASE_NAME).stat().st_size,

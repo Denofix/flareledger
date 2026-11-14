@@ -93,12 +93,12 @@ Never commit snapshots, databases or logs. Snapshots contain the full database.
 scripts/restore_snapshot.py restores a snapshot into a new Compose project named
 flareledger-restore-<random> with its own state volume, no published port and no
 ingress network, so the live API is not touched. Run it from a current checkout (it
-carries the tooling) and point --source-dir at a checkout of the snapshot's
+carries the tooling) and point --project-dir at a checkout of the snapshot's
 application revision: that checkout supplies compose.yaml, the corpus under data/ and
 the image build. A separate git worktree keeps the tooling and the old revision apart.
 
 The script refuses, before running any Docker command, when the snapshot fails
-verification, when --source-dir is not at the snapshot's revision, when the corpus
+verification, when --project-dir is not at the snapshot's revision, when the corpus
 differs, or when the snapshot records no revision. It also refuses to use a Compose
 project or volume that already exists, and --cleanup removes only what that run
 created. An unsuccessful or refused run therefore never deletes someone else's project.
@@ -110,7 +110,7 @@ commands in WSL or Git Bash):
 git clone https://github.com/Denofix/flareledger.git && cd flareledger
 REV=$(python3 -c "import json,sys; print(json.load(open(sys.argv[1]))['application']['revision'])" /path/to/snapshot/manifest.json)
 git worktree add ../flareledger-at-snapshot "$REV"
-python3 scripts/restore_snapshot.py /path/to/flareledger-daily-<stamp> --source-dir ../flareledger-at-snapshot --build --cleanup
+python3 scripts/restore_snapshot.py /path/to/flareledger-daily-<stamp> --project-dir ../flareledger-at-snapshot --build --cleanup
 ```
 
 --build builds the image from the worktree when it is not already present. The image
@@ -135,7 +135,7 @@ path is:
 1. Pull or locate the newest verified snapshot and run
    python scripts/snapshot_tools.py verify on it.
 2. Create a worktree at its application revision.
-3. Rehearse with restore_snapshot.py --source-dir <worktree> --build without
+3. Rehearse with restore_snapshot.py --project-dir <worktree> --build without
    --cleanup and confirm the counts.
 4. Stop only the FlareLedger API: docker compose -f compose.yaml -f compose.prod.yaml stop api.
 5. Rename nothing and delete nothing. Create a new state volume by the same copy step

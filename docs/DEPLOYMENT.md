@@ -1,14 +1,22 @@
 # Deployment decision
 
-The domain flareledger.fun is registered through Vercel. Domain registration and application hosting are separate services. Keep the domain registered there while selecting either deployment route below.
+The team selected Vercel for the frontend at flareledger.fun and the existing VPS
+for FastAPI and persistent SQLite. This is the intended deployment architecture,
+not a completed deployment. DNS, backend hostname, HTTPS, server availability period
+and the final ingress arrangement still need confirmation. This infrastructure
+phase changes no remote service.
 
-## Recommended candidate for the current architecture
+## Previous candidate
 
-Reuse QResto infrastructure after Timofey confirms permission, capacity, and the existing ingress. Host the built frontend, FastAPI backend, and persistent SQLite state together. Route /api to the backend and other paths to the frontend under flareledger.fun. Manage DNS in Vercel, and let the server's existing ingress obtain and renew HTTPS certificates.
+Hosting the built frontend and API together on QResto was the original candidate.
+It remains a possible local/fallback layout, but is not the selected public frontend
+hosting route. Do not use the local Compose override as a production deployment.
 
-This route fits the proposed local filesystem and SQLite contract. The server IP and proxy configuration are not yet confirmed. No production Compose or ingress file is supplied by this bootstrap.
+The VPS already has services using 80/443. Reusing its proxy versus temporarily
+stopping it has not been finalized for this release. Do not stop or modify existing
+services based on these instructions. No production Compose or ingress file is supplied.
 
-## Vercel frontend alternative
+## Selected Vercel frontend and VPS backend
 
 Once a real Vite application is merged, import this GitHub repository into Vercel, choose frontend/ as the project root, use the verified install/build commands and dist output, and connect flareledger.fun to the project. Follow the DNS values provided for that specific project.
 

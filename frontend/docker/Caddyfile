@@ -1,0 +1,19 @@
+:80 {
+    encode gzip
+
+    handle /healthz {
+        respond "ok" 200
+    }
+
+    @api path /api /api/*
+    handle @api {
+        # Keep the /api prefix: it is part of the FastAPI contract.
+        reverse_proxy api:8000
+    }
+
+    handle {
+        root * /srv
+        try_files {path} /index.html
+        file_server
+    }
+}

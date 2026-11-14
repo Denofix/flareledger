@@ -1,13 +1,16 @@
 # Technical contract
 
-## Implemented in this bootstrap
+## Implemented application
 
 The repository layout, contribution process, MIT code license, data license boundary,
 setup documentation and infrastructure scaffold exist. The first backend and importer
 are implemented with pinned dependencies, lint, type checks and native tests.
 See [backend setup](../backend/README.md) and the [API handoff](BACKEND_API.md).
-The backend is deployed on the VPS. Frontend and enabled LLM generation remain
-implementation work.
+The Vue frontend is implemented with npm dependencies, type checks, lint, tests,
+a production build, a local API proxy and Vercel routing configuration. See
+[frontend setup](../frontend/README.md) and [deployment handoff](FRONTEND_HANDOFF.md).
+The backend is deployed on the VPS. Frontend publication and enabled LLM
+generation remain separate work.
 
 ## Backend target
 
@@ -35,20 +38,30 @@ Before generation is enabled, implement its complete timeout, rate limits,
 concurrency guard and insufficient-evidence behavior. Reserved LLM environment names
 are not functioning safeguards for an enabled adapter in this release.
 
-## Frontend target
+## Frontend contract
 
 | Item | Agreed target |
 | --- | --- |
 | Directory | frontend/ |
 | Framework | Vue 3, TypeScript, Vite |
-| Node target | Node 24, subject to verification against the first real dependencies |
+| Node target | Node 24; pinned dependencies and package-lock.json |
 | Package manager | npm, with a committed package-lock.json |
 | Install and build, from frontend/ | npm ci; npm run build |
 | Build output | frontend/dist/ |
 | API base | /api through VITE_API_BASE_URL |
-| Checks | npm run typecheck; npm run lint; npm run build when the scripts exist |
+| Checks | npm run typecheck; npm run lint; npm run test; npm run build |
 
-The first frontend PR must include package.json, its lock file, real scripts, local /api proxy behavior, and SPA routing. Add unit-test commands only when the corresponding tests are present. Runtime API keys never belong in VITE_* values.
+The Vite development proxy forwards /api to API_PROXY_TARGET (default
+http://127.0.0.1:8000). Vercel forwards /api to https://api.flareledger.fun and
+uses a separate non-API SPA fallback. Keep VITE_API_BASE_URL=/api for the agreed
+deployment; direct cross-origin API access needs a separately agreed CORS policy.
+Runtime API keys never belong in VITE_* values.
+
+Charts preserve source point order, missing values and original time coordinates.
+Comparison requires matching axis quantity names and units; matching axes do not
+establish matched experimental conditions. Unknown values render as Not reported.
+Ask accepts the backend's structured llm_unavailable response and displays retrieved
+evidence without claiming that a model generated an answer.
 
 ## Data target
 

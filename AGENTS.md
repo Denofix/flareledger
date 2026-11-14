@@ -4,13 +4,13 @@ FlareLedger is an independent NASA Space Apps hackathon project. Read README.md,
 
 ## Repository state
 
-The backend and explicit corpus importer now exist with pinned dependencies and native tests. The frontend, live LLM adapter and production deployment remain pending. Inspect current files and recorded checks before claiming that Docker images build or a deployment exists. Commands become runnable only when their corresponding code and dependency files are added and verified.
+The backend, explicit corpus importer and Vue frontend now exist with pinned dependencies and tests. The backend is deployed on the VPS; frontend publication and the live LLM adapter remain pending. Inspect current files and recorded checks before claiming that Docker images build or a deployment exists. Commands become runnable only when their corresponding code and dependency files are added and verified.
 
 ## Implementation boundaries
 
 - Keep the agreed top-level paths: backend/, frontend/, data/, infra/, scripts/, docs/, design/, presentation/.
 - Use Python 3.12 for the planned backend. Keep app.main:app, port 8000, and the /api prefix unless an agreed contract change is documented.
-- Use Vue 3, TypeScript, Vite, and npm for the planned frontend. Commit its real package-lock.json when dependencies are introduced.
+- Use Vue 3, TypeScript, Vite, npm and Node 24 for the frontend. Keep its real package-lock.json committed. Run its typecheck, lint, tests and build from frontend/.
 - Keep all API credentials on the backend. VITE_* is public build configuration.
 - Default LLM access to disabled. Keep the current API budget at USD 0 and do not enable billing or paid fallback.
 - QResto is shared infrastructure. Inspect its existing ingress and available resources before preparing a deployment change.

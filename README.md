@@ -13,8 +13,12 @@ See [backend setup](backend/README.md) and the [API handoff](docs/BACKEND_API.md
 
 The backend API runs on the VPS at https://api.flareledger.fun (readiness:
 `/api/health/ready`) with the verified corpus, verified SQLite snapshots (an off-VPS copy is pulled
-by the team laptop) and a tested restore procedure. The frontend and the live LLM adapter remain pending, and Ask
-returns a structured unavailable response. See [infrastructure status](docs/INFRA_STATUS.md)
+by the team laptop) and a tested restore procedure. The Vue frontend now provides
+investigation browsing, original measured charts, compatible-series comparison,
+source records and evidence search. Ask displays the backend's structured unavailable
+response and retrieved evidence; live LLM generation remains disabled. See
+[frontend setup](frontend/README.md), [Vercel handoff](docs/FRONTEND_HANDOFF.md),
+[infrastructure status](docs/INFRA_STATUS.md)
 and [backup and recovery](docs/BACKUP_RECOVERY.md).
 
 The registered project domain is **flareledger.fun**. The apex frontend on Vercel is not connected yet. The VPS lease ends on 1 December 2026. [Deployment decisions](docs/DEPLOYMENT.md) describe the layout.
@@ -42,7 +46,7 @@ For a new Ubuntu VM, follow the [Ubuntu and GitHub setup guide](docs/SETUP_UBUNT
 | Path | Responsibility |
 | --- | --- |
 | `backend/` | Python 3.12, FastAPI, SQLite ingestion and source retrieval; live LLM adapter pending |
-| `frontend/` | Planned Vue 3, TypeScript, Vite, and evidence-aware charts |
+| `frontend/` | Vue 3, TypeScript, Vite, measured charts and source-linked evidence browsing |
 | `data/` | Dataset documentation, reviewed demo data, and local raw/processed files |
 | `infra/` | Docker, Compose, ingress, and deployment implementation |
 | `scripts/` | Repository checks and future reproducible maintenance commands |
@@ -61,7 +65,9 @@ Python and frontend dependencies will be owned by their respective directories. 
 - **Data:** SQLite and a versioned, source-linked NASA demo corpus. Generated state stays outside Git.
 - **AI:** disabled by default; a free API is enabled only after its model, quota, and failure behavior are verified. The current LLM budget is **USD 0**, with no paid fallback.
 - **Deployment:** frontend on Vercel and API/SQLite on the VPS, as selected by the team.
-  The API hostname, HTTPS and ingress are configured; the Vercel `/api` rewrite is not.
+  The API hostname, HTTPS and ingress are configured. The frontend includes the
+  Vercel `/api` rewrite and SPA routing configuration; Vercel publication is still a
+  deployment task.
 
 The [technical contract](docs/TECHNICAL_CONTRACT.md) separates implemented commands from planned interfaces. Public project material uses English under the [language decision](docs/adr/0002-public-language.md).
 

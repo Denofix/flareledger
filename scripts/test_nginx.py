@@ -83,7 +83,8 @@ def main():
                 response = error
             with response:
                 content, headers = response.read().decode(), response.headers
-                if response.code != status:
+                expected = (status,) if isinstance(status, int) else status
+                if response.code not in expected:
                     raise AssertionError(f"{url}: expected {status}, received {response.code}")
             return content, headers
 
@@ -140,8 +141,10 @@ def main():
             compose("stop", "api")
             # Linux may silently drop connections to a stopped container rather
             # than reject immediately. Allow Docker DNS (3s) + Nginx connect (5s)
-            # to finish; still require the exact 502 instead of accepting timeout.
-            check(secure, https + "/api", 502, timeout=12)
+            # to finish. Refusal produces 502; connection timeout produces 504.
+            # Both must be real bounded HTTP failures, never a client timeout/200.
+            _, failure_headers = check(secure, https + "/api", (502, 504), timeout=12)
+            assert failure_headers["Cache-Control"] == "no-store"
             compose("exec", "-T", "nginx", "nginx", "-t")
             content, _ = check(plain, http + "/", 200, host="other.test")
             assert content == "OTHER_TEST_SITE"

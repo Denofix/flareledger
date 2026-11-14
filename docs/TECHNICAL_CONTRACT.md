@@ -45,7 +45,14 @@ The demo JSON includes actual source inconsistencies and measurements with camer
 
 ## Infrastructure target
 
-Timofey adds actual Dockerfiles, Compose, and application CI after obtaining the implementation and its verified commands. For an existing QResto host, inspect the current ingress first. Proposed isolation is a separate FlareLedger directory, Compose project or Kubernetes namespace, persistent application state, and read-only corpus.
+Timofey has prepared Dockerfiles and a local Compose scaffold against this target
+contract, plus infrastructure-only CI. Image builds and runtime compatibility remain
+unverified until the application handoff. Application CI follows the real dependency
+commands. See [infrastructure status](INFRA_STATUS.md).
+
+The team selected a Vercel frontend and VPS API/SQLite. The local Compose web is a
+development/fallback server. For the VPS, inspect existing ingress before selecting
+production isolation and routing. No deployment change is included in this phase.
 
 If the current host proxy forwards to a loopback port, 127.0.0.1:18080 is only a candidate until confirmed free. A containerized ingress needs a reachable container upstream or an approved host gateway; its localhost is not the application container. Public 80/443 remain owned by the existing ingress.
 

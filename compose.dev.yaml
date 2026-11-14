@@ -1,0 +1,5 @@
+# Local demonstration only. Do not combine this with a future production override.
+services:
+  web:
+    ports:
+      - "127.0.0.1:8080:80"

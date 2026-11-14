@@ -6,7 +6,11 @@ FlareLedger is a team project for the **2026 NASA Space Apps Challenge**, addres
 
 ## Current status
 
-This repository bootstrap contains the monorepo layout, contribution rules, licensing, the reviewed NASA demo seed, technical handoff, and setup instructions. The backend, frontend, data importer, containers, and application CI are the next implementation milestones. Commands for those components are documented as a target contract, not as existing functionality.
+This repository contains the monorepo layout, contribution rules, licensing, NASA
+demo seed, technical handoff, and setup instructions. The infrastructure branch adds
+Dockerfiles, local Compose and infrastructure checks; application source, dependency
+files and the importer are still pending. Container builds and application startup
+are not yet verified. See [infrastructure status](docs/INFRA_STATUS.md).
 
 The registered project domain is **flareledger.fun**. Hosting, DNS routing, and HTTPS still need to be connected and verified. [Deployment decisions](docs/DEPLOYMENT.md) describe the options.
 
@@ -51,7 +55,8 @@ Python and frontend dependencies will be owned by their respective directories. 
 - **API:** same-origin `/api`; health endpoints `/api/health/live` and `/api/health/ready`.
 - **Data:** SQLite and a versioned, source-linked NASA demo corpus. Generated state stays outside Git.
 - **AI:** disabled by default; a free API is enabled only after its model, quota, and failure behavior are verified. The current LLM budget is **USD 0**, with no paid fallback.
-- **Deployment:** QResto server reuse is a candidate pending an infrastructure review. Vercel frontend hosting is an alternative; purchasing a domain does not choose the application hosting platform.
+- **Deployment:** frontend on Vercel and API/SQLite on the VPS, as selected by the team.
+  DNS, backend HTTPS and production ingress remain unconfigured in this phase.
 
 The [technical contract](docs/TECHNICAL_CONTRACT.md) separates implemented commands from planned interfaces. Public project material uses English under the [language decision](docs/adr/0002-public-language.md).
 

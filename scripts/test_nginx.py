@@ -75,10 +75,10 @@ def main():
                 raise AssertionError("Test listeners must stay on localhost")
             return value
 
-        def check(opener, url, status, host="api.flareledger.fun", body=None):
+        def check(opener, url, status, host="api.flareledger.fun", body=None, timeout=3):
             req = urllib.request.Request(url, headers={"Host": host}, data=body)
             try:
-                response = opener.open(req, timeout=3)
+                response = opener.open(req, timeout=timeout)
             except urllib.error.HTTPError as error:
                 response = error
             with response:
@@ -138,7 +138,10 @@ def main():
             check(secure, https + "/", 404)
             print("PASS API prefix/query/POST, JSON 404, no SPA fallback and no-store")
             compose("stop", "api")
-            check(secure, https + "/api", 502)
+            # Linux may silently drop connections to a stopped container rather
+            # than reject immediately. Allow Docker DNS (3s) + Nginx connect (5s)
+            # to finish; still require the exact 502 instead of accepting timeout.
+            check(secure, https + "/api", 502, timeout=12)
             compose("exec", "-T", "nginx", "nginx", "-t")
             content, _ = check(plain, http + "/", 200, host="other.test")
             assert content == "OTHER_TEST_SITE"

@@ -7,7 +7,7 @@ review are separate from deployment.
 | Deliverable | State | Remaining validation |
 | --- | --- | --- |
 | Backend Dockerfile | Prepared against target contract | Real app/dependencies and image build |
-| Local frontend Dockerfile and Caddy | Prepared against target contract | Real npm lock/scripts, build and proxy check |
+| Local frontend Dockerfile and Caddy | Caddy routing tested in isolation | Real npm lock/scripts, image build and app integration |
 | Compose | Configuration validation available | Real application startup |
 | LLM environment | Disabled defaults, day/minute/concurrency settings passed | Backend implementation and confirmed provider |
 | Infrastructure CI | Workflow prepared | GitHub execution after push |
@@ -23,6 +23,9 @@ review are separate from deployment.
   bound to 127.0.0.1 only.
 - LLM defaults checked: disabled, day/minute limits zero, concurrency one.
 - Both backup tests passed, including committed data in an active WAL.
+- Caddy configuration and routing passed in disposable Docker containers: static
+  files, SPA routes, API prefix/query, POST body, JSON 404 and upstream failure.
+  The fixtures contain no application implementation or scientific data.
 - Existing repository checker reported 51 tracked text files and zero problems.
 - Working-tree and staged whitespace checks passed; smoke --help works.
 

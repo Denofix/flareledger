@@ -38,6 +38,14 @@ not scientific data. They verify an active WAL backup and a missing source datab
 The separate infrastructure workflow runs these real checks without provider keys.
 Application CI will be added after real dependencies and commands are available.
 
+With Docker Engine running, also run `python scripts/test_caddy.py`. It validates
+the actual Caddyfile and tests static files, SPA routes, API prefix/query retention,
+POST forwarding, JSON 404, and static availability during an upstream outage.
+It uses a Python HTTP stub and clearly marked temporary HTML, not the application
+or NASA data. Official Caddy/Python images may be pulled on the first run. A unique
+Compose project binds a random localhost port and removes its own containers,
+network and volumes in a finally block. No existing application stack is stopped.
+
 ## Startup after the application handoff
 
 The commands in this section are pending application implementation. First obtain:

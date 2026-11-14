@@ -70,7 +70,7 @@ This is an independent hackathon project. NASA has not reviewed or endorsed Flar
 | Team member | Project responsibility |
 | --- | --- |
 | Denis / [Denofix](https://github.com/Denofix) | Team lead, AI integration, architecture, repository ownership |
-| Timofey | Infrastructure, Docker, CI, and deployment coordination |
+| Timofey [Tymofii1912](https://github.com/Tymofii1912) | Infrastructure, Docker, CI, and deployment coordination |
 | Sayat / [sayat228](https://github.com/sayat228) | Software development, AI integration, and application security |
 | Ivan | UI/UX, graphic design, and presentation design |
 

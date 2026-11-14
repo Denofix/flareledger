@@ -27,7 +27,7 @@ The LLM is disabled and the budget is USD 0. Ask returns a structured 503.
 | Retention | Newest 7 snapshots per kind (daily, pre-update) |
 | Daily systemd timer | Prepared in infra/systemd; enabled on the VPS after this change is merged and its first run is recorded below |
 | Copy outside the VPS | Pulled by the team laptop with scripts/pull-backup.ps1; verified end to end |
-| Restore from the off-VPS copy | Verified into a separate Compose project and volume: ready, 10 investigations, 1132 records (647 trial_row), 6 series, 1844 points |
+| Restore from the off-VPS copy | Verified on 14 November 2026 from a fresh clone of this branch: tooling checkout plus a separate worktree at the snapshot revision (8be005f, which has no recovery scripts), restoring the copy pulled to the laptop into a new project and volume: ready, 10 investigations, 1132 records (647 trial_row), 6 series, 1844 points. Refusals checked: wrong snapshot path and wrong application checkout both stop before any Docker command; the volume list was identical before and after |
 | Live database replacement | Not scripted and not rehearsed |
 | Second off-site location | Not configured |
 

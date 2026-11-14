@@ -18,16 +18,14 @@ cd flareledger
 python3 scripts/check_repository.py
 ```
 
-For a new Ubuntu VM, follow the [Ubuntu and GitHub setup guide in Russian](docs/SETUP_UBUNTU_RU.md). It covers installation, GitHub device-code login, Git identity, invitations, branch rules, and your next tasks.
-
-If you received the starter archive while the remote repository is still empty, follow [initial publication](docs/PUBLISH_BOOTSTRAP_RU.md) first. The included script publishes only the prepared files and refuses to overwrite an existing remote history.
+For a new Ubuntu VM, follow the [Ubuntu and GitHub setup guide](docs/SETUP_UBUNTU.md). It covers installation, GitHub device-code login, Git identity, invitations, branch rules, and your next tasks.
 
 - [Team rules](TEAM_RULES.md)
 - [Contribution workflow](CONTRIBUTING.md)
 - [Monorepo layout](docs/MONOREPO.md)
 - [Backend and frontend contract](docs/TECHNICAL_CONTRACT.md)
 - [Implementation roadmap](docs/ROADMAP.md)
-- [Domain setup in Russian](docs/DOMAIN_SETUP_RU.md)
+- [Domain setup](docs/DOMAIN_SETUP.md)
 - [Data and licensing](DATA_LICENSES.md)
 
 ## Repository layout
@@ -55,7 +53,7 @@ Python and frontend dependencies will be owned by their respective directories. 
 - **AI:** disabled by default; a free API is enabled only after its model, quota, and failure behavior are verified. The current LLM budget is **USD 0**, with no paid fallback.
 - **Deployment:** QResto server reuse is a candidate pending an infrastructure review. Vercel frontend hosting is an alternative; purchasing a domain does not choose the application hosting platform.
 
-The [technical contract](docs/TECHNICAL_CONTRACT.md) separates implemented commands from planned interfaces.
+The [technical contract](docs/TECHNICAL_CONTRACT.md) separates implemented commands from planned interfaces. Public project material uses English under the [language decision](docs/adr/0002-public-language.md).
 
 ## Scientific scope
 

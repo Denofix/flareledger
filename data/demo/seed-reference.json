@@ -3,8 +3,8 @@
   "status": "reviewed_seed_included",
   "filename": "FlareLedger_NASA_Demo_Data.json",
   "target_repo_path": "data/demo/FlareLedger_NASA_Demo_Data.json",
-  "sha256": "3ec203666d317bb7ac3b82b14632ceaca81e5f89479ae7b152abe0e77723c286",
-  "byte_length": 13142154,
+  "sha256": "90be248ab23b24f6eaa51e3923ba5937631493630fd4833e18a2dbb51897bc52",
+  "byte_length": 13131127,
   "assembled_on": "2026-11-14",
   "statistics": {
     "investigations": 10,
@@ -100,5 +100,7 @@
   "raw_source_urls": [
     "https://psi.nasa.gov/physci/repo/search?q=combustion",
     "https://science.data.nasa.gov/about/license"
-  ]
+  ],
+  "seed_format": "flareledger.nasa_demo.v2",
+  "language": "en"
 }

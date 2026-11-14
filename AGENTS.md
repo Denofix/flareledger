@@ -16,6 +16,10 @@ This initial repository is a documentation and layout bootstrap. Inspect the cur
 - QResto is shared infrastructure. Inspect its existing ingress and available resources before preparing a deployment change.
 - The project domain is flareledger.fun, registered through Vercel. DNS routing, hosting, and certificates remain deployment tasks.
 
+## Public language
+
+Use English for public project-authored files, README, UI, and dataset explanations. Internal Ukrainian guidance can be distributed separately. Preserve original scientific sources and exact numerical data. See docs/adr/0002-public-language.md.
+
 ## Scientific evidence
 
 - Preserve original source IDs, DOI, file version, units, gravity regime, and source locators.

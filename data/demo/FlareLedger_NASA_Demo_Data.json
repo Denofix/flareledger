@@ -1,8 +1,8 @@
 {
-  "format": "flareledger.nasa_demo.v1",
-  "title_ru": "Открытые данные NASA для демо FlareLedger",
+  "format": "flareledger.nasa_demo.v2",
+  "title_en": "Open NASA data for the FlareLedger demo",
   "assembled_on": "2026-11-14",
-  "scope_ru": "Подборка по горению, дыму и пожарной безопасности для Flame in Freefall. Включены все строки девяти выбранных опубликованных матриц, выбранные измерительные ряды, полный один CSV телеметрии, карточки ресурсов и каталог файлов десяти исследований. Это не полный архив NASA или PSI.",
+  "scope_en": "A curated combustion, smoke, and fire safety collection for Flame in Freefall. It includes every row of nine selected published experimental matrices, selected numerical series, one complete telemetry CSV, resource cards, and file catalogs for ten investigations. Coverage is limited to this selection.",
   "statistics": {
     "investigations": 10,
     "experimental_tables": 9,
@@ -29,17 +29,17 @@
     "quality_issues": 13,
     "synthetic_numeric_values": 0
   },
-  "readme_ru": [
-    "Файл является единым JSON seed для backend, frontend, локального демо и контекста AI-агента. Ключи на английском, инструкции и пояснения на русском.",
-    "Начните с investigations и graph_presets. trial_records содержит строки матриц, включая заметки и режимы. Смотрите record_type: запись в таблице не всегда является независимым выполненным опытом.",
-    "time_series.points содержит пары [x,y] в единицах x.unit и y.unit. Это исходные числа из текстовых файлов, без генерации, сглаживания, оцифровки картинок и интерполяции. source_rows сохраняет остальные ячейки.",
-    "raw_tables содержит полные исходные CSV как original_content, заголовки и все строки. Номер data_row_number начинается с 1 после заголовка. Ссылки evidence ведут к конкретной строке и версии исходного файла.",
-    "quarantined_raw_data содержит настоящий, но не нормализованный CSV Saffire-III. Для него отключён показ физических графиков до проверки словаря каналов. Нули и отрицательные значения не объявлены автоматически пропусками.",
-    "download_catalog — проверенный публичный каталог файлов, а не содержимое всех этих файлов. Сами большие видео, ZIP изображений и PDF публикаций не вложены. Для загрузки доступны стабильная ссылка NASA, ID файла, версия и размер.",
-    "null означает отсутствующее, неоднозначное или не применимое значение. Точная причина есть в qualifier, quality_flags, исходной ячейке или quality_issues. Настоящий ноль остаётся нулём.",
-    "Не объединяйте в одну физическую зависимость капли, твёрдые образцы и дым. Нельзя выводить нормативы безопасности, лучший материал или поведение на Луне/Марсе из этих записей без подходящей модели и проверки условий.",
-    "У источников численных наборов явно указана CC0-1.0. У обзорных страниц и видео нет автоматически назначенной лицензии CC0: включены собственные краткие пересказы и ссылки. Логотипы и чужие фотографии не вложены.",
-    "Проверка выполнена одним AI-помощником по скачанным файлам и программным сверкам. Независимое научное или человеческое рецензирование не заявляется."
+  "readme_en": [
+    "One JSON seed supports backend and frontend development, a local demo, and AI-agent handoff. Field names, instructions, and project-authored explanations are in English.",
+    "Start with investigations and graph_presets. trial_records contains matrix rows, including notes and operating conditions. Inspect record_type: a matrix row does not necessarily represent an independent completed trial.",
+    "time_series.points contains [x,y] pairs in x.unit and y.unit. Values come directly from source text files, with no generation, smoothing, chart digitization, or interpolation. source_rows retains the remaining source cells.",
+    "raw_tables retains complete original CSV text in original_content, headers, and every row. data_row_number starts at 1 after the header. Evidence references locate a specific row and source-file version.",
+    "quarantined_raw_data contains an authentic, unnormalized Saffire-III CSV. Physical plotting remains disabled until its channel dictionary is verified. Zero and negative readings have not automatically been classified as missing.",
+    "download_catalog lists public files and their metadata. Large videos, image ZIP archives, and publication PDFs are linked rather than embedded. Each entry includes a stable NASA download endpoint, file ID, version, and size.",
+    "null indicates a missing, ambiguous, or inapplicable value. The reason is recorded in qualifier, quality_flags, the original cell, or quality_issues. A reported zero remains zero.",
+    "Keep droplet, solid-sample, and smoke measurements physically distinct. Safety standards, a safest-material ranking, or lunar and Martian behavior require an appropriate model and verified test conditions beyond these records.",
+    "Numerical dataset sources explicitly identify CC0-1.0. Overview pages and videos are not automatically assigned that license; only original short factual summaries and links are included. Logos and third-party photographs are not embedded.",
+    "One AI assistant checked downloaded files and performed programmatic comparisons. Independent scientific or human peer review has not been performed."
   ],
   "reuse": {
     "numerical_data_license": "CC0-1.0 as explicitly stated by each of the ten PSI investigation records",
@@ -48,11 +48,11 @@
       "SRC-POLICY-DATA",
       "SRC-POLICY-MEDIA"
     ],
-    "citation_rule_ru": "При показе данных сохраняйте название исследования, PSI ID, версию, DOI и ссылку на исходный файл. Для публикаций и презентаций используйте citation из источника исследования.",
-    "catalog_rights_rule_ru": "У файла из внешнего каталога проверяйте собственные copyright notices и credits перед встраиванием. Лицензия родительского набора не используется для автоматического переиздания статей издательств или чужих изображений.",
-    "ai_label_ru": "Пояснение создано FlareLedger с помощью AI. Исходные измерения доступны по ссылкам. NASA не проверяла выводы FlareLedger.",
-    "ai_display_rule_ru": "Отделяйте подпись исходных данных от сгенерированного вывода. Выводы подписывайте как продукт FlareLedger, не как ответ NASA. Ссылки на первоисточник сохраняйте отдельно.",
-    "endorsement_rule_ru": "Не заявлять одобрение проекта NASA. Не использовать эмблемы NASA в качестве собственного логотипа или маркировки сгенерированного контента.",
+    "citation_rule_en": "When displaying data, preserve the investigation title, PSI ID, version, DOI, and original-file link. Use the investigation source citation for publications and presentations.",
+    "catalog_rights_rule_en": "Check each externally cataloged artifact for its own copyright notices and credits before embedding it. The parent dataset license does not automatically authorize republishing publisher articles or third-party images.",
+    "ai_label_en": "Explanation generated by FlareLedger using AI. Original measurements are linked. NASA has not reviewed FlareLedger conclusions.",
+    "ai_display_rule_en": "Separate original-data attribution from generated conclusions. Attribute generated explanations to FlareLedger and keep original source references available separately.",
+    "endorsement_rule_en": "Do not imply NASA endorsement. Use original project branding and do not use NASA insignia as the project logo or as a label for generated content.",
     "rights_checked_on": "2026-11-14"
   },
   "schema_notes": {
@@ -75,8 +75,8 @@
       "id": "PSI-25",
       "acronym": "BASS-II",
       "title": "Burning and Suppression of Solids - II",
-      "title_ru": "Горение и тушение твёрдых материалов BASS-II",
-      "summary_ru": "Исследования плёнок, пластин и стержней PMMA, ткани SIBAL и других твёрдых образцов. Включены все строки опубликованной матрицы опытов с исходными показаниями газовых датчиков.",
+      "title_en": "BASS-II solid-material burning and suppression",
+      "summary_en": "Experiments with PMMA films, slabs and rods, SIBAL fabric, and other solid samples. All rows of the published experimental matrix and original gas-sensor readings are retained.",
       "fuel_phase": "solid",
       "tags": [
         "solid_fuel",
@@ -126,8 +126,8 @@
       "id": "PSI-26",
       "acronym": "BASS",
       "title": "Burning and Suppression of Solids",
-      "title_ru": "Горение и тушение твёрдых материалов BASS",
-      "summary_ru": "Матрица опытов с твёрдыми образцами в микрогравитации. Сохранены номера опытов, даты и описания образцов. Численных результатов распространения пламени в этой таблице нет.",
+      "title_en": "BASS solid-material burning and suppression",
+      "summary_en": "An experimental matrix for solid samples in microgravity. Original trial numbers, dates, and sample descriptions are retained. This table contains no numerical flame-spread results.",
       "fuel_phase": "solid",
       "tags": [
         "solid_fuel",
@@ -175,8 +175,8 @@
       "id": "PSI-98",
       "acronym": "SAFFIRE-I",
       "title": "Spacecraft Fire Safety Experiment-I",
-      "title_ru": "Крупномасштабное горение ткани Saffire-I",
-      "summary_ru": "Исследование ткани SIBAL на беспилотном Cygnus после отделения от МКС. Матрица содержит два режима горения и две записи визуализации потока. Параметры геометрии требуют проверки из-за расхождения таблицы с описанием.",
+      "title_en": "Saffire-I large-scale fabric combustion",
+      "summary_en": "SIBAL fabric research aboard an uncrewed Cygnus after departure from the ISS. The matrix includes two burning configurations and two flow-visualization records. Geometry needs review because the table conflicts with the investigation description.",
       "fuel_phase": "solid",
       "tags": [
         "solid_fuel",
@@ -229,8 +229,8 @@
       "id": "PSI-99",
       "acronym": "SAFFIRE-II",
       "title": "Spacecraft Fire Experiment-II",
-      "title_ru": "Разные материалы в исследовании Saffire-II",
-      "summary_ru": "Опубликованы девять строк образцов, две записи визуализации потока и четыре примечания. Содержание кислорода в этой матрице оценено по образованию CO2 относительно исходного значения на МКС, а не измерено как отдельный прямой канал O2.",
+      "title_en": "Saffire-II material combustion experiments",
+      "summary_en": "The published matrix includes nine sample rows, two flow-visualization records, and four notes. Oxygen values are inferred from CO2 production relative to initial ISS oxygen concentration, rather than recorded as a separate direct O2 channel.",
       "fuel_phase": "solid",
       "tags": [
         "solid_fuel",
@@ -277,8 +277,8 @@
       "id": "PSI-100",
       "acronym": "SAFFIRE-III",
       "title": "Spacecraft Fire Experiment-III",
-      "title_ru": "Крупномасштабное горение ткани Saffire-III",
-      "summary_ru": "Матрица двух режимов горения SIBAL при указанном потоке 30 см/с. Дополнительно включён полный исходный CSV телеметрии. Его единицы и служебные значения не подтверждены, поэтому этот CSV отделён от готовых графиков.",
+      "title_en": "Saffire-III large-scale fabric combustion",
+      "summary_en": "Two SIBAL burning configurations at a reported airflow of 30 cm/s. One complete original telemetry CSV is also included. Its units and service values remain unresolved, so it is separate from plot-ready series.",
       "fuel_phase": "solid",
       "tags": [
         "solid_fuel",
@@ -329,8 +329,8 @@
       "id": "PSI-69",
       "acronym": "FLEX",
       "title": "Flame Extinguishment Experiment",
-      "title_ru": "Горение и погасание жидких капель FLEX",
-      "summary_ru": "Полная матрица 274 записей и выбранные исходные файлы четырёх опытов. Четыре ряда диаметра капли и два ряда диаметра пламени содержат реальные точки из файлов PSI. Замечания о видимости капель и настройках камер сохранены.",
+      "title_en": "FLEX liquid-droplet combustion and extinction",
+      "summary_en": "The complete 274-row experimental matrix and selected original files for four trials. Four droplet-diameter series and two flame-diameter series retain actual PSI values. Camera visibility and configuration limitations remain attached.",
       "fuel_phase": "liquid",
       "tags": [
         "liquid_droplet",
@@ -382,8 +382,8 @@
       "id": "PSI-101",
       "acronym": "SAME-R",
       "title": "Smoke Aerosol Measurement Experiment-Reflight",
-      "title_ru": "Дым и аэрозоли SAME-R",
-      "summary_ru": "Матрица повторного исследования дымовых аэрозолей содержит условия генерации, смешивания и старения. Это данные о дыме и диагностике, их нельзя трактовать как скорость распространения пламени.",
+      "title_en": "SAME-R smoke and aerosol measurements",
+      "summary_en": "The reflight matrix records smoke generation, mixing, and aging conditions. Its smoke and diagnostic quantities must not be interpreted as flame-spread rates.",
       "fuel_phase": "aerosol",
       "tags": [
         "smoke",
@@ -433,8 +433,8 @@
       "id": "PSI-102",
       "acronym": "SAME",
       "title": "Smoke and Aerosol Measurement Experiment",
-      "title_ru": "Дым и аэрозоли SAME",
-      "summary_ru": "Таблица задаёт условия для четырёх строк Teflon и ссылается на те же условия для других материалов. Ссылочные строки не развёрнуты в вымышленные выполненные опыты.",
+      "title_en": "SAME smoke and aerosol measurements",
+      "summary_en": "The table defines four Teflon condition rows and references those conditions for other materials. Referenced conditions have not been expanded into invented completed experiments.",
       "fuel_phase": "aerosol",
       "tags": [
         "smoke",
@@ -484,8 +484,8 @@
       "id": "PSI-107",
       "acronym": "SPICE",
       "title": "Smoke Point In Co-flow Experiment",
-      "title_ru": "Сажевыделение в соосном потоке SPICE",
-      "summary_ru": "Все 469 строк матрицы режимов для газовых топлив. Повторяющиеся строки сохранены. Строка режима не считается отдельным независимым опытом, а дни GMT без года не преобразованы в календарные даты.",
+      "title_en": "SPICE soot formation in coflow",
+      "summary_en": "All 469 operating-condition rows for gaseous fuels are retained, including duplicates. A condition row is not counted as an independent trial. GMT days without a year are not converted into calendar dates.",
       "fuel_phase": "gas",
       "tags": [
         "gas_flame",
@@ -533,8 +533,8 @@
       "id": "PSI-62",
       "acronym": null,
       "title": "Concurrent Flame Spread Modeling using Flamelet Generated Manifolds in Microgravity with Comparison to BASS Experiments using Two-Color Tomography",
-      "title_ru": "Моделирование и томография по данным BASS",
-      "summary_ru": "Карточка наземного проекта по моделированию и обработке изображений BASS и BASS-II методом двухцветной томографии. В доступном каталоге есть только пакет метаданных. Численные результаты моделирования в этот демонабор не включены.",
+      "title_en": "Modeling and tomography using BASS data",
+      "summary_en": "A ground-project metadata record for modeling and two-color tomography of BASS and BASS-II imagery. The available file catalog contains only a metadata package. Numerical simulation results are not included in this demo seed.",
       "fuel_phase": "solid",
       "tags": [
         "modeling",
@@ -583,29 +583,29 @@
   "graph_presets": [
     {
       "id": "GRAPH-FLEX-002",
-      "title_ru": "FLEX-002 Диаметр капли во времени",
+      "title_en": "FLEX-002 droplet diameter over time",
       "chart_type": "line",
       "series_ids": [
         "SERIES-FLEX-002-DropletData"
       ],
       "interpolate_missing": false,
       "smoothing": false,
-      "note_ru": "Показывать исходное время, включая отрицательные значения. Ряд содержит наблюдение капли и после погасания. Не заменять диаметр скоростью пламени."
+      "note_en": "Display original time coordinates, including negative values. The series includes droplet observations after flame extinction. Diameter and flame-spread rate are different quantities."
     },
     {
       "id": "GRAPH-FLEX-003",
-      "title_ru": "FLEX-003 Диаметр капли во времени",
+      "title_en": "FLEX-003 droplet diameter over time",
       "chart_type": "line",
       "series_ids": [
         "SERIES-FLEX-003-DropletData"
       ],
       "interpolate_missing": false,
       "smoothing": false,
-      "note_ru": "Отдельный опыт с отличающимися начальным диаметром и давлением. Пара с FLEX-002 подходит для обзора условий, но не для заявления о влиянии единственной переменной."
+      "note_en": "A separate trial with different initial diameter and pressure. It can be inspected alongside FLEX-002 to explore conditions, but does not isolate the effect of one variable."
     },
     {
       "id": "GRAPH-FLEX-007",
-      "title_ru": "FLEX-007 Капля и видимое пламя",
+      "title_en": "FLEX-007 droplet and visible flame",
       "chart_type": "line",
       "series_ids": [
         "SERIES-FLEX-007-DropletData",
@@ -613,11 +613,11 @@
       ],
       "interpolate_missing": false,
       "smoothing": false,
-      "note_ru": "Подписать два разных измерения. Время из файлов сохранено; точное совпадение событий отсчёта не проверено. Отобразить предупреждение об оптическом перекрытии капли."
+      "note_en": "Label the two distinct measured quantities. Original file time coordinates are retained; exact alignment of their zero events is unverified. Display the droplet-occlusion limitation."
     },
     {
       "id": "GRAPH-FLEX-008",
-      "title_ru": "FLEX-008 Ограниченное наблюдение капли",
+      "title_en": "FLEX-008 limited droplet observation",
       "chart_type": "line",
       "series_ids": [
         "SERIES-FLEX-008-DropletData",
@@ -625,7 +625,7 @@
       ],
       "interpolate_missing": false,
       "smoothing": false,
-      "note_ru": "Конец ряда связан с видимостью камеры. Он не является установленным моментом погасания. Не достраивать отсутствующие точки."
+      "note_en": "The end of the series is limited by camera visibility and is not an established extinction event. Do not reconstruct missing points."
     }
   ],
   "selected_trial_details": [
@@ -647,7 +647,7 @@
         "Dext  (mm)": "0.94"
       },
       "source_reported_kavg_mm2_s": 0.56,
-      "quality_note_ru": "Опыт помечен авторами как калибровочный. Капля оставалась в поле камер и погасла без разрушения. Настройка LLUV была неудачной, особенно в конце; ряд LLUV в пакет не включён. Значение kavg в матрице 0.6 с неоднозначной единицей, в листе опыта 0.56 мм²/с. Они не объединены.",
+      "quality_note_en": "The authors identify this as a calibration run. The droplet remained in camera view and extinguished without disruption. LLUV settings were unsuitable, especially near the end; that LLUV series is not included. The matrix reports kavg as 0.6 with an ambiguous unit, whereas the test sheet gives 0.56 mm2/s. These values remain separate.",
       "independent_human_review": false,
       "file_organization_subcategory": "Reduced Gravity/MeOH_Air/Flex-002"
     },
@@ -669,7 +669,7 @@
         "Dext  (mm)": "0.92"
       },
       "source_reported_kavg_mm2_s": 0.56,
-      "quality_note_ru": "Калибровочный опыт в атмосфере кабины. Капля находилась в поле камер. Авторы отмечают трудности измерения слабого пламени в LLUV в конце опыта. Капля, пламя и момент погасания являются разными измерениями.",
+      "quality_note_en": "A calibration run in cabin air. The droplet remained in camera view. The authors report difficulty measuring the weak LLUV flame near the end. Droplet diameter, flame diameter, and extinction timing are distinct observations.",
       "independent_human_review": false,
       "file_organization_subcategory": "Reduced Gravity/MeOH_Air/Flex-003"
     },
@@ -691,7 +691,7 @@
         "Dext  (mm)": "Disruption"
       },
       "source_reported_kavg_mm2_s": 0.68,
-      "quality_note_ru": "Яркое светящееся пламя закрывало каплю значительную часть опыта. Последняя часть истории капли скрыта. Капля разрушилась. Пропуски и скачки не сглажены и не восстановлены.",
+      "quality_note_en": "A bright luminous flame obscured the droplet for much of the run, including its final history. The droplet disrupted. Missing observations and jumps have not been smoothed or reconstructed.",
       "independent_human_review": false,
       "file_organization_subcategory": "Reduced Gravity/Heptane/Flex-007"
     },
@@ -713,7 +713,7 @@
         "Dext  (mm)": "nan"
       },
       "source_reported_kavg_mm2_s": 0.79,
-      "quality_note_ru": "Капля вышла из поля HiBMS и затем цветной камеры. Сажа создаёт заметный шум в диаметре капли. Конец загруженного ряда не является доказанным концом горения. Диаметр при погасании указан как nan и сохранён как отсутствующий.",
+      "quality_note_en": "The droplet left the HiBMS field of view and later the color-camera field of view. Soot produces substantial diameter noise. The final available observation is not a proven end of combustion. Extinction diameter is reported as nan and remains unavailable.",
       "independent_human_review": false,
       "file_organization_subcategory": "Reduced Gravity/Heptane/Flex-008"
     }
@@ -727,7 +727,7 @@
       "source_ids": [
         "SRC-PSI-98"
       ],
-      "description_ru": "В поле проекта указаны название исследования дыма, платформа ISS и даты 2001–2008. Раздел approach описывает Saffire-I на отделившемся Cygnus. Противоречивые поля сохранены как reported и не используются как нормализованная дата или место выполнения Saffire-I.",
+      "description_en": "Project metadata lists a smoke-study title, the ISS platform, and dates from 2001 to 2008, while approach describes Saffire-I on a detached Cygnus. Conflicting fields are retained as reported and are not used as normalized Saffire-I mission dates or location.",
       "action": "do_not_use_conflicting_project_fields_as_mission_history"
     },
     {
@@ -739,7 +739,7 @@
         "SRC-PSI-98",
         "SRC-TABLE-PSI-98"
       ],
-      "description_ru": "Описание даёт примерно 0.94 м в длину и 0.4 м в ширину. Таблица подписывает длину 40.6 см и ширину 94 см; толщину указывает 0.37 см. Оси и единица толщины требуют проверки по инженерному документу. Значения не исправлены догадкой.",
+      "description_en": "The description gives about 0.94 m length and 0.4 m width. The table labels length as 40.6 cm, width as 94 cm, and thickness as 0.37 cm. Axis interpretation and thickness units need engineering-document review. Values have not been corrected by inference.",
       "action": "exclude_dimensions_from_controlled_comparisons_until_review"
     },
     {
@@ -751,7 +751,7 @@
         "SRC-TABLE-PSI-99",
         "SRC-README-PSI-99"
       ],
-      "description_ru": "В таблице встречаются 037 mm без точки, пропуски материала, заголовки ?-g и Spread Length над значениями mm/s, а также неоднозначные подписи камер. Эти поля не превращены в каноническую скорость пламени. Примечания сохранены целиком.",
+      "description_en": "The table contains 037 mm without a decimal point, missing materials, ?-g headers, Spread Length over mm/s values, and ambiguous camera labels. These fields are not normalized into a canonical flame-spread rate. All source notes are retained.",
       "action": "read_original_notes_and_figures_before_normalizing_ambiguous_fields"
     },
     {
@@ -763,7 +763,7 @@
         "SRC-TABLE-PSI-100",
         "SRC-README-PSI-98"
       ],
-      "description_ru": "Толщина SIBAL в матрице Saffire-III записана как .33 cm. Единица сохранена буквально, но не проверена по инженерным чертежам. Не заменять её на mm и не считать проверенной геометрией для межэкспериментального сравнения.",
+      "description_en": "The Saffire-III matrix reports SIBAL thickness as .33 cm. The literal unit is retained but has not been checked against engineering drawings. Do not replace it with mm or treat it as verified geometry for controlled cross-experiment comparisons.",
       "action": "retain_reported_unit_and_verify_geometry_before_controlled_comparison"
     },
     {
@@ -775,7 +775,7 @@
         "SRC-TABLE-PSI-69",
         "SRC-FLEX-002-TESTSHEET"
       ],
-      "description_ru": "Заголовок Burning rate в CSV содержит mm, тогда как лист опыта задаёт kavg в mm2/s. У FLEX-002 численные значения также различаются: 0.6 в матрице и 0.56 в листе. Заголовок газовой колонки CO не переименован в CO2. Массивы исходных ячеек остаются авторитетными для аудита.",
+      "description_en": "The CSV Burning rate header gives mm, while a trial sheet defines kavg in mm2/s. FLEX-002 also has different values: 0.6 in the matrix and 0.56 in the test sheet. The gas-column label CO has not been relabeled as CO2. Original cell arrays remain available for audit.",
       "action": "do_not_use_ambiguous_burning_rate_or_CO_species_for_derived_claims"
     },
     {
@@ -786,7 +786,7 @@
       "source_ids": [
         "SRC-SAFFIRE-III-TELEMETRY-CSV"
       ],
-      "description_ru": "CSV содержит RelativeSeconds с шагами около 1000 и CygnusTimestamp с похожими приращениями, а также отрицательные и нулевые значения каналов. Единицы, заполнители и события отсчёта не подтверждены. Полный файл включён для разбора, но эти числа не подписаны как секунды, температура, давление или физический тепловой поток.",
+      "description_en": "The CSV has RelativeSeconds increments near 1000 and similar CygnusTimestamp increments, plus negative and zero channel values. Units, fill values, and zero events are unverified. The complete file is retained for analysis without assigning seconds, temperature, pressure, or physical heat-flux units to unresolved channels.",
       "action": "raw_display_only_until_dictionary_and_calibration_verified"
     },
     {
@@ -798,7 +798,7 @@
         "SRC-TABLE-PSI-25",
         "SRC-README-PSI-25"
       ],
-      "description_ru": "Матрица содержит отрицательные показания CO, OR, отсутствующие значения и большие расхождения O2. README поясняет поправку калибровки O2, OR как превышение диапазона >1000 ppm и медленный отклик Air display около минуты. Показания не обрезаны до нуля, OR не заменён точным 1000.",
+      "description_en": "The matrix includes negative CO readings, OR, missing values, and large O2 endpoint differences. The README explains the O2 calibration offset, OR as over-range above 1000 ppm, and an Air display response time of about a minute. Negative readings are retained and OR is not replaced by an exact 1000.",
       "action": "show_sensor_notes_and_filter_flagged_rows_for_analysis"
     },
     {
@@ -809,7 +809,7 @@
       "source_ids": [
         "SRC-TABLE-PSI-107"
       ],
-      "description_ru": "Матрица содержит несколько режимов на одну пару ignition/flame off и повторяющиеся строки. 469 строк не означают 469 независимых запусков. Год и стандартные условия для sccm в этой таблице не указаны.",
+      "description_en": "Several operating conditions share ignition/flame-off intervals, and duplicate rows occur. The 469 rows do not establish 469 independent runs. The year and standard reference conditions for sccm are not given in this table.",
       "action": "retain_rows_without_deduplication_and_do_not_claim_independent_trial_count"
     },
     {
@@ -822,7 +822,7 @@
         "SRC-TABLE-PSI-101",
         "SRC-TABLE-PSI-102"
       ],
-      "description_ru": "В SAME есть строки вида same conditions as 1-4, а в SAME-R даты не содержат года. Ссылки на условия и год не дополнены предположениями.",
+      "description_en": "SAME includes same conditions as 1-4 references, while SAME-R dates omit the year. Neither referenced trials nor missing years have been invented.",
       "action": "preserve_condition_references_and_partial_dates"
     },
     {
@@ -833,7 +833,7 @@
       "source_ids": [
         "SRC-FLEX-002-TESTSHEET"
       ],
-      "description_ru": "Опыт помечен авторами как калибровочный. Капля оставалась в поле камер и погасла без разрушения. Настройка LLUV была неудачной, особенно в конце; ряд LLUV в пакет не включён. Значение kavg в матрице 0.6 с неоднозначной единицей, в листе опыта 0.56 мм²/с. Они не объединены.",
+      "description_en": "The authors identify this as a calibration run. The droplet remained in camera view and extinguished without disruption. LLUV settings were unsuitable, especially near the end; that LLUV series is not included. The matrix reports kavg as 0.6 with an ambiguous unit, whereas the test sheet gives 0.56 mm2/s. These values remain separate.",
       "action": "display_limitations_next_to_series_and_keep_all_original_points"
     },
     {
@@ -844,7 +844,7 @@
       "source_ids": [
         "SRC-FLEX-003-TESTSHEET"
       ],
-      "description_ru": "Калибровочный опыт в атмосфере кабины. Капля находилась в поле камер. Авторы отмечают трудности измерения слабого пламени в LLUV в конце опыта. Капля, пламя и момент погасания являются разными измерениями.",
+      "description_en": "A calibration run in cabin air. The droplet remained in camera view. The authors report difficulty measuring the weak LLUV flame near the end. Droplet diameter, flame diameter, and extinction timing are distinct observations.",
       "action": "display_limitations_next_to_series_and_keep_all_original_points"
     },
     {
@@ -855,7 +855,7 @@
       "source_ids": [
         "SRC-FLEX-007-TESTSHEET"
       ],
-      "description_ru": "Яркое светящееся пламя закрывало каплю значительную часть опыта. Последняя часть истории капли скрыта. Капля разрушилась. Пропуски и скачки не сглажены и не восстановлены.",
+      "description_en": "A bright luminous flame obscured the droplet for much of the run, including its final history. The droplet disrupted. Missing observations and jumps have not been smoothed or reconstructed.",
       "action": "display_limitations_next_to_series_and_keep_all_original_points"
     },
     {
@@ -866,7 +866,7 @@
       "source_ids": [
         "SRC-FLEX-008-TESTSHEET"
       ],
-      "description_ru": "Капля вышла из поля HiBMS и затем цветной камеры. Сажа создаёт заметный шум в диаметре капли. Конец загруженного ряда не является доказанным концом горения. Диаметр при погасании указан как nan и сохранён как отсутствующий.",
+      "description_en": "The droplet left the HiBMS field of view and later the color-camera field of view. Soot produces substantial diameter noise. The final available observation is not a proven end of combustion. Extinction diameter is reported as nan and remains unavailable.",
       "action": "display_limitations_next_to_series_and_keep_all_original_points"
     }
   ],
@@ -874,7 +874,7 @@
     {
       "id": "CARD-SRC-NASA-COMBUSTION",
       "title": "Combustion Science",
-      "text_ru": "Обзор исследований горения NASA Glenn. Помогает объяснить назначение BASS, FLEX, SAME и Saffire. Обзор не заменяет численные результаты конкретного опыта.",
+      "text_en": "An overview of NASA Glenn combustion research that explains the roles of BASS, FLEX, SAME, and Saffire. Individual numerical results require the relevant experimental source.",
       "role": "overview",
       "source_ids": [
         "SRC-NASA-COMBUSTION"
@@ -885,7 +885,7 @@
     {
       "id": "CARD-SRC-NASA-GUIDE",
       "title": "A Researcher’s Guide to: Combustion Science",
-      "text_ru": "Путеводитель по исследованиям горения, редакция октября 2015 года. Полезен для физических основ, оборудования и терминов. Дата веб-страницы не означает, что экспериментальные данные обновлены.",
+      "text_en": "An October 2015 edition guide to combustion research, physical principles, facilities, and terminology. A web-page update date does not establish an update to the underlying experimental data.",
       "role": "research_guide",
       "source_ids": [
         "SRC-NASA-GUIDE"
@@ -896,7 +896,7 @@
     {
       "id": "CARD-SRC-APOLLO-1",
       "title": "Apollo 1 AS-204",
-      "text_ru": "27 января 1967 года пожар произошёл при наземном испытании Apollo 1. Источник полезен для истории требований к материалам и безопасности. Это не эксперимент в микрогравитации.",
+      "text_en": "A fire occurred during an Apollo 1 ground test on January 27, 1967. The source provides historical context for material selection and safety requirements. It is not a microgravity experiment.",
       "role": "historical_context",
       "source_ids": [
         "SRC-APOLLO-1"
@@ -907,7 +907,7 @@
     {
       "id": "CARD-SRC-APOLLO-13",
       "title": "Apollo 13 CSM-109 LM-7",
-      "text_ru": "Материал об аварии кислородного бака Apollo 13, расследовании и инженерных уроках. Используется как историческая карточка безопасности, без переноса её условий на опыты BASS или FLEX.",
+      "text_en": "Historical coverage of the Apollo 13 oxygen-tank accident, investigation, and engineering lessons. Its accident conditions are not transferred to BASS or FLEX experiments.",
       "role": "historical_context",
       "source_ids": [
         "SRC-APOLLO-13"
@@ -918,7 +918,7 @@
     {
       "id": "CARD-SRC-MIR-FIRE",
       "title": "25 Years Ago: Fire Aboard Space Station Mir",
-      "text_ru": "Статья описывает пожар кислородного генератора на станции «Мир» 24 февраля 1997 года по дате, указанной в этом источнике. Дым и перекрытый путь эвакуации показывают значение обнаружения и компоновки оборудования. Исторический случай не является лабораторным измерением.",
+      "text_en": "The article dates the Mir oxygen-generator fire to February 24, 1997. Smoke and a blocked evacuation route illustrate detection and equipment-layout concerns. This historical event is not a laboratory measurement.",
       "role": "historical_context",
       "source_ids": [
         "SRC-MIR-FIRE"
@@ -929,7 +929,7 @@
     {
       "id": "CARD-SRC-SPINOFF-9582",
       "title": "Fireman's Air Tanks",
-      "text_ru": "Исторический материал Spinoff 1976 года о более лёгких дыхательных аппаратах пожарных, созданных с использованием космических технологий. Подходит для раздела о пользе космических исследований на Земле.",
+      "text_en": "A 1976 Spinoff account of lighter firefighter breathing equipment developed using space technology. It provides historical context for benefits on Earth.",
       "role": "earth_benefit",
       "source_ids": [
         "SRC-SPINOFF-9582"
@@ -940,7 +940,7 @@
     {
       "id": "CARD-SRC-SPINOFF-9407",
       "title": "Fire Detector",
-      "text_ru": "Материал Spinoff 1978 года о детекторе, различающем частицы горения и посторонние частицы. Это историческое описание технологии, без включённых современных характеристик прибора.",
+      "text_en": "A 1978 Spinoff account of a detector distinguishing combustion particles from other particles. It is historical technology context rather than a current equipment specification.",
       "role": "earth_benefit",
       "source_ids": [
         "SRC-SPINOFF-9407"
@@ -951,7 +951,7 @@
     {
       "id": "CARD-SRC-SPINOFF-9918",
       "title": "New Technology for the Fire Attire",
-      "text_ru": "Материал Spinoff 1982 года о Project FIRES и применении материалов и подходов космической техники в защитном оснащении пожарных. Подходит для презентации, но не для графика горения.",
+      "text_en": "A 1982 Spinoff account of Project FIRES and space-derived materials and designs for firefighter protection. It supports presentation context, not a combustion measurement plot.",
       "role": "earth_benefit",
       "source_ids": [
         "SRC-SPINOFF-9918"
@@ -962,31 +962,31 @@
   ],
   "demo_questions": [
     {
-      "question_ru": "Покажи настоящий график изменения диаметра капли FLEX-002.",
+      "question_en": "Show the actual FLEX-002 droplet-diameter series.",
       "use_graph_id": "GRAPH-FLEX-002",
-      "expected_behavior_ru": "Показать все 660 исходных точек с осями s и mm, ссылку на файл и замечания листа опыта. Не называть это скоростью распространения пламени.",
+      "expected_behavior_en": "Display all 660 original points with seconds and millimeters, the original-file link, and trial-sheet limitations. Label the measured diameter accurately.",
       "source_ids": [
         "SRC-FLEX-002-DropletData",
         "SRC-FLEX-002-TESTSHEET"
       ]
     },
     {
-      "question_ru": "Почему график FLEX-008 заканчивается так рано?",
-      "expected_behavior_ru": "Объяснить выход капли из поля камеры и шум от сажи. Не утверждать погасание в конце ряда.",
+      "question_en": "Why does the FLEX-008 chart end so early?",
+      "expected_behavior_en": "Explain camera field-of-view loss and soot-related noise. Do not infer flame extinction from the last available point.",
       "source_ids": [
         "SRC-FLEX-008-TESTSHEET"
       ]
     },
     {
-      "question_ru": "Что означает OR в данных CO у BASS-II?",
-      "expected_behavior_ru": "Пояснить превышение диапазона >1000 ppm. Не заменять OR точным числом 1000 и не усреднять текстовую ячейку как число.",
+      "question_en": "What does OR mean in BASS-II CO data?",
+      "expected_behavior_en": "Explain the over-range indication above 1000 ppm. Do not replace OR with an exact 1000 or average a text qualifier as a numerical observation.",
       "source_ids": [
         "SRC-README-PSI-25"
       ]
     },
     {
-      "question_ru": "Можно сравнить поток в Saffire-I и Saffire-III?",
-      "expected_behavior_ru": "Показать заявленные 20 и 30 см/с, условия и источники. Указать расхождения геометрии и не выводить причинный эффект только по двум карточкам.",
+      "question_en": "Can the Saffire-I and Saffire-III airflow conditions be compared?",
+      "expected_behavior_en": "Show the reported 20 and 30 cm/s conditions and their sources. Keep geometry discrepancies visible and avoid a causal conclusion from the two investigation cards alone.",
       "source_ids": [
         "SRC-TABLE-PSI-98",
         "SRC-TABLE-PSI-100",
@@ -994,23 +994,23 @@
       ]
     },
     {
-      "question_ru": "Какой материал самый безопасный для космического корабля?",
-      "expected_behavior_ru": "Отказаться от общего рейтинга безопасности. Предложить выбрать совместимые условия, геометрию и конкретную измеренную величину. При недостатке данных явно сказать об этом.",
+      "question_en": "Which material is safest for a spacecraft?",
+      "expected_behavior_en": "Do not produce a universal safety ranking. Offer to select compatible conditions, geometry, and a specific measured quantity. State when the available evidence is insufficient.",
       "source_ids": [
         "SRC-TABLE-PSI-25",
         "SRC-TABLE-PSI-99"
       ]
     },
     {
-      "question_ru": "Сколько независимых опытов в SPICE?",
-      "expected_behavior_ru": "Сообщить, что загружены 469 строк режимов; независимые запуски не подсчитаны, поскольку строки повторяются и относятся к общим интервалам.",
+      "question_en": "How many independent SPICE trials are included?",
+      "expected_behavior_en": "State that 469 operating-condition rows are included. Independent runs have not been counted because rows repeat and share time intervals.",
       "source_ids": [
         "SRC-TABLE-PSI-107"
       ]
     },
     {
-      "question_ru": "Есть ли связь космических исследований с пожарной безопасностью на Земле?",
-      "expected_behavior_ru": "Использовать исторические карточки Spinoff о дыхательных аппаратах, детекторах и защитном оснащении с датами 1976, 1978 и 1982. Не выдавать их за актуальные спецификации оборудования.",
+      "question_en": "How has space research contributed to fire safety on Earth?",
+      "expected_behavior_en": "Use the historical Spinoff cards on breathing equipment, detectors, and protective equipment, retaining their 1976, 1978, and 1982 dates. Do not present them as current product specifications.",
       "source_ids": [
         "SRC-SPINOFF-9582",
         "SRC-SPINOFF-9407",
@@ -1022,14 +1022,14 @@
     "suggested_repo_path": "data/demo/FlareLedger_NASA_Demo_Data.json",
     "backend_load_example": "import json\nfrom pathlib import Path\ndata = json.loads(Path('data/demo/FlareLedger_NASA_Demo_Data.json').read_text(encoding='utf-8'))\nseries = next(s for s in data['time_series'] if s['id'] == 'SERIES-FLEX-002-DropletData')\nassert len(series['points']) == series['point_count']",
     "frontend_load_example": "const demo = await fetch('/demo/FlareLedger_NASA_Demo_Data.json').then(r => r.json());\nconst series = demo.time_series.find(s => s.id === 'SERIES-FLEX-002-DropletData');\nconst chartData = series.points; // ECharts [x,y]; axis names from series.x and series.y",
-    "display_steps_ru": [
-      "Каталог investigations с русским названием, фазой топлива и DOI.",
-      "Карточка trial_records с условиями, исходными ячейками и quality_flags.",
-      "График time_series по готовому graph_presets с подписью величины и единицы.",
-      "Панель evidence с исходным файлом, версией, номером строки и ссылкой.",
-      "AI получает только релевантные записи, ограничения и источники. Большой сырой CSV и весь download_catalog целиком в prompt не отправлять."
+    "display_steps_en": [
+      "Show the investigations catalog with an English title, fuel phase, and DOI.",
+      "Show trial_records with conditions, original cells, and quality_flags.",
+      "Render time_series using graph_presets with quantity and unit labels.",
+      "Show evidence with the original file, version, source-row locator, and link.",
+      "Give the AI only relevant records, limitations, and sources. Do not send the entire raw telemetry CSV or download catalog in a prompt."
     ],
-    "agent_continuation_prompt_ru": "Ты продолжаешь FlareLedger. Сначала прочитай readme_ru, reuse, schema_notes и statistics в этом JSON. Используй реальные NASA PSI IDs и DOI из investigations. Не придумывай измерения, размеры, годы, единицы, trial IDs или калибровку. Все собственные идентификаторы имеют префиксы FL, SRC, E, SERIES. Для первого графика используй GRAPH-FLEX-002; проверь points против embedded_text_files. Показывай quality_note_ru рядом с графиком. Числа в quarantined_raw_data не показывай в физических единицах до проверки документации. Исторические карточки не превращай в эксперименты. Сохраняй происхождение и отсутствующие значения. Файл не задаёт выбранный хостинг или LLM-провайдера."
+    "agent_continuation_prompt_en": "You are continuing FlareLedger. Read readme_en, reuse, schema_notes, and statistics first. Use actual NASA PSI IDs and DOI from investigations. Preserve measurements, dimensions, years, units, trial IDs, and calibration exactly as supported. Local IDs use FL, SRC, E, and SERIES prefixes. Start with GRAPH-FLEX-002 and compare points with embedded_text_files. Display quality_note_en alongside charts. Keep quarantined_raw_data out of physical plots until its documentation is verified. Historical cards are not experiments. Preserve provenance and missing values. This seed does not select a hosting platform or LLM provider."
   },
   "sources": [
     {
@@ -97184,13 +97184,13 @@
       "synthetic": false,
       "x": {
         "name": "DropletTime_sec",
-        "label_ru": "Время по исходному файлу",
+        "label_en": "Time in the original source file",
         "unit": "s",
         "zero_event": "not independently established; use source time coordinates unchanged"
       },
       "y": {
         "name": "DropletDiameter_mm",
-        "label_ru": "Диаметр капли",
+        "label_en": "Droplet diameter",
         "unit": "mm"
       },
       "points": [
@@ -103805,9 +103805,9 @@
           "2.380342465753426"
         ]
       ],
-      "other_columns_note": "позиции капли имеют единицы mm из заголовка; единица ColorCamFlameStandoff не подтверждена и не назначена",
+      "other_columns_note": "Droplet position units are mm as stated in the header. ColorCamFlameStandoff units are unverified and remain unassigned.",
       "display_status": "show_with_source_limitations",
-      "quality_note_ru": "Опыт помечен авторами как калибровочный. Капля оставалась в поле камер и погасла без разрушения. Настройка LLUV была неудачной, особенно в конце; ряд LLUV в пакет не включён. Значение kavg в матрице 0.6 с неоднозначной единицей, в листе опыта 0.56 мм²/с. Они не объединены.",
+      "quality_note_en": "The authors identify this as a calibration run. The droplet remained in camera view and extinguished without disruption. LLUV settings were unsuitable, especially near the end; that LLUV series is not included. The matrix reports kavg as 0.6 with an ambiguous unit, whereas the test sheet gives 0.56 mm2/s. These values remain separate.",
       "source_ids": [
         "SRC-FLEX-002-DropletData",
         "SRC-FLEX-002-TESTSHEET"
@@ -103826,13 +103826,13 @@
       "synthetic": false,
       "x": {
         "name": "DropletTime_sec",
-        "label_ru": "Время по исходному файлу",
+        "label_en": "Time in the original source file",
         "unit": "s",
         "zero_event": "not independently established; use source time coordinates unchanged"
       },
       "y": {
         "name": "DropletDiameter_mm",
-        "label_ru": "Диаметр капли",
+        "label_en": "Droplet diameter",
         "unit": "mm"
       },
       "points": [
@@ -109217,9 +109217,9 @@
           "9.203498043052839"
         ]
       ],
-      "other_columns_note": "позиции капли имеют единицы mm из заголовка; единица ColorCamFlameStandoff не подтверждена и не назначена",
+      "other_columns_note": "Droplet position units are mm as stated in the header. ColorCamFlameStandoff units are unverified and remain unassigned.",
       "display_status": "show_with_source_limitations",
-      "quality_note_ru": "Калибровочный опыт в атмосфере кабины. Капля находилась в поле камер. Авторы отмечают трудности измерения слабого пламени в LLUV в конце опыта. Капля, пламя и момент погасания являются разными измерениями.",
+      "quality_note_en": "A calibration run in cabin air. The droplet remained in camera view. The authors report difficulty measuring the weak LLUV flame near the end. Droplet diameter, flame diameter, and extinction timing are distinct observations.",
       "source_ids": [
         "SRC-FLEX-003-DropletData",
         "SRC-FLEX-003-TESTSHEET"
@@ -109238,13 +109238,13 @@
       "synthetic": false,
       "x": {
         "name": "DropletTime_sec",
-        "label_ru": "Время по исходному файлу",
+        "label_en": "Time in the original source file",
         "unit": "s",
         "zero_event": "not independently established; use source time coordinates unchanged"
       },
       "y": {
         "name": "DropletDiameter_mm",
-        "label_ru": "Диаметр капли",
+        "label_en": "Droplet diameter",
         "unit": "mm"
       },
       "points": [
@@ -110669,9 +110669,9 @@
           ""
         ]
       ],
-      "other_columns_note": "позиции капли имеют единицы mm из заголовка; единица ColorCamFlameStandoff не подтверждена и не назначена",
+      "other_columns_note": "Droplet position units are mm as stated in the header. ColorCamFlameStandoff units are unverified and remain unassigned.",
       "display_status": "show_with_source_limitations",
-      "quality_note_ru": "Яркое светящееся пламя закрывало каплю значительную часть опыта. Последняя часть истории капли скрыта. Капля разрушилась. Пропуски и скачки не сглажены и не восстановлены.",
+      "quality_note_en": "A bright luminous flame obscured the droplet for much of the run, including its final history. The droplet disrupted. Missing observations and jumps have not been smoothed or reconstructed.",
       "source_ids": [
         "SRC-FLEX-007-DropletData",
         "SRC-FLEX-007-TESTSHEET"
@@ -110690,13 +110690,13 @@
       "synthetic": false,
       "x": {
         "name": "ColorCamTime_sec",
-        "label_ru": "Время по исходному файлу",
+        "label_en": "Time in the original source file",
         "unit": "s",
         "zero_event": "not independently established; use source time coordinates unchanged"
       },
       "y": {
         "name": "ColorCamFlameDiameter_mm",
-        "label_ru": "Диаметр пламени по цветной камере",
+        "label_en": "Flame diameter from the color camera",
         "unit": "mm"
       },
       "points": [
@@ -112132,9 +112132,9 @@
           ""
         ]
       ],
-      "other_columns_note": "позиции капли имеют единицы mm из заголовка; единица ColorCamFlameStandoff не подтверждена и не назначена",
+      "other_columns_note": "Droplet position units are mm as stated in the header. ColorCamFlameStandoff units are unverified and remain unassigned.",
       "display_status": "show_with_source_limitations",
-      "quality_note_ru": "Яркое светящееся пламя закрывало каплю значительную часть опыта. Последняя часть истории капли скрыта. Капля разрушилась. Пропуски и скачки не сглажены и не восстановлены.",
+      "quality_note_en": "A bright luminous flame obscured the droplet for much of the run, including its final history. The droplet disrupted. Missing observations and jumps have not been smoothed or reconstructed.",
       "source_ids": [
         "SRC-FLEX-007-ColorCamData",
         "SRC-FLEX-007-TESTSHEET"
@@ -112153,13 +112153,13 @@
       "synthetic": false,
       "x": {
         "name": "DropletTime_sec",
-        "label_ru": "Время по исходному файлу",
+        "label_en": "Time in the original source file",
         "unit": "s",
         "zero_event": "not independently established; use source time coordinates unchanged"
       },
       "y": {
         "name": "DropletDiameter_mm",
-        "label_ru": "Диаметр капли",
+        "label_en": "Droplet diameter",
         "unit": "mm"
       },
       "points": [
@@ -113584,9 +113584,9 @@
           "9.565724070450095"
         ]
       ],
-      "other_columns_note": "позиции капли имеют единицы mm из заголовка; единица ColorCamFlameStandoff не подтверждена и не назначена",
+      "other_columns_note": "Droplet position units are mm as stated in the header. ColorCamFlameStandoff units are unverified and remain unassigned.",
       "display_status": "show_with_source_limitations",
-      "quality_note_ru": "Капля вышла из поля HiBMS и затем цветной камеры. Сажа создаёт заметный шум в диаметре капли. Конец загруженного ряда не является доказанным концом горения. Диаметр при погасании указан как nan и сохранён как отсутствующий.",
+      "quality_note_en": "The droplet left the HiBMS field of view and later the color-camera field of view. Soot produces substantial diameter noise. The final available observation is not a proven end of combustion. Extinction diameter is reported as nan and remains unavailable.",
       "source_ids": [
         "SRC-FLEX-008-DropletData",
         "SRC-FLEX-008-TESTSHEET"
@@ -113605,13 +113605,13 @@
       "synthetic": false,
       "x": {
         "name": "ColorCamTime_sec",
-        "label_ru": "Время по исходному файлу",
+        "label_en": "Time in the original source file",
         "unit": "s",
         "zero_event": "not independently established; use source time coordinates unchanged"
       },
       "y": {
         "name": "ColorCamFlameDiameter_mm",
-        "label_ru": "Диаметр пламени по цветной камере",
+        "label_en": "Flame diameter from the color camera",
         "unit": "mm"
       },
       "points": [
@@ -115488,9 +115488,9 @@
           ""
         ]
       ],
-      "other_columns_note": "позиции капли имеют единицы mm из заголовка; единица ColorCamFlameStandoff не подтверждена и не назначена",
+      "other_columns_note": "Droplet position units are mm as stated in the header. ColorCamFlameStandoff units are unverified and remain unassigned.",
       "display_status": "show_with_source_limitations",
-      "quality_note_ru": "Капля вышла из поля HiBMS и затем цветной камеры. Сажа создаёт заметный шум в диаметре капли. Конец загруженного ряда не является доказанным концом горения. Диаметр при погасании указан как nan и сохранён как отсутствующий.",
+      "quality_note_en": "The droplet left the HiBMS field of view and later the color-camera field of view. Soot produces substantial diameter noise. The final available observation is not a proven end of combustion. Extinction diameter is reported as nan and remains unavailable.",
       "source_ids": [
         "SRC-FLEX-008-ColorCamData",
         "SRC-FLEX-008-TESTSHEET"
@@ -144511,7 +144511,7 @@
       "quality_issue_id": "QI-SAFFIRE-III-TELEMETRY"
     }
   ],
-  "download_catalog_note_ru": "Только метаданные публичных файлов, не вложенные гигабайты. Приватные и restricted-файлы исключены. Для PDF, медиа и сторонних материалов перед переизданием нужны проверки собственных notices.",
+  "download_catalog_note_en": "Public-file metadata only; large binary files are linked. Private and restricted files are excluded. Check artifact-specific notices before redistributing publications, media, or third-party content.",
   "download_catalog": [
     {
       "investigation_id": "PSI-25",
@@ -228203,5 +228203,11 @@
       "byte_length": 9694,
       "url": "https://psi.nasa.gov/geode-py/ws/studies/PSI-62/download?file=691cc8941e54369ebd26f6f7&version=1&redirect=false"
     }
-  ]
+  ],
+  "language": "en",
+  "editorial_revision": {
+    "date": "2026-11-14",
+    "source_sha256": "3ec203666d317bb7ac3b82b14632ceaca81e5f89479ae7b152abe0e77723c286",
+    "note": "Project-authored explanations and localized field names use English. Original scientific payloads are unchanged."
+  }
 }

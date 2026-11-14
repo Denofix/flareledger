@@ -1,6 +1,6 @@
 # Contributing
 
-Read the [team rules](TEAM_RULES.md) and [technical contract](docs/TECHNICAL_CONTRACT.md) before starting a task. New contributors should follow the [Ubuntu setup guide](docs/SETUP_UBUNTU_RU.md).
+Read the [team rules](TEAM_RULES.md) and [technical contract](docs/TECHNICAL_CONTRACT.md) before starting a task. New contributors should follow the [Ubuntu setup guide](docs/SETUP_UBUNTU.md).
 
 ## Branch workflow
 

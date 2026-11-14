@@ -4,7 +4,7 @@
 
 Denis owns repository administration and coordinates the team. Timofey coordinates infrastructure and delivery, Sayat contributes software and AI implementation, and Ivan owns UI and presentation design. Confirm each task with its implementer and record one owner, the expected result, and any blocker.
 
-Use English for README, commit messages, PR titles, public UI, and submission material. Team discussion and internal setup guides may use Russian or Ukrainian.
+Use English for README, commit messages, PR titles, public UI, and submission material. Public project-authored documentation and dataset explanations also use English. Internal team guidance may use Ukrainian.
 
 ## Branches and reviews
 

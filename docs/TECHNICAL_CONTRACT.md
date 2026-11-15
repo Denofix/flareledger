@@ -10,8 +10,10 @@ The Vue frontend is implemented with npm dependencies, type checks, lint, tests,
 a production build, a local API proxy and Vercel routing configuration. See
 [frontend setup](../frontend/README.md) and [deployment handoff](FRONTEND_HANDOFF.md).
 The backend is deployed on the VPS and the frontend is published on Vercel.
-An optional Gemini adapter is implemented; enabled production generation and
-independent scientific evaluation remain separate work.
+An optional Gemini adapter is implemented and disabled by default in code.
+Production explicitly enables Gemini 3.6 Flash with persistent shared quotas;
+independent scientific evaluation remains unfinished. See the dated
+[release audit](RELEASE_AUDIT.md) for deployment evidence and remaining gaps.
 
 ## Backend target
 

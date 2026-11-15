@@ -1,37 +1,57 @@
 # Deployment decision
 
-The team selected Vercel for the frontend at flareledger.fun and the existing VPS
-for FastAPI and persistent SQLite. The API half is deployed: application commit
-8be005f runs at https://api.flareledger.fun behind the existing Nginx, which keeps
-80/443 and reaches the API through the dedicated flareledger_ingress network. DNS,
-HTTPS, persistent ingress attachment and the explicit corpus import are done and
-recorded in [infrastructure status](INFRA_STATUS.md). The Vercel frontend and its
-/api rewrite are not deployed. The VPS lease ends on 1 December 2026 (exact time
-unconfirmed); see [backup and recovery](BACKUP_RECOVERY.md) for the migration order.
-See the [production runbook](../infra/proxy/PRODUCTION.md).
+The selected layout is live: the Vue frontend is published on Vercel at
+https://flareledger.fun/ and https://flareledger.vercel.app/. Its `/api` rewrite
+forwards to FastAPI at https://api.flareledger.fun. SQLite remains on the VPS;
+Vercel does not host the persistent database or run Docker Compose.
 
-## Previous candidate
+As checked on 15 November 2026, the API runs
+`969cb9460de9115fe0a16016bd02bf168aa7175e` (`flareledger-api:969cb94`). The account-relative
+defaults are `$HOME/flareledger` for the managed checkout and
+`$HOME/flareledger-ops` for tooling. Host-specific account and path values belong
+in the private operator inventory.
+The existing Nginx keeps ports 80/443 and reaches `flareledger-api:8000` through
+`flareledger_ingress`. The API publishes no host port. DNS, HTTPS, the persistent
+ingress attachment and explicit corpus import are complete.
 
-Hosting the built frontend and API together on QResto was the original candidate.
-It remains a possible local/fallback layout, but is not the selected public frontend
-hosting route. Do not use the local Compose override as a production deployment.
+Both domains return HTTP 200 / `ready` for `/api/health/ready` with the same corpus
+version. Gemini 3.6 Flash is explicitly enabled with persistent shared limits;
+readiness is checked without calling Ask. See [AI setup](AI_SETUP.md),
+[infrastructure status](INFRA_STATUS.md) and [release audit](RELEASE_AUDIT.md).
+The API revision was verified directly; the public frontend does not expose an
+independently verifiable source SHA, so the initial frontend commit must not be
+reported as its current deployed revision.
 
-The VPS already has services using 80/443. The team selected reuse of that existing
-proxy without stopping QResto. compose.prod.yaml supplies API-only routing to the
-external flareledger_ingress network. Host inspection and explicit deployment are
-completed on 14 November 2026 without stopping QResto.
+## Updates and recovery
 
-## Selected Vercel frontend and VPS backend
+Use the [production runbook](../infra/proxy/PRODUCTION.md) and
+[explicit deploy/rollback procedure](DEPLOY_ROLLBACK.md). A frontend merge can
+trigger Vercel publication; it does not update the VPS API. Keep code, the
+read-only `data/` mount (including `data/ask-context`) and the selected backend
+image consistent. Take and verify the required backup before a release.
 
-Once a real Vite application is merged, import this GitHub repository into Vercel, choose frontend/ as the project root, use the verified install/build commands and dist output, and connect flareledger.fun to the project. Follow the DNS values provided for that specific project.
+The current release is the frozen evaluation baseline. Review open UI/documentation
+PRs separately and agree any release change before resuming its live evaluation.
+PR20–22 preserved the existing database and quota history and needed no new
+migration. Fresh databases require the explicit setup steps; never re-import or
+reset production state to obtain quota.
 
-The backend is hosted on the VPS. A static frontend deployment does not run Docker Compose or provide the proposed persistent local SQLite volume. To retain same-origin /api, add an explicit route to the verified HTTPS backend. Do not deploy a catch-all SPA rewrite that captures API routes first.
+## Local/fallback layout
 
-A full Vercel backend is a separate design choice. Verify its current Python runtime, request limits, filesystem behavior, and persistence requirements before adapting the backend. This repository does not assume that change.
+The local Compose override can serve frontend and API together for development;
+it is not the selected public ingress. For native startup, use the pinned Python
+3.12 and Node 24 instructions in [backend setup](../backend/README.md) and
+[frontend setup](../frontend/README.md). Keep generation disabled for an offline
+catalog/chart demonstration; no key is needed for those features. The final
+fallback walkthrough and operator handoff still require team confirmation.
 
-## Domain steps
+## Domain and hosting continuity
 
-The [domain guide](DOMAIN_SETUP.md) explains how to connect the purchased domain after hosting is selected. Do not replace DNS with an example address. Use the actual VPS address or the DNS values Vercel displays for the imported project.
+The existing routing is configured in `frontend/vercel.json` and the production
+proxy files. Do not replace working DNS with example records. Consult the
+[domain guide](DOMAIN_SETUP.md) only when deliberately changing the deployment.
+The VPS lease ends on 1 December 2026; the exact shutdown hour is unconfirmed.
+Use [backup and recovery](BACKUP_RECOVERY.md) to plan continuity before that date.
 
 ## References
 

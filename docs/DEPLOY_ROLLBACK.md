@@ -21,9 +21,11 @@ https://flareledger.vercel.app/ (Vercel alias). The backend image revision is in
 
 ## Where the scripts run
 
-Run them from the tooling checkout (/home/tymofii/flareledger-ops, kept on main with
-git pull --ff-only), not from the application checkout they manage
-(/home/tymofii/flareledger). The managed checkout must have no uncommitted changes.
+Run them from the deployment account's tooling checkout (`$HOME/flareledger-ops`,
+kept on main with `git pull --ff-only`), not from the managed application checkout
+(`$HOME/flareledger`). These are account-relative defaults; keep any installation-
+specific account and paths in the private operator inventory. The managed checkout
+must have no uncommitted changes.
 The tooling checkout supplies the pre-update backup script.
 
 ```sh
@@ -50,6 +52,15 @@ the last backup. It exits non-zero if any of these is bad.
    (any 5xx fails, which would have caught the concurrency fault fixed in PR 8),
    plus existing shared-service reachability and TLS.
 6. On failure returns to the previous image without rebuilding and checks again.
+
+**Generation is disabled by the helper.** Deploy, explicit rollback and automatic
+return all create the API with `LLM_ENABLED=false`, even if the private environment
+previously enabled Gemini. `DEPLOY_OK` or healthy readiness does not mean generation
+was restored. After verifying state and the selected image, follow the explicit
+[operator restoration step](AI_SETUP.md#production-handoff-after-pr-review) with
+the same database and quota history. Run read-only `app.ask_status` again; no Ask
+is needed to confirm configuration. Re-enabling generation is a separate deliberate
+operator action, never an automatic retry or counter reset.
 
 rollback is the same without the build: the target image must already exist on the
 host (older images are kept). Use it to go back to a known revision, for example
@@ -118,25 +129,30 @@ Install the VPS monitor like the backup timer:
 
 ```sh
 cd ~/flareledger-ops && git pull --ff-only
-sudo install -m 644 infra/systemd/flareledger-monitor.service infra/systemd/flareledger-monitor.timer /etc/systemd/system/
+sudo install -m 644 "${PRIVATE_UNIT_DIR:?Set the adapted unit directory}/flareledger-monitor.service" "$PRIVATE_UNIT_DIR/flareledger-monitor.timer" /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now flareledger-monitor.timer
 sudo systemctl start flareledger-monitor.service
 ```
 
+Use private, host-adapted copies of the monitor service/timer and Telegram drop-in;
+set `PRIVATE_UNIT_DIR` as in [backup installation](BACKUP_RECOVERY.md#automatic-backup-on-the-vps).
+Check account, WorkingDirectory, ExecStart and EnvironmentFile together before
+installation. This runbook does not change the installed services.
+
 ### Telegram incident and recovery messages
 
 Use the agreed private group and a dedicated bot that can send messages there.
 Keep BOT_TOKEN and CHAT_ID only on the VPS in
-/home/tymofii/.config/flareledger/telegram.env (directory mode 700, file mode 600,
-owned by tymofii). Set the values using a server-side editor. Do not paste them
+`$HOME/.config/flareledger/telegram.env` for the deployment account (directory
+mode 700, file mode 600, owned by that account). Set the values using a server-side editor. Do not paste them
 into Git, terminal commands, logs or chat. The file contains KEY=value lines.
 
 After review and updating the tooling checkout, install the drop-in:
 
 ```sh
 sudo install -d -m 755 /etc/systemd/system/flareledger-monitor.service.d
-sudo install -m 644 infra/systemd/flareledger-monitor-telegram.conf /etc/systemd/system/flareledger-monitor.service.d/telegram.conf
+sudo install -m 644 "${PRIVATE_UNIT_DIR:?Set the adapted unit directory}/flareledger-monitor-telegram.conf" /etc/systemd/system/flareledger-monitor.service.d/telegram.conf
 sudo systemctl daemon-reload
 sudo systemctl start flareledger-monitor.service
 ```

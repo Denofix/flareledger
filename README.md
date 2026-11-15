@@ -29,8 +29,9 @@ provider and a successful response are not scientific validation. The separate
 [evaluation criteria](docs/AI_EVALUATION.md) and the [release audit](docs/RELEASE_AUDIT.md).
 
 PR20–22 diagnostic, citation and retrieval changes are merged and deployed.
-PR23 contains small UI fixes awaiting review; it is not part of the deployed
-evaluation baseline. The VPS lease ends on 1 December 2026; the exact shutdown
+UI fixes are tracked separately in [PR23](https://github.com/Denofix/flareledger/pull/23).
+The operational snapshot above predates their integration; check the current PR
+state and deployed frontend revision before claiming that those fixes are public. The VPS lease ends on 1 December 2026; the exact shutdown
 time is unconfirmed. See [deployment decisions](docs/DEPLOYMENT.md).
 
 ## Start here

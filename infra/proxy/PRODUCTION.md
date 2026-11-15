@@ -1,11 +1,13 @@
 # API production deployment preparation
 
 The team selected frontend hosting on Vercel and API/SQLite on the existing VPS.
-The existing qresto-production-nginx-1 keeps ports 80/443.
+The existing shared Nginx keeps ports 80/443. Its container/project names,
+volume names, host addresses and absolute host paths are operator-local details;
+this public runbook uses parameters instead of publishing that inventory.
 
 **Applied on 14 November 2026.** DNS (A record only), the certificate for
 api.flareledger.fun, the HTTPS vhost and a scoped renewal dry-run were completed.
-The API runs from /home/tymofii/flareledger in the Compose project flareledger
+The API uses the deployment account's managed checkout in Compose project flareledger
 (compose.yaml plus compose.prod.yaml). On 15 November 2026 the running backend
 was verified at commit 969cb9460de9115fe0a16016bd02bf168aa7175e. Nginx is
 attached to flareledger_ingress both live and in the host edge.yml override, with
@@ -22,38 +24,38 @@ configuration and persistent quotas. Current evidence is in the
 
 ## Required read-only host inspection
 
-Before applying any command below, inspect the host and save the current config:
+Before applying any command below, inspect the host and save the current config
+privately. Set `NGINX_CONTAINER`, `SHARED_COMPOSE_PROJECT`, `SHARED_COMPOSE_FILE`
+and `SHARED_ENV_FILE` from the private operator inventory; never guess them.
+Shell commands below require these values and do not install a second proxy.
+
+```sh
+: "${NGINX_CONTAINER:?Set the existing ingress container name}"
+```
+
+Read-only inspection:
 
 ```sh
 free -h
 nproc
 df -h /
 docker stats --no-stream
-docker exec qresto-production-nginx-1 nginx -v
-docker exec qresto-production-nginx-1 nginx -T
-docker inspect qresto-production-nginx-1 --format '{{json .Mounts}}'
-docker inspect qresto-production-nginx-1 --format '{{json .NetworkSettings.Networks}}'
+docker exec "$NGINX_CONTAINER" nginx -v
+docker exec "$NGINX_CONTAINER" nginx -T
+docker inspect "$NGINX_CONTAINER" --format '{{json .Mounts}}'
+docker inspect "$NGINX_CONTAINER" --format '{{json .NetworkSettings.Networks}}'
 docker ps -a --format 'table {{.Names}}\t{{.Image}}\t{{.Status}}'
 systemctl list-timers --all
 ```
 
-Do not paste secrets or private key contents. Confirm which Compose file owns
-Nginx, the exact include pattern for conf.d, the existing certificate renewal job,
-volume names, certificate client version and a working reload command. The observed
-renewal arrangement uses the existing certificate project and named volumes:
-qresto-production_certbot-certs -> /etc/letsencrypt, and
-qresto-production_certbot-webroot -> /var/www/certbot. Recheck them on the host.
-Do not upgrade the running Nginx or install a second renewal scheduler by default.
-
-Host output supplied on 14 November confirms Nginx 1.28.3, the conf.d/*.conf
-include and the existing qresto-certbot-renew.timer. Its service invokes
-/opt/qresto/infra/scripts/certbot/renew-production-certificates.sh, which runs
-unscoped certbot renew --quiet and reloads Nginx only when that command succeeds.
-It uses /opt/qresto/infra/docker-compose.production.yml and .env.production under
-project qresto-production. The running edge Nginx instead records the base.yml,
-release.yml and edge.yml configuration files from its deployment state. Verify
-Certbot mounts match the running Nginx mounts before issuance. Do not print the
-full interpolated Compose model or environment secrets to perform that check.
+Do not publish raw inspection output, environment values or private key contents.
+Confirm the existing Compose model, include pattern, renewal timer/script, image,
+mounts and working reload command privately. The existing certificate volume must
+map to `/etc/letsencrypt` and its webroot volume to `/var/www/certbot`; match these
+against the running Nginx mounts before issuance. Renewal may use a different
+Compose model from ingress, so compare actual resolved mount identities locally.
+Use `config --quiet` for validation, not a published interpolated environment dump.
+Do not upgrade Nginx or add a second certificate scheduler as part of this task.
 
 ## Routing and persistence
 
@@ -69,7 +71,7 @@ connect can bootstrap this, but is not persistent configuration:
 
 ```sh
 docker network create flareledger_ingress
-docker network connect flareledger_ingress qresto-production-nginx-1
+docker network connect flareledger_ingress "$NGINX_CONTAINER"
 ```
 
 Skip these commands if the network or attachment already exists. Do not replace
@@ -78,28 +80,14 @@ proxy configuration inactive until the network is prepared. Record a fixed image
 tag/digest after real builds. Reuse the existing Certbot image and volume setup;
 this project does not introduce another certificate client or scheduler.
 
-For persistent attachment, the host edge.yml is the maintained override; state/base.yml
-and state/release.yml are recorded snapshots and should not be edited for this task.
-Merge these fields into edge.yml without removing its current image, mounts or
-entrypoint (it currently uses JSON syntax, which is valid YAML):
-
-```yaml
-services:
-  nginx:
-    networks:
-      - outside
-      - flareledger_ingress
-networks:
-  flareledger_ingress:
-    name: flareledger_ingress
-    external: true
-```
-
-Validate the same three-file edge model with its original env file before applying.
-The existing outside network must remain. Do not run an unrestricted up command:
-the base snapshot contains stopped QResto services and dependency chains. A manual
-network connect can avoid recreating Nginx now; edge.yml preserves the intent for
-future approved recreations. Current host files have not been edited by this PR.
+For persistent attachment, update the existing managed ingress configuration
+rather than generated snapshots. Add `flareledger_ingress` as an external network
+to the existing Nginx service while preserving every existing network, image,
+mount and entrypoint. Validate the complete existing Compose model with its private
+environment before applying. Do not run an unrestricted `up`: unrelated services
+or dependency chains may be present. A live network connection avoids recreating
+Nginx; the maintained configuration must preserve the intent for future approved
+recreations. This documentation change applies no host configuration.
 
 Start the API only after its source/dependencies and explicit importer are verified:
 
@@ -114,7 +102,8 @@ from inside api before external acceptance. No guessed ingestion CLI is provided
 
 ## DNS and first certificate
 
-The DNS owner adds api.flareledger.fun A -> 57.129.163.115. Do not add AAAA until
+The DNS owner points api.flareledger.fun to the operator-confirmed VPS IPv4
+address. Do not publish an example host address or add AAAA until
 IPv6 is verified. The apex frontend domain remains on Vercel.
 
 Back up the current proxy files outside conf.d. Install only api-bootstrap.conf as
@@ -123,8 +112,8 @@ at once, and do not put backup .conf files inside the active include directory.
 After every edit, test before reload:
 
 ```sh
-docker exec qresto-production-nginx-1 nginx -t
-docker exec qresto-production-nginx-1 nginx -s reload
+docker exec "$NGINX_CONTAINER" nginx -t
+docker exec "$NGINX_CONTAINER" nginx -s reload
 ```
 
 Verify a temporary challenge file is reachable from another device at
@@ -133,7 +122,7 @@ to the same webroot seen by Nginx. Only after DNS and HTTP are confirmed, use th
 existing Certbot service, after verifying its effective volume names:
 
 ```sh
-sudo docker compose --project-name qresto-production --env-file /opt/qresto/infra/.env.production --file /opt/qresto/infra/docker-compose.production.yml run --rm --no-deps certbot certonly --webroot -w /var/www/certbot --cert-name api.flareledger.fun -d api.flareledger.fun
+sudo docker compose --project-name "${SHARED_COMPOSE_PROJECT:?Set the existing certificate project}" --env-file "${SHARED_ENV_FILE:?Set its private environment file}" --file "${SHARED_COMPOSE_FILE:?Set its Compose file}" run --rm --no-deps certbot certonly --webroot -w /var/www/certbot --cert-name api.flareledger.fun -d api.flareledger.fun
 ```
 
 The account owner supplies the contact address and accepts any applicable ACME
@@ -150,7 +139,7 @@ then reloads Nginx. Once the new webroot lineage is issued into the same certifi
 volume, it should be covered by that renewal command. Confirm with a scoped dry-run:
 
 ```sh
-sudo docker compose --project-name qresto-production --env-file /opt/qresto/infra/.env.production --file /opt/qresto/infra/docker-compose.production.yml run --rm --no-deps certbot renew --cert-name api.flareledger.fun --dry-run
+sudo docker compose --project-name "${SHARED_COMPOSE_PROJECT:?Set the existing certificate project}" --env-file "${SHARED_ENV_FILE:?Set its private environment file}" --file "${SHARED_COMPOSE_FILE:?Set its Compose file}" run --rm --no-deps certbot renew --cert-name api.flareledger.fun --dry-run
 ```
 
 Do not install a FlareLedger timer or restart/replace the QResto schedule. The

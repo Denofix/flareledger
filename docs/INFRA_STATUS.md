@@ -9,7 +9,7 @@ verified; planned work is labelled as such.
 | --- | --- | --- |
 | Frontend on Vercel | Published at https://flareledger.fun/ and https://flareledger.vercel.app/; 1d258c9 was the initial publication reported by Denis, not an assertion of the current frontend SHA | Public HTML and frontend-domain readiness/meta independently checked; readiness is HTTP 200 / ready, original corpus version retained |
 | API on the VPS | Running application commit 969cb9460de9115fe0a16016bd02bf168aa7175e (image flareledger-api:969cb94), verified on 15 November 2026 | /api/health/ready returns 200 with status ready; corpus 2026-11-14:90be248a... |
-| Compose project | flareledger, compose.yaml plus compose.prod.yaml, checkout /home/tymofii/flareledger | API is the only service; no host port is published |
+| Compose project | flareledger, compose.yaml plus compose.prod.yaml, checkout $HOME/flareledger | API is the only service; no host port is published |
 | Corpus import | Explicit python -m app.ingest, run once | 10 investigations, 1132 records (647 trial_row), 6 series, 1844 points |
 | SQLite state | Named volume flareledger_app_state; corpus mounted read-only | Corpus entities, Ask schema and all nine reservation records were unchanged across the PR22 update; state volume was preserved |
 | DNS | api.flareledger.fun A record to the VPS | Public DNS resolves; no AAAA record |
@@ -30,7 +30,7 @@ checks configuration and local allowance, not provider availability. The new
 | --- | --- |
 | Verified snapshot script and offline verification | Implemented; tested against the real database on the VPS |
 | Retention | Newest 7 snapshots per kind (daily, pre-update) |
-| Daily systemd timer | Enabled on the VPS (flareledger-backup.timer, 03:10 UTC). The scheduled run on 15 November 2026 completed at 03:11:21 UTC with Result=success and exit 0. Tooling checkout /home/tymofii/flareledger-ops was updated to reviewed main 969cb94 for the PR22 release |
+| Daily systemd timer | Enabled on the VPS (flareledger-backup.timer, 03:10 UTC). The scheduled run on 15 November 2026 completed at 03:11:21 UTC with Result=success and exit 0. Tooling checkout $HOME/flareledger-ops was updated to reviewed main 969cb94 for the PR22 release |
 | Copy outside the VPS | Pulled by the team laptop with scripts/pull-backup.ps1; verified end to end |
 | Restore from the off-VPS copy | Verified on 14 November 2026 from a fresh clone of this branch: tooling checkout plus a separate worktree at the snapshot revision (8be005f, which has no recovery scripts), restoring the copy pulled to the laptop into a new project and volume: ready, 10 investigations, 1132 records (647 trial_row), 6 series, 1844 points. Refusals checked: wrong snapshot path and wrong application checkout both stop before any Docker command; the volume list was identical before and after |
 | Live database replacement | Scripted (scripts/replace_database.py: verify, safety backup, swap inside the volume with the previous file kept, checks, automatic return, rollback command) and rehearsed on 14 November 2026 on a separate project and volume: tampered snapshot refused, other corpus refused, valid replacement, rollback byte-identical, rejected corpus change rolled back automatically. Not yet run against the live project |
@@ -116,7 +116,8 @@ subsequently installed and verified as recorded above.
 - Full live scientific acceptance of the 15-question set. The prepared journal
   contains 15 NOT_RUN cases; offline context checks are not answer grades.
 - Final demo-release approval, curated screenshots and an agreed demo sequence.
-- Small UI follow-ups in PR23 await review; this audit does not merge or deploy them.
+- UI follow-ups are tracked in PR23. Check its current head and review/merge state
+  before integration; this audit does not attest its publication on the frontend.
 - Confirmed shutdown time. The VPS lease ends on 1 December 2026; the exact hour is
   not confirmed.
 - Independent scientific review of the corpus.

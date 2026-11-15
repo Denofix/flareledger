@@ -67,8 +67,9 @@ was submitted for these UI checks.
 
 Known follow-ups are visible in [PR23](https://github.com/Denofix/flareledger/pull/23):
 missing-acronym fallback, stable labels, mobile skip-link and validation messaging.
-That PR is not merged into this evaluation baseline. Its preview visual check
-remains pending. Search currently shows at most 20 results without pagination;
+The original audit predates integration of that PR. Check its current head, review
+and merge state before release; a merge does not attest the published frontend by
+itself. Its protected Vercel preview was not verified by this audit. Search currently shows at most 20 results without pagination;
 the enlarged plot scrolls its numerical Y ticks with the SVG. Chrome/emulated
 sizes do not establish Safari/Firefox, real-device touch or full accessibility
 coverage. External NASA/DOI availability was not revalidated by this audit.

@@ -6,8 +6,10 @@ forwards to FastAPI at https://api.flareledger.fun. SQLite remains on the VPS;
 Vercel does not host the persistent database or run Docker Compose.
 
 As checked on 15 November 2026, the API runs
-`969cb9460de9115fe0a16016bd02bf168aa7175e` (`flareledger-api:969cb94`). The managed
-checkout is `/home/tymofii/flareledger`; tooling is `/home/tymofii/flareledger-ops`.
+`969cb9460de9115fe0a16016bd02bf168aa7175e` (`flareledger-api:969cb94`). The account-relative
+defaults are `$HOME/flareledger` for the managed checkout and
+`$HOME/flareledger-ops` for tooling. Host-specific account and path values belong
+in the private operator inventory.
 The existing Nginx keeps ports 80/443 and reaches `flareledger-api:8000` through
 `flareledger_ingress`. The API publishes no host port. DNS, HTTPS, the persistent
 ingress attachment and explicit corpus import are complete.

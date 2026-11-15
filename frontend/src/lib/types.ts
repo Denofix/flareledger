@@ -27,6 +27,8 @@ export interface Source extends Entity {
   license_identifier?: string;
   document_type?: string;
   version?: string | number;
+  file_version?: string | number;
+  investigation_version?: string | number;
 }
 export interface Issue extends Entity {
   description_en?: string;

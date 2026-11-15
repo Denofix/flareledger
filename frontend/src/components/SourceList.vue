@@ -23,9 +23,23 @@ defineProps<{ sources: Source[] }>();
           {{ source.citation }}
         </p>
         <div class="source-meta">
-          <span class="mono">{{ source.id }}</span><span v-if="source.version"
+          <span class="mono">{{ source.id }}</span>
+          <span v-if="source.file_version != null"
+            >File version {{ source.file_version }}</span
+          >
+          <span v-if="source.investigation_version != null"
+            >Investigation version {{ source.investigation_version }}</span
+          >
+          <span
+            v-if="
+              source.version != null &&
+              source.file_version == null &&
+              source.investigation_version == null
+            "
             >Version {{ source.version }}</span
-          ><span v-if="source.license_identifier">{{
+          >
+          <span v-if="source.doi">DOI {{ source.doi }}</span>
+          <span v-if="source.license_identifier">{{
             source.license_identifier
           }}</span>
         </div>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { computed, ref } from "vue";
 import { useRoute } from "vue-router";
 import { ApiError, request } from "../lib/api";
 import { useResource } from "../lib/useResource";
@@ -12,6 +12,22 @@ import LimitationList from "../components/LimitationList.vue";
 const route = useRoute();
 const question = ref(String(route.query.q || ""));
 const result = useResource<AskResult>();
+const generationEnabled = computed(
+  () =>
+    result.data.value?.live_generation_available ??
+    corpusMeta.value?.live_generation_available ??
+    false,
+);
+const unavailableTitle = computed(() => {
+  switch (result.data.value?.error?.reason) {
+    case "provider_quota_exhausted":
+      return "Gemini generation limit reached";
+    case "invalid_model_output":
+      return "No supported explanation was returned";
+    default:
+      return "Live generation is unavailable";
+  }
+});
 function submit() {
   if (!question.value.trim() || result.loading.value) return;
   result.load(async (signal) => {
@@ -104,7 +120,7 @@ function submit() {
         >
           <AppIcon name="spark" :size="25" />
           <div>
-            <h2>Live generation is unavailable</h2>
+            <h2>{{ unavailableTitle }}</h2>
             <p>
               No AI answer was generated. The source-linked keyword results
               below are retrieved evidence, not a generated explanation.
@@ -192,9 +208,7 @@ function submit() {
       <h2>Sources first.</h2>
       <div class="mode-badge">
         <span class="status-light amber" />{{
-          corpusMeta?.live_generation_available
-            ? "Generation available"
-            : "Evidence retrieval"
+          generationEnabled ? "Generation enabled" : "Evidence retrieval"
         }}
       </div>
       <p>

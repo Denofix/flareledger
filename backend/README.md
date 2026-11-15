@@ -88,3 +88,8 @@ additive migration (`python -m app.migrate_ask` after a verified backup), exact
 Gemini configuration, persistent rolling limits, timeout/failure behavior,
 scientific validation limits and controlled local evaluation. Changing model or
 provider to an unsupported value disables generation. The API budget remains USD 0.
+
+The default model is `gemini-3.6-flash`; an explicit existing `LLM_MODEL` value
+takes precedence. Run `python -m app.ask_status` in the API's environment to inspect
+migration state and remaining local quota without contacting Google or changing
+the database. A ready local preflight is not a provider health or quota probe.

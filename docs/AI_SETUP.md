@@ -25,20 +25,27 @@ rolling window is deliberately more conservative. A public visitor can consume
 this shared allowance; there is no per-user authentication or private judge quota.
 If it is exhausted, evidence browsing still works. Do not use paid fallback.
 
-### Explicit Gemini 3.6 Flash evaluation
+### Gemini 3.6 Flash default
 
-`gemini-3.6-flash` is also accepted when selected explicitly with `LLM_MODEL`.
+`gemini-3.6-flash` is the default in native Python, Compose and `.env.example`.
 Google documents this stable model, Interactions support, structured JSON output,
-`thinking_level=low` and a Standard Free Tier. Hydrogen remains the default;
-there is no automatic substitution after an error. Check actual project access
-and model quotas in AI Studio before a live evaluation. Listed Free Tier pricing
-does not establish this project's eligibility or available quota.
+`thinking_level=low` and a Standard Free Tier. `gemini-4-hydrogen` remains an
+explicitly supported alternative; there is no automatic substitution after an
+error. An existing `LLM_MODEL` setting takes precedence over the default. Check
+actual project access and the selected model's quotas in AI Studio before live
+activation. The Hydrogen limits above must not be assumed to apply to Flash.
+Listed Free Tier pricing does not establish this project's eligibility or
+available quota.
 
-The first Flash evaluation is still pending: offline transport tests establish
-request construction and failure handling, not live access or scientific quality.
-An observed upstream HTTP 503 from Hydrogen does not establish a permanent model
-failure or prove that Flash will work. Google's API error reference describes 503
-as temporary service overload or downtime.
+On 15 November 2026 Denis completed a local Vite → API → Gemini 3.6 Flash → UI
+run of the PMMA/BASS demonstration question. The captured response included an
+attributed explanation, PSI-25/PSI-62 citations, exact context excerpts and visible
+limitations, and the linked source record opened. Earlier Hydrogen adapter
+attempts returned upstream HTTP 503. This is evidence for that local Flash
+transport/UI flow, not permanent availability or scientific validation. Offline
+tests exercise request construction and failure handling with both allowed models.
+The demonstration is not the exact frozen AE-01 question; all 15 formal live
+evaluation cases remain NOT_RUN in [the acceptance set](AI_EVALUATION.md).
 
 Model selection uses the same SQLite reservation history. Switching model, key
 or process does not refill the application's shared rolling quota. Keep the
@@ -54,7 +61,7 @@ file and forwards the explicitly listed settings to `api`.
 | --- | --- |
 | `LLM_ENABLED` | `false` by default; enable explicitly after review and local evaluation |
 | `LLM_PROVIDER` | `gemini` |
-| `LLM_MODEL` | `gemini-4-hydrogen` by default; explicit `gemini-3.6-flash` also accepted |
+| `LLM_MODEL` | `gemini-3.6-flash` by default; explicit `gemini-4-hydrogen` also accepted |
 | `GEMINI_API_KEY` | Secret in the backend environment; never Git, Vercel or `VITE_*` |
 | `LLM_BASE_URL` | Empty; custom gateways/URLs are rejected |
 | `ASK_MAX_REQUESTS_PER_DAY` | `0` by default; use `10` for the first controlled activation; allowed 1–18 |
@@ -68,6 +75,33 @@ disable generation. A changed key does not reset the application's counters.
 An OpenAI or other provider adapter is **not implemented**: changing its key and
 model name alone will not make it work. The provider interface allows a separate
 future implementation and review.
+
+## Read-only operator preflight
+
+From `backend/`, in the same environment and with the same database as the API:
+
+```bash
+python -m app.ask_status
+```
+
+For an already running Docker API, use the deployed Compose checkout and project:
+
+```bash
+docker compose -f compose.yaml -f compose.prod.yaml exec -T api python -m app.ask_status
+```
+
+The command reports corpus readiness, parsed configuration, key presence as a
+boolean, Ask migration state, rolling usage, remaining local allowance, active
+lease and retry delay. It only opens existing SQLite state read-only: it does not
+migrate, reserve a request, reset counters or contact Google. Missing or corrupt
+state is reported without repair. Keys and arbitrary invalid provider/model
+strings are not printed.
+
+`ready_to_attempt_generation=true` means the local prerequisites and current
+local allowance permit an attempt. `provider_probed=false` is always present:
+the command cannot establish key validity, Google availability, project Free Tier
+eligibility or the provider's remaining quota. Its exit code describes completion
+of the inspection; use the JSON fields to assess generation readiness.
 
 ## Explicit additive migration
 
@@ -119,18 +153,23 @@ that shell; the following input does not echo it or put its value in history:
 read -r -s -p "Gemini API key: " GEMINI_API_KEY
 printf '\n'
 export GEMINI_API_KEY
-export LLM_PROVIDER=gemini LLM_MODEL=gemini-4-hydrogen
+export LLM_PROVIDER=gemini LLM_MODEL=gemini-3.6-flash
 export ASK_MAX_REQUESTS_PER_DAY=10 ASK_MAX_REQUESTS_PER_MINUTE=3
 export LLM_MAX_CONCURRENT_REQUESTS=1 LLM_TIMEOUT_SECONDS=30 LLM_MAX_OUTPUT_TOKENS=2048
 export LLM_ENABLED=true
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-For an explicit Flash evaluation, use `export LLM_MODEL=gemini-3.6-flash` instead
-of the Hydrogen model assignment **before starting that API process**. Use the
-same existing `DATABASE_PATH`, credentials and limits. A launcher that hardcodes
-Hydrogen must also be changed or replaced; setting a parent environment variable
-does not override a later shell assignment inside that launcher.
+For an explicit Hydrogen evaluation, use `export LLM_MODEL=gemini-4-hydrogen`
+instead **before starting that API process**. Use the same existing
+`DATABASE_PATH`, credentials and limits. A launcher that hardcodes a model can
+override its parent environment. Older downloadable launchers also pin transport
+file hashes and can reject newer reviewed code; use this repository procedure
+for the current release instead of changing their hash checks.
+
+Run `python -m app.ask_status` before starting Uvicorn or submitting a question.
+If `remaining_24h` is zero or an active lease is reported, wait for the reported
+window; do not replace the existing database to obtain another allowance.
 
 From a second terminal, start the existing frontend with `npm run dev` and use
 `/ask`. First inspect `/api/meta` and `/api/health/ready`; neither spends quota.
@@ -146,6 +185,30 @@ is scientifically unsupported. Do not switch to a paid model as a workaround.
 Stop Uvicorn and run `unset GEMINI_API_KEY LLM_ENABLED` when finished. Disabling
 the provider on a running deployment requires restarting/recreating that API with
 `LLM_ENABLED=false`. Do not share screenshots containing a key or a full env dump.
+
+## Production handoff after PR review
+
+Timofey owns the VPS release. Use the existing deployment and verified backup
+procedure with an explicitly selected reviewed image tag and the current state
+volume. Merge alone publishes the frontend; it does not update the VPS API,
+install Ask tables, provide a Gemini key or enable generation.
+
+1. Take the fresh verified backup required above, then deploy the reviewed
+   backend release with generation disabled. Keep the same corpus/state volume.
+2. Run the explicit additive migration using that release and inspect
+   `python -m app.ask_status`. Corpus and Ask state must both be ready.
+3. In the backend's private environment, explicitly select `gemini-3.6-flash`,
+   supply the existing project key, and confirm that project's Free Tier and
+   remaining Flash allowance. Start with the shared 10/day, 3/minute limits and
+   one active call. Keep billing and fallback disabled.
+4. Enable generation and recreate the API through the reviewed release process.
+   Check readiness, `/api/meta` and the read-only preflight before any model call.
+5. If allowance remains, submit one reviewed question through the public `/ask`
+   page. Inspect the attributed answer, exact excerpts, verified source links and
+   limitations. Record the release, model and corpus; a generic generated answer
+   is not a pass for the full scientific acceptance set.
+6. If the provider fails or the answer is unsupported, disable generation and
+   restart the API. Keep retrieval available and retain all reservation history.
 
 ## Request and response contract
 
@@ -173,6 +236,9 @@ Every response is `Cache-Control: no-store`. Provider 429 does not cause retries
 or paid fallback. The UI gives Ask a separate 55-second timeout, handles these
 states and renders generated text with normal Vue escaping. Source links are
 constructed from validated corpus IDs, never model-provided URLs.
+The mode badge says "Generation enabled" rather than claiming upstream
+availability. A provider quota response and a rejected model output have distinct
+notice titles; all unavailable responses keep retrieved sources visible.
 
 ## Scientific and data limits
 

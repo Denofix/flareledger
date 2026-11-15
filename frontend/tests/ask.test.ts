@@ -107,36 +107,65 @@ const base = {
   live_generation_available: true,
 };
 
-it("labels generated interpretation and renders exact excerpts as text with verified source routes", async () => {
-  const wrapper = await answered({
-    ...base,
-    status: "generated",
-    answer: "<img src=x onerror=alert(1)> [TEST-RECORD]",
-    provider: "gemini",
-    model: "gemini-4-hydrogen",
-    corpus_version: "TEST-CORPUS",
-    notice:
-      "FlareLedger-generated interpretation; scientific correctness is not established.",
-    citations: [
+it.each(["gemini-3.6-flash", "gemini-4-hydrogen"])(
+  "labels %s interpretation and renders exact excerpts as text with verified source routes",
+  async (model) => {
+    const wrapper = await answered({
+      ...base,
+      status: "generated",
+      answer: "<img src=x onerror=alert(1)> [TEST-RECORD]",
+      provider: "gemini",
+      model,
+      corpus_version: "TEST-CORPUS",
+      notice:
+        "FlareLedger-generated interpretation; scientific correctness is not established.",
+      citations: [
+        {
+          context_id: "TEST-RECORD",
+          source_id: "TEST-SOURCE",
+          quote: "An exact test-only context excerpt.",
+        },
+      ],
+      limitations: ["Test-only limitation; not measured data."],
+    });
+    const answer = wrapper.get(".generated-answer");
+    expect(answer.text()).toContain("FLARELEDGER-GENERATED EXPLANATION");
+    expect(answer.text()).toContain(model);
+    expect(wrapper.get(".mode-badge").text()).toContain("Generation enabled");
+    expect(wrapper.text()).not.toContain("Generation available");
+    expect(answer.text()).toContain("<img src=x onerror=alert(1)>");
+    expect(answer.find("img").exists()).toBe(false);
+    expect(answer.text()).toContain("Exact context excerpt");
+    expect(answer.get("a").attributes("href")).toBe("/sources/TEST-SOURCE");
+    expect(answer.text()).toContain("Test-only limitation");
+    expect(wrapper.text()).not.toContain("No AI answer was generated");
+    wrapper.unmount();
+  },
+);
+
+it.each([
+  ["provider_quota_exhausted", "Gemini generation limit reached"],
+  ["invalid_model_output", "No supported explanation was returned"],
+  ["provider_unavailable", "Live generation is unavailable"],
+])(
+  "keeps evidence available after %s without promising provider availability",
+  async (reason, title) => {
+    const wrapper = await answered(
       {
-        context_id: "TEST-RECORD",
-        source_id: "TEST-SOURCE",
-        quote: "An exact test-only context excerpt.",
+        ...base,
+        status: "unavailable",
+        error: { code: "llm_unavailable", reason },
       },
-    ],
-    limitations: ["Test-only limitation; not measured data."],
-  });
-  const answer = wrapper.get(".generated-answer");
-  expect(answer.text()).toContain("FLARELEDGER-GENERATED EXPLANATION");
-  expect(answer.text()).toContain("gemini-4-hydrogen");
-  expect(answer.text()).toContain("<img src=x onerror=alert(1)>");
-  expect(answer.find("img").exists()).toBe(false);
-  expect(answer.text()).toContain("Exact context excerpt");
-  expect(answer.get("a").attributes("href")).toBe("/sources/TEST-SOURCE");
-  expect(answer.text()).toContain("Test-only limitation");
-  expect(wrapper.text()).not.toContain("No AI answer was generated");
-  wrapper.unmount();
-});
+      503,
+    );
+    expect(wrapper.get(".generation-notice h2").text()).toBe(title);
+    expect(wrapper.get(".mode-badge").text()).toContain("Generation enabled");
+    expect(wrapper.find(".evidence-card").exists()).toBe(true);
+    expect(wrapper.find(".generated-answer").exists()).toBe(false);
+    expect(vi.mocked(fetch)).toHaveBeenCalledTimes(1);
+    wrapper.unmount();
+  },
+);
 
 it("keeps source retrieval visible during a shared quota rejection", async () => {
   const wrapper = await answered(

@@ -1,15 +1,32 @@
 <script setup lang="ts">
-import { computed, ref, watch } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref, watch } from "vue";
 import type { Point, Series } from "../lib/types";
 import { display } from "../lib/format";
 const props = defineProps<{ series: Series[] }>();
 const palette = ["#197a73", "#d17948", "#7063a6", "#487fa8"];
 const selectedIndex = ref(0);
 const selectedSeries = ref(0);
-const left = 67,
-  right = 802,
-  top = 25,
-  bottom = 315;
+const chartElement = ref<HTMLElement>();
+const width = ref(840);
+const expanded = ref(false);
+let observer: ResizeObserver | undefined;
+onMounted(() => {
+  if (typeof ResizeObserver === "undefined" || !chartElement.value) return;
+  observer = new ResizeObserver(([entry]) => {
+    if (entry && entry.contentRect.width > 0)
+      width.value = entry.contentRect.width;
+  });
+  observer.observe(chartElement.value);
+});
+onBeforeUnmount(() => observer?.disconnect());
+const chartWidth = computed(() =>
+  Math.max(expanded.value ? 760 : 250, width.value),
+);
+const compact = computed(() => chartWidth.value < 520);
+const left = 64;
+const right = computed(() => chartWidth.value - 24);
+const top = 25;
+const bottom = computed(() => (compact.value ? 230 : 315));
 function valid(point: Point): point is [number, number] {
   return (
     typeof point[0] === "number" &&
@@ -39,28 +56,35 @@ const domain = computed(() => {
 const x = (value: number) =>
   left +
   ((value - domain.value.x0) / (domain.value.x1 - domain.value.x0)) *
-    (right - left);
+    (right.value - left);
 const y = (value: number) =>
-  bottom -
+  bottom.value -
   ((value - domain.value.y0) / (domain.value.y1 - domain.value.y0)) *
-    (bottom - top);
+    (bottom.value - top);
+function ticks(min: number, max: number, count: number) {
+  const rough = (max - min) / count;
+  const power = 10 ** Math.floor(Math.log10(rough));
+  const step =
+    (rough / power <= 1
+      ? 1
+      : rough / power <= 2
+        ? 2
+        : rough / power <= 5
+          ? 5
+          : 10) * power;
+  const start = Math.ceil(min / step);
+  return Array.from(
+    { length: Math.max(0, Math.floor(max / step) - start + 1) },
+    (_, i) => (start + i) * step,
+  );
+}
 const xTicks = computed(() =>
-  Array.from(
-    { length: 6 },
-    (_, index) =>
-      domain.value.x0 + (index / 5) * (domain.value.x1 - domain.value.x0),
-  ),
+  ticks(domain.value.x0, domain.value.x1, compact.value ? 3 : 5),
 );
-const yTicks = computed(() =>
-  Array.from(
-    { length: 5 },
-    (_, index) =>
-      domain.value.y0 + (index / 4) * (domain.value.y1 - domain.value.y0),
-  ),
-);
+const yTicks = computed(() => ticks(domain.value.y0, domain.value.y1, 4));
 function tick(value: number) {
   return Number(value.toPrecision(4)).toLocaleString("en-US", {
-    maximumFractionDigits: 4,
+    maximumSignificantDigits: 4,
   });
 }
 function path(points: Point[]) {
@@ -95,10 +119,36 @@ const activePoint = computed(
 );
 </script>
 <template>
-  <div class="chart-wrap">
+  <div class="chart-axis-label">
+    Y · {{ series[0]?.y.label_en }} ({{
+      series[0]?.y.unit || "unit not reported"
+    }})
+  </div>
+  <button
+    class="chart-size-toggle"
+    type="button"
+    :aria-pressed="expanded"
+    @click="expanded = !expanded"
+  >
+    {{
+      expanded ? "Show entire chart" : "Enlarge chart for horizontal scrolling"
+    }}
+  </button>
+  <p v-if="expanded" class="chart-scroll-hint">
+    Scroll horizontally inside the chart to inspect the full time range.
+  </p>
+  <div
+    ref="chartElement"
+    class="chart-wrap"
+    :class="{ 'chart-wrap-expanded': expanded }"
+    tabindex="0"
+    role="region"
+    aria-label="Measured chart; scroll horizontally when enlarged"
+  >
     <svg
       class="measurement-chart"
-      viewBox="0 0 840 375"
+      :viewBox="`0 0 ${chartWidth} ${bottom + 45}`"
+      :style="{ minWidth: expanded ? '760px' : '0' }"
       role="img"
       :aria-label="
         'Original measurements: ' +
@@ -147,22 +197,6 @@ const activePoint = computed(
           {{ tick(value) }}
         </text>
       </g>
-      <text x="434" y="366" text-anchor="middle" class="chart-axis">
-        {{ series[0]?.x.label_en }} ({{
-          series[0]?.x.unit || "unit not reported"
-        }})
-      </text>
-      <text
-        x="17"
-        y="171"
-        transform="rotate(-90 17 171)"
-        text-anchor="middle"
-        class="chart-axis"
-      >
-        {{ series[0]?.y.label_en }} ({{
-          series[0]?.y.unit || "unit not reported"
-        }})
-      </text>
       <path
         v-for="(item, index) in series"
         :key="item.id"
@@ -184,11 +218,17 @@ const activePoint = computed(
       />
     </svg>
   </div>
+  <div class="chart-axis-label">
+    X · {{ series[0]?.x.label_en }} ({{
+      series[0]?.x.unit || "unit not reported"
+    }})
+  </div>
   <div class="chart-legend">
     <button
       v-for="(item, index) in series"
       :key="item.id"
       :class="{ selected: selectedSeries === index }"
+      :aria-pressed="selectedSeries === index"
       @click="
         selectedSeries = index;
         selectedIndex = 0;

@@ -27,8 +27,11 @@ export interface Source extends Entity {
   license_identifier?: string;
   document_type?: string;
   version?: string | number;
+  file_version?: string | number;
+  investigation_version?: string | number;
 }
 export interface Issue extends Entity {
+  source_ids?: string[];
   description_en?: string;
   action?: string;
 }
@@ -112,7 +115,7 @@ export interface SearchResult {
 export interface AskResult {
   status?:
     "generated" | "insufficient_evidence" | "rate_limited" | "unavailable";
-  error?: { code: string; message: string };
+  error?: { code: string; message: string; reason?: string };
   answer: string | null;
   retrieved_evidence: SearchItem[];
   retrieval_method: string;

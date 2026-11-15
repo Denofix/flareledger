@@ -11,6 +11,8 @@ from typing import Annotated, Any, Literal, Protocol
 from pydantic import BaseModel, ConfigDict, Field
 
 ENDPOINT = "https://generativelanguage.googleapis.com/v1beta/interactions"
+DEFAULT_MODEL = "gemini-3.6-flash"
+SUPPORTED_MODELS = (DEFAULT_MODEL, "gemini-4-hydrogen")
 
 
 class Citation(BaseModel):
@@ -32,7 +34,7 @@ class Explanation(BaseModel):
 class LLMSettings:
     enabled: bool = False
     provider: str = "gemini"
-    model: str = "gemini-4-hydrogen"
+    model: str = DEFAULT_MODEL
     key: str = field(default="", repr=False)
     daily: int = 0
     minute: int = 0
@@ -46,7 +48,7 @@ class LLMSettings:
             return cls(
                 enabled=os.getenv("LLM_ENABLED", "false").lower() == "true",
                 provider=os.getenv("LLM_PROVIDER", "gemini"),
-                model=os.getenv("LLM_MODEL", "gemini-4-hydrogen"),
+                model=os.getenv("LLM_MODEL", DEFAULT_MODEL),
                 key=os.getenv("GEMINI_API_KEY", ""),
                 daily=int(os.getenv("ASK_MAX_REQUESTS_PER_DAY", "0")),
                 minute=int(os.getenv("ASK_MAX_REQUESTS_PER_MINUTE", "0")),
@@ -65,7 +67,7 @@ class LLMSettings:
             and self.valid
             and bool(self.key)
             and self.provider == "gemini"
-            and self.model in ("gemini-4-hydrogen", "gemini-3.6-flash")
+            and self.model in SUPPORTED_MODELS
             and 1 <= self.daily <= 18
             and 1 <= self.minute <= 3
             and 5 <= self.timeout <= 45

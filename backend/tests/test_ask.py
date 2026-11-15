@@ -26,6 +26,15 @@ def configured(**values):
     return replace(LLMSettings(enabled=True, key="TEST-ONLY-KEY", daily=10, minute=3), **values)
 
 
+def test_default_model_is_flash_and_generation_still_requires_opt_in(monkeypatch):
+    for name in ("LLM_MODEL", "LLM_ENABLED", "GEMINI_API_KEY"):
+        monkeypatch.delenv(name, raising=False)
+    assert LLMSettings().model == "gemini-3.6-flash"
+    config = LLMSettings.from_env()
+    assert config.model == "gemini-3.6-flash"
+    assert config.enabled is False and config.configured is False
+
+
 def supported(context):
     item = context[0]
     return {

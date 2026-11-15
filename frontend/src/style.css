@@ -1462,6 +1462,7 @@ pre {
 }
 .generated-answer {
   margin-top: 24px;
+  overflow-wrap: anywhere;
 }
 .generated-answer > p {
   white-space: pre-wrap;

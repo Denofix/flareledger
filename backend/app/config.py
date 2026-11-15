@@ -1,4 +1,4 @@
-"""Paths shared by the explicit importer and the read-only HTTP API."""
+"""Paths shared by the importer, read-only corpus API and explicit Ask state."""
 
 import os
 from dataclasses import dataclass

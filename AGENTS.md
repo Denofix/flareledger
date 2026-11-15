@@ -4,7 +4,7 @@ FlareLedger is an independent NASA Space Apps hackathon project. Read README.md,
 
 ## Repository state
 
-The backend, explicit corpus importer and Vue frontend now exist with pinned dependencies and tests. The backend is deployed on the VPS; frontend publication and the live LLM adapter remain pending. Inspect current files and recorded checks before claiming that Docker images build or a deployment exists. Commands become runnable only when their corresponding code and dependency files are added and verified.
+The backend, explicit corpus importer and Vue frontend exist with pinned dependencies and tests. Backend is deployed on the VPS and frontend on Vercel. The optional Gemini Ask adapter is implemented but remains disabled by default; production activation and scientific evaluation are separate. Inspect current files and recorded checks before claiming that Docker images build or a deployment exists. Commands become runnable only when their corresponding code and dependency files are added and verified.
 
 ## Implementation boundaries
 
@@ -13,6 +13,7 @@ The backend, explicit corpus importer and Vue frontend now exist with pinned dep
 - Use Vue 3, TypeScript, Vite, npm and Node 24 for the frontend. Keep its real package-lock.json committed. Run its typecheck, lint, tests and build from frontend/.
 - Keep all API credentials on the backend. VITE_* is public build configuration.
 - Default LLM access to disabled. Keep the current API budget at USD 0 and do not enable billing or paid fallback.
+- Follow docs/AI_SETUP.md for the explicit additive Ask migration and persistent quotas. Corpus reads remain read-only; POST Ask may reserve usage only in existing migrated tables. Never reset counters during restart, key rotation or recovery.
 - QResto is shared infrastructure. Inspect its existing ingress and available resources before preparing a deployment change.
 - The project domain is flareledger.fun, registered through Vercel. DNS routing, hosting, and certificates remain deployment tasks.
 

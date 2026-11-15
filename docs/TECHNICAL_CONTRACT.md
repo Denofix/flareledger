@@ -35,7 +35,7 @@ python -m mypy app and python -m pytest -q.
 
 LLM failure must not disable catalog, source access or measured data. Ask defaults
 to a structured unavailable response and source retrieval. The opt-in Gemini
-adapter requires the verified Hydrogen model, key, positive rolling quotas and
+adapter requires an explicitly allowed Gemini model, key, positive rolling quotas and
 explicit `python -m app.migrate_ask` after a backup. Reservations persist in the
 same SQLite snapshot; quota writes never change source entities. A transactional
 lease, network timeout, byte limits, no retries and explicit insufficient-evidence

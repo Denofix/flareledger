@@ -89,17 +89,18 @@ def test_opt_in_needs_key_positive_limits_and_explicit_migration(settings):
     assert provider.calls == 0
 
 
-def test_natural_question_uses_real_sources_and_preserves_original_corpus(settings):
+@pytest.mark.parametrize("model", ["gemini-4-hydrogen", "gemini-3.6-flash"])
+def test_natural_question_uses_real_sources_and_preserves_original_corpus(settings, model):
     migrate(settings.database_path)
     provider = Stub()
     original = Repository(settings).readiness()
-    with TestClient(create_app(settings, configured(), provider)) as client:
+    with TestClient(create_app(settings, configured(model=model), provider)) as client:
         response = client.post(
             "/api/ask", json={"question": "What evidence is available about PMMA in the BASS experiments?"}
         )
         assert response.status_code == 200
         result = response.json()
-        assert result["status"] == "generated" and result["model"] == "gemini-4-hydrogen"
+        assert result["status"] == "generated" and result["model"] == model
         assert result["scientific_review"] is False
         assert result["citations"][0]["source_id"] in result["retrieved_evidence"][0]["source_ids"]
         assert response.headers["cache-control"] == "no-store"
@@ -229,11 +230,12 @@ def test_corrupt_ask_state_never_sends_an_unaccounted_call(settings):
         migrate(settings.database_path)
 
 
-def test_environment_configuration_rejects_custom_hosts_and_unsafe_limits(monkeypatch):
+@pytest.mark.parametrize("model", ["gemini-4-hydrogen", "gemini-3.6-flash"])
+def test_environment_configuration_rejects_custom_hosts_and_unsafe_limits(monkeypatch, model):
     values = {
         "LLM_ENABLED": "true",
         "LLM_PROVIDER": "gemini",
-        "LLM_MODEL": "gemini-4-hydrogen",
+        "LLM_MODEL": model,
         "GEMINI_API_KEY": "TEST-ONLY-KEY",
         "ASK_MAX_REQUESTS_PER_DAY": "10",
         "ASK_MAX_REQUESTS_PER_MINUTE": "3",
@@ -251,6 +253,8 @@ def test_environment_configuration_rejects_custom_hosts_and_unsafe_limits(monkey
         ("ASK_MAX_REQUESTS_PER_DAY", "100"),
         ("LLM_TIMEOUT_SECONDS", "invalid"),
         ("LLM_PROVIDER", "openai"),
+        ("LLM_MODEL", "gemini-flash-latest"),
+        ("LLM_MODEL", "gemini-4-carbon"),
     ):
         monkeypatch.setenv(key, value)
         assert LLMSettings.from_env().configured is False
@@ -297,7 +301,8 @@ def test_large_streamed_bodies_and_user_provider_configuration_are_rejected(sett
     assert provider.calls == 0 and count(settings) == 0
 
 
-def test_transport_uses_only_configured_official_endpoint_and_validates_complete_response(settings):
+@pytest.mark.parametrize("model", ["gemini-4-hydrogen", "gemini-3.6-flash"])
+def test_transport_uses_only_configured_official_endpoint_and_validates_complete_response(settings, model):
     with Repository(settings).connection() as db:
         _, context = retrieve(Repository(settings), db, "PMMA")
     explanation = supported(context)
@@ -308,9 +313,10 @@ def test_transport_uses_only_configured_official_endpoint_and_validates_complete
     opener = mock.Mock()
     opener.open.return_value = io.BytesIO(json.dumps(body).encode())
     with mock.patch("app.llm.urllib.request.build_opener", return_value=opener):
-        result = GeminiProvider(configured()).generate("PMMA", context)
+        result = GeminiProvider(configured(model=model)).generate("PMMA", context)
     request = opener.open.call_args.args[0]
     payload = json.loads(request.data)
+    assert payload["model"] == model
     assert result.status == "generated" and payload["store"] is False
     assert payload["response_format"]["mime_type"] == "application/json"
     assert payload["generation_config"]["thinking_level"] == "low"
@@ -323,22 +329,24 @@ def test_transport_uses_only_configured_official_endpoint_and_validates_complete
             mock.patch("app.llm.urllib.request.build_opener", return_value=opener),
             pytest.raises(ProviderUnavailable),
         ):
-            GeminiProvider(configured()).generate("PMMA", context)
+            GeminiProvider(configured(model=model)).generate("PMMA", context)
 
 
-def test_transport_timeout_does_not_leak_credentials_or_retry():
+@pytest.mark.parametrize("model", ["gemini-4-hydrogen", "gemini-3.6-flash"])
+def test_transport_timeout_does_not_leak_credentials_or_retry(model):
     opener = mock.Mock()
     opener.open.side_effect = TimeoutError("TEST-ONLY-KEY")
     with (
         mock.patch("app.llm.urllib.request.build_opener", return_value=opener),
         pytest.raises(ProviderUnavailable) as caught,
     ):
-        GeminiProvider(configured()).generate("PMMA", [])
+        GeminiProvider(configured(model=model)).generate("PMMA", [])
     assert "TEST-ONLY-KEY" not in str(caught.value) and opener.open.call_count == 1
 
 
-@pytest.mark.parametrize("status", [301, 403, 429, 500])
-def test_provider_http_errors_have_no_automatic_retry_or_exposed_error_body(status):
+@pytest.mark.parametrize("model", ["gemini-4-hydrogen", "gemini-3.6-flash"])
+@pytest.mark.parametrize("status", [301, 403, 429, 500, 503])
+def test_provider_http_errors_have_no_automatic_retry_or_exposed_error_body(status, model):
     opener = mock.Mock()
     opener.open.side_effect = urllib.error.HTTPError(
         "https://example.invalid", status, "TEST-ONLY-KEY", {}, None
@@ -347,6 +355,18 @@ def test_provider_http_errors_have_no_automatic_retry_or_exposed_error_body(stat
         mock.patch("app.llm.urllib.request.build_opener", return_value=opener),
         pytest.raises(ProviderUnavailable) as caught,
     ):
-        GeminiProvider(configured()).generate("PMMA", [])
+        GeminiProvider(configured(model=model)).generate("PMMA", [])
     assert opener.open.call_count == 1
     assert str(caught.value) == ("provider_quota_exhausted" if status == 429 else "provider_unavailable")
+
+
+def test_model_switch_keeps_existing_quota_and_does_not_fallback(settings):
+    migrate(settings.database_path)
+    failed = Stub(failure="provider_unavailable")
+    with TestClient(create_app(settings, configured(daily=1), failed)) as client:
+        assert client.post("/api/ask", json={"question": "PMMA"}).status_code == 503
+    flash = Stub()
+    with TestClient(create_app(settings, configured(daily=1, model="gemini-3.6-flash"), flash)) as client:
+        result = client.post("/api/ask", json={"question": "PMMA"})
+        assert result.status_code == 429 and result.json()["retrieved_evidence"]
+    assert failed.calls == 1 and flash.calls == 0 and count(settings) == 1

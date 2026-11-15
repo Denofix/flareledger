@@ -65,7 +65,7 @@ class LLMSettings:
             and self.valid
             and bool(self.key)
             and self.provider == "gemini"
-            and self.model == "gemini-4-hydrogen"
+            and self.model in ("gemini-4-hydrogen", "gemini-3.6-flash")
             and 1 <= self.daily <= 18
             and 1 <= self.minute <= 3
             and 5 <= self.timeout <= 45

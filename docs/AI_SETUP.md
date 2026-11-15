@@ -25,6 +25,25 @@ rolling window is deliberately more conservative. A public visitor can consume
 this shared allowance; there is no per-user authentication or private judge quota.
 If it is exhausted, evidence browsing still works. Do not use paid fallback.
 
+### Explicit Gemini 3.6 Flash evaluation
+
+`gemini-3.6-flash` is also accepted when selected explicitly with `LLM_MODEL`.
+Google documents this stable model, Interactions support, structured JSON output,
+`thinking_level=low` and a Standard Free Tier. Hydrogen remains the default;
+there is no automatic substitution after an error. Check actual project access
+and model quotas in AI Studio before a live evaluation. Listed Free Tier pricing
+does not establish this project's eligibility or available quota.
+
+The first Flash evaluation is still pending: offline transport tests establish
+request construction and failure handling, not live access or scientific quality.
+An observed upstream HTTP 503 from Hydrogen does not establish a permanent model
+failure or prove that Flash will work. Google's API error reference describes 503
+as temporary service overload or downtime.
+
+Model selection uses the same SQLite reservation history. Switching model, key
+or process does not refill the application's shared rolling quota. Keep the
+existing database and limits, and do not enable billing as a workaround.
+
 ## Runtime configuration
 
 All values are server environment variables, read when the API starts. Native
@@ -35,7 +54,7 @@ file and forwards the explicitly listed settings to `api`.
 | --- | --- |
 | `LLM_ENABLED` | `false` by default; enable explicitly after review and local evaluation |
 | `LLM_PROVIDER` | `gemini` |
-| `LLM_MODEL` | `gemini-4-hydrogen`; only this verified model is accepted |
+| `LLM_MODEL` | `gemini-4-hydrogen` by default; explicit `gemini-3.6-flash` also accepted |
 | `GEMINI_API_KEY` | Secret in the backend environment; never Git, Vercel or `VITE_*` |
 | `LLM_BASE_URL` | Empty; custom gateways/URLs are rejected |
 | `ASK_MAX_REQUESTS_PER_DAY` | `0` by default; use `10` for the first controlled activation; allowed 1–18 |
@@ -106,6 +125,12 @@ export LLM_MAX_CONCURRENT_REQUESTS=1 LLM_TIMEOUT_SECONDS=30 LLM_MAX_OUTPUT_TOKEN
 export LLM_ENABLED=true
 python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
+
+For an explicit Flash evaluation, use `export LLM_MODEL=gemini-3.6-flash` instead
+of the Hydrogen model assignment **before starting that API process**. Use the
+same existing `DATABASE_PATH`, credentials and limits. A launcher that hardcodes
+Hydrogen must also be changed or replaced; setting a parent environment variable
+does not override a later shell assignment inside that launcher.
 
 From a second terminal, start the existing frontend with `npm run dev` and use
 `/ask`. First inspect `/api/meta` and `/api/health/ready`; neither spends quota.
@@ -179,6 +204,9 @@ and do not establish that the live structured scientific answer has been reviewe
 Official implementation references:
 
 - [Hydrogen model guidance](https://aistudio.google.com/docs/whats-new-gemini-4-hydrogen)
+- [Gemini 3.6 Flash model](https://aistudio.google.com/docs/models/gemini-3.6-flash)
+- [Thinking levels](https://aistudio.google.com/docs/thinking#thinking-levels)
+- [Interactions API errors](https://aistudio.google.com/docs/api-errors)
 - [Create Interaction](https://aistudio.google.com/api-reference/interactions-api/create-interaction)
 - [Structured output](https://aistudio.google.com/docs/structured-output)
 - [Rate limits](https://aistudio.google.com/docs/rate-limits)

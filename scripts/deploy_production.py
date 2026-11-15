@@ -28,6 +28,7 @@ from pathlib import Path
 
 import deploy_tools as tools
 import snapshot_tools as snap
+import operation_lock
 from restore_snapshot import PROBE
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -47,12 +48,15 @@ class Context:
     repo: Path
     public: str
     sites: tuple[str, ...]
+    recovery: bool = False
+    expected_corpus: str | None = None
 
 
-def run(command: list[str], env: dict | None = None, cwd: Path | None = None) -> str:
+def run(command: list[str], env: dict | None = None, cwd: Path | None = None, pass_fds: tuple[int, ...] = ()) -> str:
     try:
         result = subprocess.run(
-            command, capture_output=True, text=True, check=False, env={**os.environ, **(env or {})}, cwd=cwd
+            command, capture_output=True, text=True, check=False, env={**os.environ, **(env or {})}, cwd=cwd,
+            **({"pass_fds": pass_fds} if pass_fds else {}),
         )
     except OSError as error:
         raise DeployError(f"Cannot run {command[0]}: {error}") from error
@@ -62,15 +66,9 @@ def run(command: list[str], env: dict | None = None, cwd: Path | None = None) ->
 
 
 @contextmanager
-def lock(directory: Path):
-    import fcntl  # Linux only
-
-    with (directory / ".deploy.lock").open("w") as handle:
-        try:
-            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except OSError as error:
-            raise DeployError("Another deploy, rollback or backup is running") from error
-        yield
+def lock(directory: Path, project: str = "flareledger"):
+    with operation_lock.acquire(directory, project) as handle:
+        yield handle
 
 
 def compose(ctx: Context, *arguments: str) -> list[str]:
@@ -88,7 +86,7 @@ def compose_env(tag: str) -> dict:
 def container(ctx: Context) -> str:
     ids = run(
         [
-            "docker", "ps", "--quiet",
+            "docker", "ps", *(["--all"] if ctx.recovery else []), "--quiet",
             "--filter", f"label=com.docker.compose.project={ctx.project}",
             "--filter", "label=com.docker.compose.service=api",
         ]
@@ -167,6 +165,16 @@ def switch(ctx: Context, revision: str, build: bool) -> str:
 
 def pre_checks(ctx: Context) -> tuple[list[tools.Check], dict]:
     cid = container(ctx)
+    if ctx.recovery:
+        # Recovery is explicit: current HTTP/SQLite health is not a precondition.
+        # Read-only probes may still supply useful data-preservation checks.
+        try:
+            baseline = probe(cid)
+        except (DeployError, ValueError, IndexError):
+            baseline = {}
+        if baseline.get("ready") != "ready" or baseline.get("corpus_version") != ctx.expected_corpus:
+            baseline = {"corpus_version": ctx.expected_corpus}
+        return [tools.check_tls(ctx.public), tools.sites_up(ctx.sites)], baseline
     baseline = probe(cid)
     checks = [tools.Check("local ready", baseline.get("ready") == "ready", f"corpus {str(baseline.get('corpus_version'))[:24]}")]
     public, version = tools.public_ready(ctx.public)
@@ -182,18 +190,21 @@ def post_checks(ctx: Context, baseline: dict, allow_corpus_change: bool) -> list
     if allow_corpus_change:
         same = tools.Check("data unchanged", now.get("ready") == "ready", "corpus change allowed; ready only")
     else:
-        diff = [key for key in COUNT_KEYS if now.get(key) != baseline.get(key)]
+        diff = [key for key in COUNT_KEYS if key in baseline and now.get(key) != baseline.get(key)]
         same = tools.Check("data unchanged", now.get("ready") == "ready" and not diff, "all counts and corpus version match" if not diff else f"differs: {', '.join(diff)}")
-    public, _ = tools.public_ready(ctx.public)
-    return [same, public, tools.parallel_reads(ctx.public), tools.sites_up(ctx.sites), tools.check_tls(ctx.public)]
+    public, version = tools.public_ready(ctx.public)
+    agrees = tools.Check("public matches local", public.ok and version == now.get("corpus_version"), "corpus versions must match")
+    return [same, public, agrees, tools.parallel_reads(ctx.public), tools.sites_up(ctx.sites), tools.check_tls(ctx.public)]
 
 
-def backup_before(ctx: Context) -> str:
+def backup_before(ctx: Context, handle=None) -> str:
+    fd = handle.fileno() if handle is not None else None
     output = run(
         [
             sys.executable, str(BACKUP_SCRIPT), "--dest", str(ctx.snapshots), "--kind", "pre-update",
             "--repo", str(ctx.repo), "--project", ctx.project,
-        ]
+            *(["--lock-fd", str(fd)] if fd is not None else []),
+        ], pass_fds=(fd,) if fd is not None else (),
     )
     for part in output.split("|"):
         if part.strip().startswith("snapshot="):
@@ -228,7 +239,7 @@ def perform(
     if action == "rollback" and not present:
         print(f"REFUSED | {reference} is not present and rollback never builds", file=sys.stderr)
         return 1
-    if current == target:
+    if current == target and not ctx.recovery:
         print("NOTHING_TO_DO | the target revision is already running")
         return 0
     if not execute:
@@ -236,7 +247,9 @@ def perform(
               + ("build, " if action == "deploy" and not present else "")
               + "restart, post-checks, automatic return to the previous image on failure")
         return 0
-    with lock(ctx.snapshots):
+    with lock(ctx.snapshots, ctx.project) as handle:
+        # Another operation may have completed between the plan and lock acquisition.
+        _, _, current = running(ctx)
         require_clean_checkout(ctx)
         checks, baseline = pre_checks(ctx)
         print("pre-checks:\n" + tools.render(checks))
@@ -244,7 +257,13 @@ def perform(
             record(ctx, {"event": "refused", "action": action, "target": target})
             print("REFUSED | pre-checks failed; nothing was changed", file=sys.stderr)
             return 1
-        snapshot = backup_before(ctx)
+        try:
+            snapshot = backup_before(ctx, handle)
+        except DeployError as error:
+            if not ctx.recovery:
+                raise
+            snapshot = "unavailable-current-state-left-in-volume"
+            print(f"WARNING: recovery backup unavailable; no database replacement is performed: {error}", file=sys.stderr)
         print(f"pre-update backup: {snapshot}")
         record(ctx, {"event": "started", "action": action, "from": current, "to": target, "backup": snapshot})
         failure = None
@@ -299,6 +318,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--revision", help="commit (full or abbreviated SHA) that is part of origin/main")
     parser.add_argument("--execute", action="store_true", help="actually run deploy or rollback")
     parser.add_argument("--allow-corpus-change", action="store_true", help="release intentionally changes the corpus")
+    parser.add_argument("--recover", action="store_true", help="rollback only: recover an unavailable or stopped API")
+    parser.add_argument("--expected-corpus-version", help="required with --recover: corpus version the restored API must serve")
     parser.add_argument("--app-dir", type=Path, default=Path.home() / "flareledger")
     parser.add_argument("--project", default="flareledger")
     parser.add_argument("--snapshots", type=Path, default=Path("/var/backups/flareledger/snapshots"))
@@ -308,11 +329,14 @@ def main(argv: list[str] | None = None) -> int:
     args = parser.parse_args(argv)
     if args.command != "status" and not args.revision:
         parser.error(f"{args.command} needs --revision")
+    if args.recover and (args.command != "rollback" or not args.expected_corpus_version or args.allow_corpus_change):
+        parser.error("--recover requires rollback and --expected-corpus-version; corpus changes are not allowed")
     if args.app_dir.resolve() == ROOT:
         parser.error("--app-dir must not be the tooling checkout")
     ctx = Context(
         args.app_dir.resolve(), args.project, args.snapshots, args.repo.resolve(),
         args.public_url, tuple(args.sites) if args.sites else tools.SITES,
+        args.recover, args.expected_corpus_version,
     )
     try:
         if args.command == "status":

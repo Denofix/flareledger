@@ -23,6 +23,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import snapshot_tools as tools
+import operation_lock
 
 ROOT = Path(__file__).resolve().parents[1]
 CONTAINER_BACKUPS = "/app/state/backups/"
@@ -56,15 +57,8 @@ def find_container(project: str) -> str:
     return output[0]
 
 
-def lock(directory: Path):
-    import fcntl  # Linux only; imported here so the helpers stay importable elsewhere.
-
-    handle = (directory / ".lock").open("w")
-    try:
-        fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-    except OSError as error:
-        raise BackupError("Another backup is already running") from error
-    return handle
+def lock(directory: Path, project: str = "flareledger", inherited_fd: int | None = None):
+    return operation_lock.acquire(directory, project, inherited_fd)
 
 
 def application_block(image_reference: str, image_id: str, repository: Path, override: str | None) -> dict:
@@ -148,14 +142,15 @@ def main(argv: list[str] | None = None) -> int:
         "--repo", type=Path, default=ROOT, help="git checkout used only to resolve the image tag to a full SHA"
     )
     parser.add_argument("--revision", help="full commit SHA of the running image when its tag is not a commit SHA")
+    parser.add_argument("--lock-fd", type=int, help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
     if args.keep < 1:
         parser.error("--keep must be at least 1")
     args.dest.mkdir(mode=0o700, parents=True, exist_ok=True)
     os.umask(0o077)
     try:
-        handle = lock(args.dest)
-    except BackupError as error:
+        handle = lock(args.dest, args.project, args.lock_fd)
+    except (BackupError, OSError, ValueError) as error:
         print(f"BACKUP_FAILED | {error}", file=sys.stderr)
         return 1
     with handle:

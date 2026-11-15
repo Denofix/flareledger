@@ -46,6 +46,14 @@ See [backup and recovery](BACKUP_RECOVERY.md).
 
 See [deploy, rollback and monitoring](DEPLOY_ROLLBACK.md).
 
+Review fixes: explicit recovery rollback no longer requires current readiness and
+can restart a stopped API. It requires a known-good image/revision and an explicit
+expected corpus version. Backup and deploy share one per-project operation lock,
+including safe inheritance by nested backup. Regression checks: 32 deploy/monitor
+tests, 18 snapshot tests and 2 SQLite backup tests passed locally; 4 additional real
+Linux cross-process lock tests passed inside an isolated Python 3.12 container.
+These new recovery paths have not yet been run against the live deployment.
+
 Frontend monitor extension verified externally on 14 November 2026 at 23:06 UTC:
 frontend HTML shell, frontend and direct API TLS, readiness through flareledger.fun,
 matching corpus_version and all seven direct API read probes passed. The 28 local

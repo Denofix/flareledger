@@ -56,6 +56,37 @@ host (older images are kept). Use it to go back to a known revision, for example
 rollback --revision <previous sha> --execute. Results are appended to
 /var/backups/flareledger/snapshots/deploy.log as JSON lines.
 
+### Recovery when the current API is down
+
+Normal deploy/rollback still require a healthy baseline. For an unavailable or
+stopped API, explicitly use the recovery path and the full corpus version from a
+known verified snapshot or release record:
+
+```sh
+python3 scripts/deploy_production.py rollback --revision <known-good-sha> \
+  --recover --expected-corpus-version '<verified-corpus-version>' --execute
+```
+
+This still validates the target commit against origin/main, requires an existing
+image and a clean application checkout, checks TLS and neighbouring sites, and
+verifies readiness, corpus identity and catalogue reads afterwards. Current API
+health is not a precondition. A pre-update backup is attempted, but a failed backup
+does not block explicit recovery; the state volume is retained, and no database is
+replaced by this command. If local probes work, their counts are also preserved.
+The same stopped image can be restarted with this path. An unsuccessful return is
+reported as ROLLBACK_FAILED / exit 2, not a healthy recovery.
+
+### Shared operation lock
+
+Backup and deploy/rollback share `.operation-<project>.lock` in the snapshots
+directory. Use the same snapshots path for every operation on a project. Do not
+unlink the file while operations may run. Nested pre-update backup receives the
+parent's locked descriptor via subprocess pass_fds; it cannot bypass the lock
+with a standalone skip flag. All tool users, including the scheduled backup,
+must use the updated tooling checkout before these commands are enabled.
+Database replacement in PR13 must adopt this helper after PR12 is merged; do not
+run the old independently locked replacement script alongside the new tools.
+
 If a release changed the database schema, rolling the image back is not enough:
 restore the matching pre-update snapshot first. Releases that intentionally change the
 corpus use --allow-corpus-change, which then requires only that the API is ready.

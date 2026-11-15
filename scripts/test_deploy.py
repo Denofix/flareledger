@@ -63,19 +63,24 @@ class FakeHost:
         self.log: list[list[str]] = []
         self.up_fails_for: str | None = None
         self.build_tags: list[str] = []
+        self.stopped = False
+        self.probe_fails_for: str | None = None
+        self.backup_fails = False
 
     def words(self) -> list[str]:
         return [word for command in self.log for word in command]
 
-    def __call__(self, command, env=None, cwd=None):
+    def __call__(self, command, env=None, cwd=None, pass_fds=()):
         if command[0] == "git":
             return REAL_RUN(command, env, cwd)
         self.log.append(list(command))
         if command[:2] == ["docker", "ps"]:
-            return "cid1\n"
+            return "" if self.stopped and "--all" not in command else "cid1\n"
         if command[:2] == ["docker", "inspect"]:
             return f"flareledger-api:{self.running[:7]}\n" if "Config.Image" in command[-1] else "healthy\n"
         if command[:2] == ["docker", "exec"]:
+            if self.stopped or self.running == self.probe_fails_for:
+                raise deploy.DeployError("current API unavailable")
             return json.dumps(PROBE_DATA) + "\n"
         if command[:3] == ["docker", "image", "inspect"]:
             if command[3] not in self.images:
@@ -90,8 +95,11 @@ class FakeHost:
                 if self.up_fails_for and target == self.up_fails_for:
                     raise deploy.DeployError("compose up failed")
                 self.running = target
+                self.stopped = False
             return ""
         if command[0] == sys.executable:  # the backup script
+            if self.backup_fails:
+                raise deploy.DeployError("SQLite backup unavailable")
             return "BACKUP_OK | kind=pre-update | snapshot=flareledger-pre-update-20261114T000000Z-aaaaaaaa | kept<=7\n"
         raise AssertionError(f"unexpected command {command}")
 
@@ -109,7 +117,7 @@ class DeployTests(unittest.TestCase):
         self.public_ok = True
         patches = [
             mock.patch.object(deploy, "run", self.host),
-            mock.patch.object(deploy, "lock", lambda directory: contextlib.nullcontext()),
+            mock.patch.object(deploy, "lock", lambda directory, project="flareledger": contextlib.nullcontext()),
             mock.patch.object(deploy.time, "sleep", lambda seconds: None),
             mock.patch.object(tools, "public_ready", self.public_ready),
             mock.patch.object(tools, "parallel_reads", self.parallel_reads),
@@ -258,6 +266,45 @@ class DeployTests(unittest.TestCase):
         self.assertEqual(code, 0)
         self.assertIn("NOTHING_TO_DO", out)
         self.assertNotIn("up", self.host.words())
+
+    def test_recovery_rollback_handles_unavailable_or_stopped_api_and_failed_backup(self):
+        for stopped in (False, True):
+            self.host.running = self.shas[0]
+            self.host.stopped = stopped
+            self.host.probe_fails_for = self.shas[0]
+            self.host.backup_fails = True
+            self.host.images.add(f"flareledger-api:{self.shas[1][:7]}")
+            with mock.patch.object(tools, "public_ready", lambda base: (
+                tools.Check("public ready", self.host.running == self.shas[1], ""),
+                "synthetic" if self.host.running == self.shas[1] else None,
+            )):
+                code, out, err = self.invoke("rollback", "--revision", self.shas[1], "--execute",
+                                             "--recover", "--expected-corpus-version", "synthetic")
+            self.assertEqual(code, 0, err)
+            self.assertIn("ROLLBACK_OK", out)
+            self.assertEqual(self.host.running, self.shas[1])
+            self.assertNotIn("build", self.host.words())
+
+    def test_recovery_refuses_wrong_expected_corpus_after_restart(self):
+        self.host.images.add(f"flareledger-api:{self.shas[1][:7]}")
+        self.host.probe_fails_for = self.shas[0]
+        code, _, err = self.invoke("rollback", "--revision", self.shas[1], "--execute",
+                                    "--recover", "--expected-corpus-version", "wrong")
+        self.assertEqual(code, 2)
+        self.assertIn("ROLLBACK_FAILED", err)
+
+    def test_recovery_can_restart_the_same_stopped_revision(self):
+        self.host.stopped = True
+        code, out, err = self.invoke("rollback", "--revision", self.shas[0], "--execute",
+                                    "--recover", "--expected-corpus-version", "synthetic")
+        self.assertEqual(code, 0, err)
+        self.assertIn("ROLLBACK_OK", out)
+        self.assertFalse(self.host.stopped)
+
+    def test_recovery_requires_explicit_expected_corpus_and_rollback(self):
+        for command in ("deploy", "rollback"):
+            with self.assertRaises(SystemExit), contextlib.redirect_stderr(io.StringIO()):
+                self.invoke(command, "--revision", self.shas[1], "--recover")
 
     def test_the_tooling_checkout_cannot_be_the_managed_checkout(self):
         with self.assertRaises(SystemExit) as stop, contextlib.redirect_stderr(io.StringIO()):

@@ -315,9 +315,19 @@ def test_transport_uses_only_configured_official_endpoint_and_validates_complete
     with Repository(settings).connection() as db:
         _, context = retrieve(Repository(settings), db, "PMMA")
     explanation = supported(context)
+    draft = {
+        "status": "generated",
+        "claims": [
+            {
+                "text": "The corpus documents this investigation.",
+                "citation": explanation["citations"][0],
+            }
+        ],
+        "limitations": explanation["limitations"],
+    }
     body = {
         "status": "completed",
-        "steps": [{"type": "model_output", "content": [{"type": "text", "text": json.dumps(explanation)}]}],
+        "steps": [{"type": "model_output", "content": [{"type": "text", "text": json.dumps(draft)}]}],
     }
     opener = mock.Mock()
     opener.open.return_value = io.BytesIO(json.dumps(body).encode())
@@ -327,6 +337,9 @@ def test_transport_uses_only_configured_official_endpoint_and_validates_complete
     payload = json.loads(request.data)
     assert payload["model"] == model
     assert result.status == "generated" and payload["store"] is False
+    assert result.answer == explanation["answer"]
+    assert "claims" in payload["response_format"]["schema"]["properties"]
+    assert "answer" not in payload["response_format"]["schema"]["properties"]
     assert payload["response_format"]["mime_type"] == "application/json"
     assert payload["generation_config"]["thinking_level"] == "low"
     assert "TEST-ONLY-KEY" not in request.data.decode()

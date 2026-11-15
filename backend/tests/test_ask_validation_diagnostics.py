@@ -8,7 +8,7 @@ from typing import Any
 import pytest
 from fastapi.testclient import TestClient
 
-from app.ask import ExplanationRejected, RejectionCode, validate_explanation
+from app.ask import ExplanationRejected, validate_explanation
 from app.ask_store import migrate
 from app.llm import Explanation, LLMSettings, ProviderUnavailable
 from app.main import create_app
@@ -74,7 +74,25 @@ class Provider:
         return Explanation.model_validate(value)
 
 
-@pytest.mark.parametrize("code", [item.value for item in RejectionCode])
+@pytest.mark.parametrize(
+    "code",
+    [
+        "refusal_contains_content",
+        "missing_answer",
+        "missing_citations",
+        "missing_limitations",
+        "unknown_context",
+        "source_not_in_context",
+        "quote_not_exact",
+        "citation_marker_missing",
+        "unknown_citation_marker",
+        "unseen_numeric_token",
+        "model_supplied_url",
+        "oversized_limitation",
+        "invalid_output_schema",
+        "unexpected_validation_error",
+    ],
+)
 def test_rejection_logs_only_fixed_code_and_preserves_failure_contract(settings, caplog, code):
     migrate(settings.database_path)
     provider = Provider(code)

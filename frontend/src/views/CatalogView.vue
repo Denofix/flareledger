@@ -143,7 +143,7 @@ onMounted(load);
           ><span class="mono muted">{{ item.id }}</span>
         </div>
         <div class="card-eyebrow">
-          {{ item.acronym || item.id }}
+          {{ item.acronym || "INVESTIGATION" }}
         </div>
         <h3>{{ item.title_en || item.title }}</h3>
         <p>{{ item.summary_en }}</p>

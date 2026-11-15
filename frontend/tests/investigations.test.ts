@@ -64,36 +64,40 @@ it("keeps a missing-acronym catalog label stable when preceding cards are filter
   const wrapper = await setup(CatalogView, "/");
   expect(wrapper.findAll(".card-eyebrow").map((el) => el.text())).toEqual([
     "FIRST",
-    "TEST-2",
+    "INVESTIGATION",
   ]);
   await wrapper.get('input[type="search"]').setValue("TEST-2");
   expect(wrapper.findAll(".card-eyebrow").map((el) => el.text())).toEqual([
-    "TEST-2",
+    "INVESTIGATION",
   ]);
+  expect(
+    wrapper
+      .get('a[href="/investigations/TEST-2"]')
+      .text()
+      .match(/TEST-2/g),
+  ).toHaveLength(1);
   wrapper.unmount();
 });
 
 it("uses the source investigation ID for both evidence links when the acronym is missing", async () => {
   vi.stubGlobal(
     "fetch",
-    vi
-      .fn()
-      .mockImplementation((url: string) =>
-        Promise.resolve(
-          new Response(
-            JSON.stringify(
-              url.includes("/investigations/")
-                ? {
-                    item: investigation("TEST-2", null),
-                    sources: [],
-                    evidence: [],
-                    quality_issues: [],
-                  }
-                : { items: [], total: url.includes("/records") ? 13 : 0 },
-            ),
+    vi.fn().mockImplementation((url: string) =>
+      Promise.resolve(
+        new Response(
+          JSON.stringify(
+            url.includes("/investigations/")
+              ? {
+                  item: investigation("TEST-2", null),
+                  sources: [],
+                  evidence: [],
+                  quality_issues: [],
+                }
+              : { items: [], total: url.includes("/records") ? 13 : 0 },
           ),
         ),
       ),
+    ),
   );
   const wrapper = await setup(InvestigationView, "/investigations/TEST-2");
   expect(

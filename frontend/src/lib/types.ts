@@ -31,6 +31,7 @@ export interface Source extends Entity {
   investigation_version?: string | number;
 }
 export interface Issue extends Entity {
+  source_ids?: string[];
   description_en?: string;
   action?: string;
 }

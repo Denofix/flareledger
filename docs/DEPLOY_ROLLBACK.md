@@ -41,14 +41,14 @@ the last backup. It exits non-zero if any of these is bad.
 ## What deploy does
 
 1. Resolves the commit, requires it to be on origin/main, shows current and target.
-2. Pre-checks: local and public readiness agree, certificate valid, QResto and Feloza
-   answer 200. A failure refuses the release before anything is changed.
+2. Pre-checks: local and public readiness agree, certificates are valid and
+   existing ingress services remain reachable. A failure refuses the release.
 3. Takes a pre-update snapshot (see [backup and recovery](BACKUP_RECOVERY.md)).
 4. Checks out the commit, builds the image flareledger-api:<7-character SHA> if it is
    missing and recreates only the api container.
 5. Post-checks: ready, unchanged corpus and counts, overlapping catalogue reads
    (any 5xx fails, which would have caught the concurrency fault fixed in PR 8),
-   QResto and Feloza, certificate.
+   plus existing shared-service reachability and TLS.
 6. On failure returns to the previous image without rebuilding and checks again.
 
 rollback is the same without the build: the target image must already exist on the
@@ -98,8 +98,8 @@ certificate at https://flareledger.fun/, plus /api/health/ready through that ori
 The proxied corpus_version must equal the directly queried API version. A 200 SPA
 HTML response on the readiness path fails. --web-url selects another frontend
 origin for a one-off check; the production default remains the primary domain.
-The monitor never calls /api/ask: its current 503 llm_unavailable is expected, and
-monitoring must not consume future LLM quota.
+The monitor never calls /api/ask. Enabled generation, exhausted quota and provider
+availability are separate from readiness; monitoring must not consume LLM quota.
 
 It also checks direct API readiness (HTTP 200 and status ready), a round of
 catalogue reads and the certificate (failure under 10 days left, warning under 21).

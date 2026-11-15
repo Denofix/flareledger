@@ -6,24 +6,32 @@ FlareLedger is a team project for the **2026 NASA Space Apps Challenge**, addres
 
 ## Current status
 
-The first backend provides explicit checksum-verified SQLite ingestion, investigation
-browsing, typed source records, measured series, lexical search and source-linked
-comparison. Native tests exercise the real corpus and backend backup restoration.
-See [backend setup](backend/README.md) and the [API handoff](docs/BACKEND_API.md).
+As checked on 15 November 2026, the public frontend is available at
+https://flareledger.fun/ (also https://flareledger.vercel.app/). Its same-origin
+`/api` routes forward to the API at https://api.flareledger.fun. Readiness through
+both domains returns HTTP 200 with `status: ready` and the same corpus version.
+The backend runs release `969cb9460de9115fe0a16016bd02bf168aa7175e` (PR22).
 
-The backend API runs on the VPS at https://api.flareledger.fun (readiness:
-`/api/health/ready`) with the verified corpus, verified SQLite snapshots (an off-VPS copy is pulled
-by the team laptop) and a tested restore procedure. The Vue frontend now provides
-investigation browsing, original measured charts, compatible-series comparison,
-source records and evidence search. Ask supports optional source-linked Gemini
-explanations with persistent quotas and remains disabled by default. Production
-activation and independent scientific evaluation are still pending. See [AI setup](docs/AI_SETUP.md),
-[frontend setup](frontend/README.md), [Vercel handoff](docs/FRONTEND_HANDOFF.md),
-[infrastructure status](docs/INFRA_STATUS.md)
-and [backup and recovery](docs/BACKUP_RECOVERY.md).
+Implemented features include checksum-verified SQLite ingestion, 10 investigations,
+source-linked records, six original measured series, compatible-series comparison
+and lexical evidence search. The read-only corpus and persistent database remain
+separate. Daily backups, verified off-VPS copies and readiness/TLS/backup monitoring
+are in place. See [backend setup](backend/README.md), [frontend setup](frontend/README.md),
+[infrastructure status](docs/INFRA_STATUS.md) and [backup/recovery](docs/BACKUP_RECOVERY.md).
 
-The registered project domain is **flareledger.fun**. The frontend is published at https://flareledger.fun/ and https://flareledger.vercel.app/
-from main commit 1d258c9, with same-origin /api forwarding to the VPS. The VPS lease ends on 1 December 2026. [Deployment decisions](docs/DEPLOYMENT.md) describe the layout.
+Gemini Ask is explicitly enabled in this production environment with
+`gemini-3.6-flash`, a shared limit of 10 reservations per rolling 24 hours,
+3 per rolling minute and one active generation lease. Code defaults remain
+disabled. Billing and paid fallback remain off; budget is **USD 0**. A configured
+provider and a successful response are not scientific validation. The separate
+15-question journal for this release is prepared, but all 15 live outcomes remain
+`NOT_RUN`; scientific acceptance is unfinished. See [AI setup](docs/AI_SETUP.md),
+[evaluation criteria](docs/AI_EVALUATION.md) and the [release audit](docs/RELEASE_AUDIT.md).
+
+PR20–22 diagnostic, citation and retrieval changes are merged and deployed.
+PR23 contains small UI fixes awaiting review; it is not part of the deployed
+evaluation baseline. The VPS lease ends on 1 December 2026; the exact shutdown
+time is unconfirmed. See [deployment decisions](docs/DEPLOYMENT.md).
 
 ## Start here
 
@@ -51,13 +59,13 @@ For a new Ubuntu VM, follow the [Ubuntu and GitHub setup guide](docs/SETUP_UBUNT
 | `frontend/` | Vue 3, TypeScript, Vite, measured charts and source-linked evidence browsing |
 | `data/` | Dataset documentation, reviewed demo data, and local raw/processed files |
 | `infra/` | Docker, Compose, ingress, and deployment implementation |
-| `scripts/` | Repository checks and future reproducible maintenance commands |
+| `scripts/` | Repository checks, deployment, monitoring, backup and recovery commands |
 | `docs/` | Setup, contracts, architecture decisions, and delivery plan |
 | `design/` | Original UI assets, design exports, and their credits |
 | `presentation/` | Pitch material, screenshots, demo script, and source credits |
 | `.github/` | Repository checks, issue templates, PR template, and code owners |
 
-Python and frontend dependencies will be owned by their respective directories. A root JavaScript workspace or additional monorepo framework is not required for the current scope.
+Python and frontend dependencies are owned by their respective directories. A root JavaScript workspace or additional monorepo framework is not required for the current scope.
 
 ## Target implementation
 
@@ -65,7 +73,7 @@ Python and frontend dependencies will be owned by their respective directories. 
 - **Frontend:** Vue 3, TypeScript, Vite, npm, committed `package-lock.json`, output `frontend/dist/`.
 - **API:** same-origin `/api`; health endpoints `/api/health/live` and `/api/health/ready`.
 - **Data:** SQLite and a versioned, source-linked NASA demo corpus. Generated state stays outside Git.
-- **AI:** disabled by default; a free API is enabled only after its model, quota, and failure behavior are verified. The current LLM budget is **USD 0**, with no paid fallback.
+- **AI:** disabled by default in code; production explicitly enables Gemini 3.6 Flash with persistent shared quotas. The current LLM budget is **USD 0**, with no paid fallback.
 - **Deployment:** frontend on Vercel and API/SQLite on the VPS, as selected by the team.
   The API hostname, HTTPS and ingress are configured. The frontend includes the
   Vercel `/api` rewrite and SPA routing configuration; the public frontend and its proxied readiness are available at flareledger.fun.

@@ -1,35 +1,43 @@
 # Implementation roadmap
 
-## Start
+Status checked on 15 November 2026. This roadmap distinguishes delivered software,
+operator checks and unfinished scientific acceptance. See [release audit](RELEASE_AUDIT.md)
+for exact evidence and [team rules](../TEAM_RULES.md) for review requirements.
 
-| Task | Coordinator | Completion evidence |
+## Delivered
+
+| Area | State and evidence |
+| --- | --- |
+| Repository and collaboration | Monorepo, MIT code license, separate data-license notes, protected main and PR review workflow exist |
+| Backend and corpus | FastAPI, explicit checksum-verified importer, SQLite, health routes, investigations, records, sources and six measured series implemented |
+| Frontend | Vue application published at flareledger.fun; catalog, search, source pages, original charts and compatible comparison available |
+| Hosting and HTTPS | Frontend on Vercel; API and SQLite on the VPS through the existing shared Nginx and dedicated ingress network; both public readiness routes return 200 / ready |
+| Recovery and monitoring | Deploy/rollback, verified snapshots, off-VPS backup, recovery rehearsals, scheduled checks and Telegram incident transitions implemented |
+| Gemini Ask | Explicitly enabled in production with gemini-3.6-flash, persistent quotas 10/24h and 3/minute, one active lease, USD 0 and no paid fallback; code defaults remain disabled |
+| PR20 | Safe validation-reason diagnostics merged and deployed |
+| PR21 | Claim-bound citations and server-rendered markers merged and deployed; earlier diagnostic success is not a grade for the new release |
+| PR22 | Scoped evidence retrieval and hash-pinned ReadMe companion merged and deployed at 969cb9460de9115fe0a16016bd02bf168aa7175e |
+| Offline acceptance preparation | Fifteen frozen questions and 45/45 source anchors checked without model calls; a separate journal for 969cb94 was prepared |
+
+## Remaining work
+
+| Task | Coordination | Acceptance condition |
 | --- | --- | --- |
-| Authenticate Ubuntu VM and clone main | Denis | gh auth status, correct account, clean clone |
-| Confirm GitHub usernames and invite contributors | Denis | Accepted invitations and push access |
-| Enable main branch rules | Denis | One approval and actual repository check required |
-| Assign the first implementation tasks | Denis with the team | One owner and acceptance criteria per task |
+| Live answer evaluation | Timofey operates the journal; Denis reviews scientific results | Deferred by the operator. All 15 cases currently NOT_RUN. Resume only after an explicit decision and fresh quota preflight; preserve exact questions and receipts |
+| Small UI corrections | Timofey, separate PR23 | Review and preview verification before merge; keep the evaluation baseline unchanged during any resumed run |
+| Final technical documentation | Timofey | Review this audit/status update and reconcile remaining gaps without claiming scientific completion |
+| Demo release and fallback | Timofey with Denis | Agree the exact release, startup procedure, curated screenshots, fallback route and recovery owner; keep a verified backup containing the latest quota history |
+| Presentation, speech and submission requirements | Denis with the team | Check the official requirements separately; describe only demonstrated capabilities and visible limitations |
+| Hosting continuity | Timofey with Denis | Plan before the VPS lease ends on 1 December 2026; exact shutdown hour remains unconfirmed |
 
-## First implementation PRs
+## Evaluation boundary
 
-| Task | Proposed coordination | Completion evidence |
-| --- | --- | --- |
-| Backend scaffold and health endpoints | Denis and Sayat | Real dependency files, both health routes, readiness checks, existing tests |
-| Frontend shell | Sayat with Ivan | package.json, lock file, working scripts, routes, /api proxy |
-| Reviewed NASA seed and ingestion | Denis with backend developer | Source hash, explicit import command, versioned corpus, data checks |
-| UI and evidence presentation | Ivan with frontend developer | Screens and states aligned with real available data |
-| Docker and application CI | Timofey | Local builds and CI using the merged component commands |
+Live evaluation is currently deferred, not completed or converted into PASS.
+NOT_RUN, PENDING_REVIEW and NOT_EVALUABLE must remain visible in any handoff.
+An HTTP 200, a matching citation marker, a prepared screenshot or 45 matching source
+anchors cannot establish scientific answer quality. If the team elects to present
+without the full live run, disclose that limitation explicitly.
 
-These are coordination proposals. Confirm the implementer and availability in the team.
-
-## Public demo
-
-1. Timofey confirms permission, resource headroom, SSH access, and existing QResto ingress.
-2. Select hosting, document the decision, and build the application at a known commit.
-3. Connect flareledger.fun to that hosting and verify DNS and HTTPS.
-4. Verify search, source links, charts, readiness, and AI-disabled behavior from another device.
-5. Enable live AI only after official free access, the exact model, quotas, and failure behavior are verified.
-6. Record the demo commit, local backup procedure, public URL, and an owner for recovery.
-
-## Current open decisions
-
-The hosting address, deploy user, ingress route, LLM provider/model, and Ivan's GitHub username are not confirmed in this repository. No additional server or LLM purchase is required for repository preparation.
+Provider/model, public domains, hosting and ingress are selected. No additional
+server purchase, billing activation or paid model fallback is authorized by this
+roadmap. Keep private configuration on the backend and retain reservation history.

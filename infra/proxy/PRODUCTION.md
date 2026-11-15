@@ -6,12 +6,19 @@ The existing qresto-production-nginx-1 keeps ports 80/443.
 **Applied on 14 November 2026.** DNS (A record only), the certificate for
 api.flareledger.fun, the HTTPS vhost and a scoped renewal dry-run were completed.
 The API runs from /home/tymofii/flareledger in the Compose project flareledger
-(compose.yaml plus compose.prod.yaml) and was updated to commit 8be005f. Nginx is
+(compose.yaml plus compose.prod.yaml). On 15 November 2026 the running backend
+was verified at commit 969cb9460de9115fe0a16016bd02bf168aa7175e. Nginx is
 attached to flareledger_ingress both live and in the host edge.yml override, with
-backups under /var/backups/flareledger. Public ready returns 200, QResto and Feloza
-still answer, and port 8000 is not published. The sections below are the procedure
+a separate API alias. Existing shared sites still answer, and port 8000 is not
+published. The sections below are the initial bootstrap procedure
 that was followed and remain the rollback reference. Backup and recovery are in
 [docs/BACKUP_RECOVERY.md](../../docs/BACKUP_RECOVERY.md).
+
+Do not repeat certificate bootstrap or corpus initialization for a routine update.
+Use [deploy/rollback](../../docs/DEPLOY_ROLLBACK.md) with the existing database,
+and follow [AI setup](../../docs/AI_SETUP.md) to preserve enabled-generation
+configuration and persistent quotas. Current evidence is in the
+[release audit](../../docs/RELEASE_AUDIT.md).
 
 ## Required read-only host inspection
 
@@ -33,7 +40,7 @@ systemctl list-timers --all
 Do not paste secrets or private key contents. Confirm which Compose file owns
 Nginx, the exact include pattern for conf.d, the existing certificate renewal job,
 volume names, certificate client version and a working reload command. The observed
-mounts were /opt/feloza-edge/nginx/conf.d -> /etc/nginx/conf.d,
+renewal arrangement uses the existing certificate project and named volumes:
 qresto-production_certbot-certs -> /etc/letsencrypt, and
 qresto-production_certbot-webroot -> /var/www/certbot. Recheck them on the host.
 Do not upgrade the running Nginx or install a second renewal scheduler by default.
@@ -44,7 +51,7 @@ include and the existing qresto-certbot-renew.timer. Its service invokes
 unscoped certbot renew --quiet and reloads Nginx only when that command succeeds.
 It uses /opt/qresto/infra/docker-compose.production.yml and .env.production under
 project qresto-production. The running edge Nginx instead records the base.yml,
-release.yml and edge.yml files under /opt/feloza-edge. Confirm the effective
+release.yml and edge.yml configuration files from its deployment state. Verify
 Certbot mounts match the running Nginx mounts before issuance. Do not print the
 full interpolated Compose model or environment secrets to perform that check.
 
@@ -111,7 +118,7 @@ The DNS owner adds api.flareledger.fun A -> 57.129.163.115. Do not add AAAA unti
 IPv6 is verified. The apex frontend domain remains on Vercel.
 
 Back up the current proxy files outside conf.d. Install only api-bootstrap.conf as
-/opt/feloza-edge/nginx/conf.d/flareledger-api.conf. Never install both vhost files
+the FlareLedger HTTP configuration; reload and verify existing sites. Do not install both
 at once, and do not put backup .conf files inside the active include directory.
 After every edit, test before reload:
 

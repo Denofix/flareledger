@@ -57,7 +57,9 @@ it does not call an LLM or replace independent scientific or backup review.
 ## Container handoff for Timofey
 
 The following commands use the existing Dockerfile and agreed container paths.
-Image construction and startup still require verification on a Docker host:
+Backend CI builds the image, and the reviewed API is deployed on the VPS; see
+[release evidence](../docs/RELEASE_AUDIT.md). The commands below initialize a
+separate local database. Production updates use the reviewed release runbook:
 
 ```bash
 docker compose -f compose.yaml build api

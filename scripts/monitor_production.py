@@ -23,6 +23,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 import deploy_tools as tools
+import monitor_alerts
 
 MIN_FREE_FRACTION = 0.10
 
@@ -47,7 +48,11 @@ def collect(mode: str, public: str, snapshots: Path, web: str = tools.PUBLIC_WEB
 def monitor(mode: str, public: str, snapshots: Path, attempts: int, interval: float, sleep=time.sleep, web: str = tools.PUBLIC_WEB) -> tuple[bool, list[tools.Check], int]:
     checks: list[tools.Check] = []
     for number in range(1, attempts + 1):
-        checks = collect(mode, public, snapshots, web)
+        try:
+            checks = collect(mode, public, snapshots, web)
+        except Exception:
+            # Preserve retries/alerts on filesystem or probe failures without logging secrets.
+            checks = [tools.Check("monitor collection", False, "Could not complete monitoring checks")]
         if all(check.ok for check in checks):
             return True, checks, number
         if number < attempts:
@@ -63,9 +68,12 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--snapshots", type=Path, default=Path("/var/backups/flareledger/snapshots"))
     parser.add_argument("--attempts", type=int, default=3)
     parser.add_argument("--interval", type=float, default=60.0, help="seconds between attempts")
+    parser.add_argument("--telegram-state", type=Path, help="enable persistent Telegram failure/recovery alerts")
     args = parser.parse_args(argv)
     if args.attempts < 1:
         parser.error("--attempts must be at least 1")
+    if args.interval < 0:
+        parser.error("--interval must be non-negative")
     ok, checks, used = monitor(args.mode, args.public_url, args.snapshots, args.attempts, args.interval, web=args.web_url)
     print(tools.render(checks))
     print(
@@ -82,6 +90,12 @@ def main(argv: list[str] | None = None) -> int:
     )
     if not ok:
         print(f"UNHEALTHY | failed on all {used} attempts", file=sys.stderr)
+    if args.telegram_state:
+        try:
+            monitor_alerts.transition(args.telegram_state, ok, [c.name for c in checks if not c.ok])
+        except (monitor_alerts.AlertError, OSError, ValueError, KeyError):
+            print("ALERT_FAILED | delivery/state update failed; retry on next run", file=sys.stderr)
+            return 1
     return 0 if ok else 1
 
 

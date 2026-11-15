@@ -41,6 +41,8 @@ jobs:
         run: python scripts/test_deploy.py
       - name: Test cross-process operation locks and inherited backup
         run: python scripts/test_operation_lock.py
+      - name: Test Telegram incident transitions without network or credentials
+        run: python scripts/test_monitor_alerts.py
       - name: Check Caddy routing with disposable test fixtures
         run: python scripts/test_caddy.py
       - name: Validate production isolation without deployment

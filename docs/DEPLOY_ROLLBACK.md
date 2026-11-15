@@ -111,10 +111,8 @@ one blip does not alert.
 | GitHub Actions, every 30 minutes (.github/workflows/production-monitor.yml) | Frontend page/TLS, proxied readiness/corpus agreement, direct API readiness and certificate; read-only requests, no secrets | The failed workflow run, with GitHub's own notification to the people watching Actions |
 | VPS, every 30 minutes (flareledger-monitor.timer) | The same plus the age of the newest daily snapshot (limit 26 hours) and free disk (limit 10%) | systemctl --failed, journalctl -u flareledger-monitor.service |
 
-There is no chat or e-mail channel for the VPS-side check yet. Choose one before
-relying on it for judging day (for example a chat webhook or a mail relay) and add it
-as OnFailure= on the monitor service. Scheduled GitHub workflows pause after 60 days
-without repository activity.
+The optional Telegram integration below reports incident transitions. Scheduled
+GitHub workflows pause after 60 days without repository activity.
 
 Install the VPS monitor like the backup timer:
 
@@ -125,6 +123,54 @@ sudo systemctl daemon-reload
 sudo systemctl enable --now flareledger-monitor.timer
 sudo systemctl start flareledger-monitor.service
 ```
+
+### Telegram incident and recovery messages
+
+Use the agreed private group and a dedicated bot that can send messages there.
+Keep BOT_TOKEN and CHAT_ID only on the VPS in
+/home/tymofii/.config/flareledger/telegram.env (directory mode 700, file mode 600,
+owned by tymofii). Set the values using a server-side editor. Do not paste them
+into Git, terminal commands, logs or chat. The file contains KEY=value lines.
+
+After review and updating the tooling checkout, install the drop-in:
+
+```sh
+sudo install -d -m 755 /etc/systemd/system/flareledger-monitor.service.d
+sudo install -m 644 infra/systemd/flareledger-monitor-telegram.conf /etc/systemd/system/flareledger-monitor.service.d/telegram.conf
+sudo systemctl daemon-reload
+sudo systemctl start flareledger-monitor.service
+```
+
+Failure is reported after all monitor retries fail; repeated failures are suppressed,
+then recovery is reported when every check passes. A locked persistent state
+directory serializes updates. Observed transitions are queued on disk before sending,
+separately from confirmed delivery. If an outage ends before Telegram becomes
+reachable, the queued failure and recovery are delivered in order on the next run.
+Each acknowledgement removes only that event; a failed recovery send does not
+repeat the already delivered failure. Existing delivered-state files remain supported.
+An ambiguous network timeout or process interruption after delivery can still cause
+a duplicate. Exceptions and Telegram response bodies are not logged because URLs
+contain the bot token. The implementation uses the official
+[sendMessage API](https://core.telegram.org/bots/api#sendmessage).
+
+Verify delivery in a private SSH shell, without tracing, using separate test state:
+
+```sh
+set +x
+set -a
+. "$HOME/.config/flareledger/telegram.env"
+set +a
+test_state=$(mktemp -d "$HOME/flareledger-alert-test.XXXXXX")
+python3 scripts/monitor_alerts.py failure --state "$test_state"
+python3 scripts/monitor_alerts.py failure --state "$test_state"
+python3 scripts/monitor_alerts.py recovery --state "$test_state"
+unset BOT_TOKEN CHAT_ID
+```
+
+Expect one TEST FAILURE and one TEST RECOVERED in the group; confirm receipt.
+The second failure sends nothing. No production incident state, service or database
+is changed. If delivery fails, check bot membership and the private file without
+printing its contents.
 
 ## Checks
 

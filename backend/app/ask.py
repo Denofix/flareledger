@@ -6,13 +6,15 @@ import re
 import sqlite3
 import time
 from collections.abc import Callable
-from enum import StrEnum
 from typing import Any
 
 from pydantic import ValidationError
 
 from app.ask_store import AskStateUnavailable, AskStore, Limited
-from app.llm import Explanation, GeminiProvider, LLMSettings, Provider, ProviderUnavailable
+from app.explanations import ExplanationRejected as ExplanationRejected
+from app.explanations import RejectionCode as RejectionCode
+from app.explanations import validate_explanation as validate_explanation
+from app.llm import GeminiProvider, LLMSettings, Provider, ProviderUnavailable
 from app.storage import CorpusUnavailable, Repository
 
 STOP = set(
@@ -20,29 +22,6 @@ STOP = set(
 )
 NOTICE = "FlareLedger-generated interpretation; citation and excerpt checks do not establish scientific correctness. Verify the original source and experimental conditions."
 LOGGER = logging.getLogger(__name__)
-
-
-class RejectionCode(StrEnum):
-    REFUSAL_CONTAINS_CONTENT = "refusal_contains_content"
-    MISSING_ANSWER = "missing_answer"
-    MISSING_CITATIONS = "missing_citations"
-    MISSING_LIMITATIONS = "missing_limitations"
-    UNKNOWN_CONTEXT = "unknown_context"
-    SOURCE_NOT_IN_CONTEXT = "source_not_in_context"
-    QUOTE_NOT_EXACT = "quote_not_exact"
-    CITATION_MARKER_MISSING = "citation_marker_missing"
-    UNKNOWN_CITATION_MARKER = "unknown_citation_marker"
-    UNSEEN_NUMERIC_TOKEN = "unseen_numeric_token"
-    MODEL_SUPPLIED_URL = "model_supplied_url"
-    OVERSIZED_LIMITATION = "oversized_limitation"
-    INVALID_OUTPUT_SCHEMA = "invalid_output_schema"
-    UNEXPECTED_VALIDATION_ERROR = "unexpected_validation_error"
-
-
-class ExplanationRejected(ValueError):
-    def __init__(self, code: RejectionCode):
-        self.code = RejectionCode(code)
-        super().__init__(self.code.value)
 
 
 def log_rejection(code: RejectionCode) -> None:
@@ -130,46 +109,6 @@ def retrieve(repository: Repository, db: sqlite3.Connection, question: str) -> t
         if len(hits) == 5:
             break
     return hits, context
-
-
-def validate_explanation(result: Explanation, context: list[dict]) -> None:
-    if result.status == "insufficient_evidence":
-        if result.answer or result.citations:
-            raise ExplanationRejected(RejectionCode.REFUSAL_CONTAINS_CONTENT)
-        return
-    if not result.answer.strip():
-        raise ExplanationRejected(RejectionCode.MISSING_ANSWER)
-    if not result.citations:
-        raise ExplanationRejected(RejectionCode.MISSING_CITATIONS)
-    if not result.limitations:
-        raise ExplanationRejected(RejectionCode.MISSING_LIMITATIONS)
-    by_id = {c["id"]: c for c in context}
-    evidence_text = ""
-    for citation in result.citations:
-        if citation.context_id not in by_id:
-            raise ExplanationRejected(RejectionCode.UNKNOWN_CONTEXT)
-        item = by_id[citation.context_id]
-        if citation.source_id not in item["source_ids"]:
-            raise ExplanationRejected(RejectionCode.SOURCE_NOT_IN_CONTEXT)
-        if citation.quote not in item["support_text"]:
-            raise ExplanationRejected(RejectionCode.QUOTE_NOT_EXACT)
-        if f"[{citation.context_id}]" not in result.answer:
-            raise ExplanationRejected(RejectionCode.CITATION_MARKER_MISSING)
-        evidence_text += " " + item["support_text"]
-    cited_ids = {c.context_id for c in result.citations}
-    if any(marker not in cited_ids for marker in re.findall(r"\[([^\]]+)\]", result.answer)):
-        raise ExplanationRejected(RejectionCode.UNKNOWN_CITATION_MARKER)
-    answer = result.answer
-    for identifier in by_id:
-        answer = answer.replace(identifier, "")
-    numbers = r"(?<![\w])[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?"
-    allowed = set(re.findall(numbers, evidence_text))
-    if not set(re.findall(numbers, answer)).issubset(allowed):
-        raise ExplanationRejected(RejectionCode.UNSEEN_NUMERIC_TOKEN)
-    if re.search(r"https?://|www\.", result.answer, re.I):
-        raise ExplanationRejected(RejectionCode.MODEL_SUPPLIED_URL)
-    if any(len(note) > 600 for note in result.limitations):
-        raise ExplanationRejected(RejectionCode.OVERSIZED_LIMITATION)
 
 
 class AskService:

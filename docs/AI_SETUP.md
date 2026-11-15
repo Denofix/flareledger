@@ -44,8 +44,10 @@ limitations, and the linked source record opened. Earlier Hydrogen adapter
 attempts returned upstream HTTP 503. This is evidence for that local Flash
 transport/UI flow, not permanent availability or scientific validation. Offline
 tests exercise request construction and failure handling with both allowed models.
-The demonstration is not the exact frozen AE-01 question; all 15 formal live
-evaluation cases remain NOT_RUN in [the acceptance set](AI_EVALUATION.md).
+The demonstration is not the exact frozen AE-01 question. Live attempts and
+manual scientific grades must be recorded separately against the exact frozen
+questions in [the acceptance set](AI_EVALUATION.md); transport success is not a
+scientific pass.
 
 Model selection uses the same SQLite reservation history. Switching model, key
 or process does not refill the application's shared rolling quota. Keep the
@@ -240,6 +242,38 @@ The mode badge says "Generation enabled" rather than claiming upstream
 availability. A provider quota response and a rejected model output have distinct
 notice titles; all unavailable responses keep retrieved sources visible.
 
+### Claim-bound provider drafts
+
+The Gemini wire schema is private to the adapter. It returns `status`, `claims`
+and `limitations`. A generated draft has one to five claims; each contains at
+most 300 characters of plain text and exactly one citation (`context_id`,
+`source_id`, `quote`). An insufficient-evidence draft has an empty claims list.
+The model must not insert square brackets, citation markers or URLs in claim
+text. The server rejects them rather than stripping or repairing model text.
+
+For each claim the server validates its citation's context/source membership,
+exact excerpt and permitted numeric tokens against that claim's cited context.
+It then renders `claim text [context_id]`, joins the claims as paragraphs and
+deduplicates identical context/source/quote triples. The existing strict final
+explanation validator runs again. The public API still returns the same
+`answer`, `citations` and `limitations` fields and the same failure statuses;
+clients do not receive `claims`. All existing output and request byte bounds,
+one-call behavior, timeouts and persistent quota reservations remain in force.
+Older free-answer provider output is rejected rather than accepted as a fallback.
+
+This addresses the structural failure reported on release `f50fbc9` for a
+separately recorded AE-11 diagnostic at `2026-11-15T17:36:39.993835919Z`:
+`citation_marker_missing`. The raw rejected model answer was not retained, so
+the regression is synthetic and does not identify the missing citation. This
+change does not establish the cause of earlier undiagnosed failures.
+
+Offline tests cover rendering, the original marker rejection, invalid evidence,
+per-claim numeric checks and the real API/quota path with mocked transport.
+All 15 frozen questions are also checked for unchanged retrieval input and the
+32,768-byte request bound. These are not live model executions or scientific
+grades. After review and deployment, a separately authorized single diagnostic
+attempt is still needed; do not replay the full evaluation set automatically.
+
 ### Operator diagnostics for rejected explanations
 
 An Ask HTTP 503 with `error.reason=invalid_model_output` means the application
@@ -253,16 +287,18 @@ The API logs one warning per rejected explanation, containing only a fixed code:
 ASK_VALIDATION stage=explanation code=quote_not_exact
 ```
 
-The codes distinguish refusal content, missing answer/citations/limitations,
+The codes distinguish refusal content, missing claims/answer/citations/limitations,
 unknown context, a source outside its context, an inexact excerpt, missing or
 unknown citation markers, unseen numeric tokens, model-supplied URLs, oversized
 limitations, invalid output schema at the provider boundary, and unexpected
-validation errors. No question, answer, excerpt, identifier, key, exception
-message or traceback is logged by these diagnostics. Public response fields,
-validation rules, persistent reservations and failure status remain unchanged.
-Provider transport/JSON failures that are mapped to `provider_unavailable` are
-outside this explanation-stage diagnostic; do not infer their cause from these
-codes.
+validation errors. Claim text containing square brackets uses the fixed code
+`claim_contains_markers`. No question, answer, excerpt, identifier, key, exception
+message or traceback is logged by these diagnostics. Persistent reservations
+and the public failure response remain unchanged. A completed interaction with
+nonempty model text that violates the private draft schema now reports
+`invalid_output_schema` and `invalid_model_output`; transport failures, malformed
+outer interaction JSON, incomplete interactions and empty text remain
+`provider_unavailable`. Do not infer their cause from explanation-stage codes.
 
 From the same deployed Compose project and release environment, an operator can
 read the fixed diagnostic lines after a separately authorized single attempt:
@@ -280,9 +316,10 @@ or establish scientific correctness.
 
 ## Scientific and data limits
 
-The model must return structured JSON. The server rejects unknown context/source
-IDs, non-exact context excerpts, unrecognized citation markers, new numeric tokens,
-model-supplied links and missing support/limitations. These are mechanical checks;
+The model must return structured JSON with a citation for every claim. The server
+renders citation markers and rejects unknown context/source IDs, non-exact
+context excerpts, model-supplied markup or links, new numeric tokens and missing
+support/limitations. These are mechanical checks;
 they do **not** prove entailment, correct number-to-unit binding, causal validity,
 complete support for every sentence or scientific correctness. Independent human
 evaluation remains required before a judging demo.
@@ -292,6 +329,10 @@ summary or record JSON; it is not automatically a quotation from NASA. Answers
 are visibly attributed to FlareLedger, with no NASA endorsement or fire-safety
 certification. Do not infer extinguishment, safety thresholds, material rankings
 or compatible conditions merely from shared units or the model's explanation.
+Membership in an item's attached source list does not prove that a particular
+excerpt originated in that source's original file. Claim rendering does not fix
+source-specific provenance gaps or missing retrieval context; review those
+separately before assigning scientific passes.
 
 Questions and selected public corpus context are sent to Google when enabled.
 No key is included in the prompt, no arbitrary tools are enabled, and prompts,

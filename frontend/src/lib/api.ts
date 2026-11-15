@@ -54,7 +54,9 @@ export async function request<T>(
           detail ||
           (response.status === 404
             ? "This research record was not found."
-            : "The research API is temporarily unavailable."),
+            : response.status === 422
+              ? "The request contains invalid input. Check the supplied values and try again."
+              : "The research API is temporarily unavailable."),
         body,
       );
     }

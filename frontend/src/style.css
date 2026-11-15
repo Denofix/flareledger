@@ -130,14 +130,16 @@ em {
 }
 .skip-link {
   position: fixed;
-  left: 260px;
-  top: -60px;
+  left: 8px;
+  top: 0;
+  transform: translateY(-100%);
   background: #fff;
   padding: 12px;
   z-index: 50;
 }
 .skip-link:focus {
   top: 8px;
+  transform: none;
 }
 .sidebar {
   position: fixed;

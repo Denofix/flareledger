@@ -15,12 +15,20 @@ defineEmits<{ retry: [] }>();
         {{
           error instanceof ApiError && error.status === 404
             ? "Record not found"
-            : "We could not load this research"
+            : error instanceof ApiError && error.status === 422
+              ? "Check the request"
+              : "We could not load this research"
         }}
       </h2>
       <p>{{ error.message }}</p>
-      <button class="button secondary" @click="$emit('retry')">Try again</button
-      ><RouterLink to="/" class="text-link">Back to investigations</RouterLink>
+      <button
+        v-if="!(error instanceof ApiError && [404, 422].includes(error.status))"
+        class="button secondary"
+        @click="$emit('retry')"
+      >
+        Try again
+      </button>
+      <RouterLink to="/" class="text-link">Back to investigations</RouterLink>
     </div>
   </section>
 </template>

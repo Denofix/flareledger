@@ -1,10 +1,73 @@
 import { mount } from "@vue/test-utils";
-import { describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
 import SeriesChart from "../src/components/SeriesChart.vue";
 import SourceList from "../src/components/SourceList.vue";
 import { makeSeries } from "./fixtures";
+afterEach(() => vi.unstubAllGlobals());
 
 describe("measured series", () => {
+  it.each([299, 329])(
+    "fits the full chart in a %i px container with visible axis units",
+    async (width) => {
+      vi.stubGlobal(
+        "ResizeObserver",
+        class {
+          constructor(private callback: (entries: unknown[]) => void) {}
+          observe() {
+            this.callback([{ contentRect: { width } }]);
+          }
+          disconnect() {}
+        },
+      );
+      const series = makeSeries({
+        x: {
+          name: "Time_sec",
+          label_en: "Time in the original source file",
+          unit: "s",
+        },
+        y: {
+          name: "FlameDiameter_mm",
+          label_en: "Flame diameter from the color camera",
+          unit: "mm",
+        },
+      });
+      const wrapper = mount(SeriesChart, { props: { series: [series] } });
+      await wrapper.vm.$nextTick();
+      expect(wrapper.get("svg").attributes("viewBox")).toBe(`0 0 ${width} 275`);
+      expect(wrapper.get("svg").attributes("style")).toContain("min-width: 0");
+      expect(wrapper.findAll("svg text.chart-axis")).toHaveLength(0);
+      expect(
+        wrapper.findAll(".chart-axis-label").map((label) => label.text()),
+      ).toEqual([
+        "Y · Flame diameter from the color camera (mm)",
+        "X · Time in the original source file (s)",
+      ]);
+      await wrapper.get(".chart-size-toggle").trigger("click");
+      expect(wrapper.get("svg").attributes("viewBox")).toBe("0 0 760 360");
+      expect(wrapper.text()).toContain("Scroll horizontally");
+      await wrapper.get(".chart-size-toggle").trigger("click");
+      expect(wrapper.get("svg").attributes("viewBox")).toBe(`0 0 ${width} 275`);
+      wrapper.unmount();
+    },
+  );
+  it("selects the fourth series without changing its source point values", async () => {
+    const series = Array.from({ length: 4 }, (_, i) =>
+      makeSeries({
+        id: `SERIES-${i}`,
+        original_trial_label: `Run ${i}`,
+        points: [[-1.5, i + 0.123456789]],
+        point_count: 1,
+      }),
+    );
+    const wrapper = mount(SeriesChart, { props: { series } });
+    expect(wrapper.findAll("svg path")).toHaveLength(4);
+    await wrapper.findAll(".chart-legend button")[3]!.trigger("click");
+    expect(wrapper.get(".point-readout").text()).toContain("3.123456789 mm");
+    expect(
+      wrapper.findAll(".chart-legend button")[3]!.attributes("aria-pressed"),
+    ).toBe("true");
+    wrapper.unmount();
+  });
   it("keeps a missing coordinate as a gap and exposes original point values", async () => {
     const series = makeSeries({
       point_count: 4,

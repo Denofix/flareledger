@@ -13,18 +13,19 @@ const detail = (item: Series): Detail<Series> => ({
   quality_issues: [],
 });
 
-async function openComparison(second: Series) {
-  const first = makeSeries({ id: "SERIES-A" });
+async function openComparison(second: Series, firstDetail?: Detail<Series>) {
+  const first = firstDetail?.item || makeSeries({ id: "SERIES-A" });
   const fetcher = vi.fn(async (url: string) => {
     const path = new URL(url, "https://test.invalid").pathname;
     let payload: unknown;
     if (path === "/api/series")
       payload = { items: [first, second], total: 2, limit: 100, offset: 0 };
-    else if (path === "/api/series/SERIES-A") payload = detail(first);
+    else if (path === "/api/series/SERIES-A")
+      payload = firstDetail || detail(first);
     else if (path === "/api/series/SERIES-B") payload = detail(second);
     else if (path === "/api/compare")
       payload = {
-        series: [detail(first), detail(second)],
+        series: [firstDetail || detail(first), detail(second)],
         transformations: [],
         limitations: ["Test-only source limitation."],
       };
@@ -64,9 +65,55 @@ describe("comparison navigation", () => {
     );
     expect(wrapper.find("svg.measurement-chart").exists()).toBe(false);
     expect(wrapper.text()).toContain("different quantities");
+    expect(wrapper.text()).toContain("These series cannot be compared");
+    expect(wrapper.text()).not.toContain("Try again");
+    expect(wrapper.text()).not.toContain("We could not load this research");
+    expect(wrapper.get('a[href="#series-picker"]').text()).toContain("Change");
     expect(
       fetcher.mock.calls.some(([url]) => url.startsWith("/api/compare")),
     ).toBe(false);
+    wrapper.unmount();
+  });
+  it("separates other-trial notes from source-linked series limitations", async () => {
+    const first = makeSeries({
+      id: "SERIES-A",
+      source_ids: ["SOURCE-A"],
+      quality_note_en: "Selected run stayed in view.",
+    });
+    const firstDetail = detail(first);
+    firstDetail.quality_issues = [
+      {
+        id: "OWN",
+        source_ids: ["SOURCE-A"],
+        description_en: "Selected source limitation.",
+      },
+      {
+        id: "OTHER",
+        source_ids: ["SOURCE-B"],
+        description_en: "Another run left the camera.",
+      },
+    ];
+    const { wrapper } = await openComparison(
+      makeSeries({ id: "SERIES-B" }),
+      firstDetail,
+    );
+    const context = wrapper.findAll(".series-detail")[0]!;
+    expect(context.get(".investigation-notes").text()).toContain(
+      "Another run left the camera.",
+    );
+    expect(
+      context.get(".investigation-notes").attributes("open"),
+    ).toBeUndefined();
+    expect(context.get(".investigation-notes").text()).toContain(
+      "not established limitations of the selected series",
+    );
+    expect(context.findAll(".limitations")[0]!.text()).toContain(
+      "Selected source limitation.",
+    );
+    expect(context.findAll(".limitations")[0]!.text()).not.toContain(
+      "Another run",
+    );
+    expect(context.text()).toContain("Selected run stayed in view.");
     wrapper.unmount();
   });
 });

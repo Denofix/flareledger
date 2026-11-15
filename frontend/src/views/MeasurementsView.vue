@@ -4,7 +4,7 @@ import { useRoute, useRouter } from "vue-router";
 import { ApiError, request } from "../lib/api";
 import { compatible, display } from "../lib/format";
 import { useResource } from "../lib/useResource";
-import type { Comparison, Detail, Page, Series } from "../lib/types";
+import type { Comparison, Detail, Issue, Page, Series } from "../lib/types";
 import RequestState from "../components/RequestState.vue";
 import SeriesChart from "../components/SeriesChart.vue";
 import SourceList from "../components/SourceList.vue";
@@ -25,6 +25,29 @@ const selected = computed(() =>
         .map((item) => item.id) || [],
 );
 const isCompare = computed(() => route.path === "/compare");
+const selectionError = computed(() =>
+  charts.error.value instanceof ApiError &&
+  ["incompatible_axes", "invalid_selection"].includes(charts.error.value.code)
+    ? charts.error.value
+    : null,
+);
+function relatedIssue(issue: Issue, series: Series) {
+  return (
+    issue.source_ids?.some((id) => series.source_ids.includes(id)) ||
+    (Array.isArray(series.quality_issue_ids) &&
+      series.quality_issue_ids.includes(issue.id))
+  );
+}
+function seriesIssues(detail: Detail<Series>) {
+  return detail.quality_issues.filter((issue) =>
+    relatedIssue(issue, detail.item),
+  );
+}
+function otherIssues(detail: Detail<Series>) {
+  return detail.quality_issues.filter(
+    (issue) => !relatedIssue(issue, detail.item),
+  );
+}
 function loadList() {
   list.load((signal) => request<Page<Series>>("/series?limit=100", { signal }));
 }
@@ -90,6 +113,9 @@ onMounted(loadList);
       Follow numerical measurements from the FLEX source files. Original values,
       units and limitations stay with every series.
     </p>
+    <a v-if="selected.length" href="#measurement-plot" class="text-link"
+      >Jump to chart or selection guidance</a
+    >
   </header>
   <RequestState
     :loading="list.loading.value"
@@ -97,7 +123,7 @@ onMounted(loadList);
     @retry="loadList"
   />
   <div v-if="list.data.value" class="measurements-layout">
-    <aside class="series-picker">
+    <aside id="series-picker" class="series-picker">
       <div class="eyebrow">SELECT UP TO FOUR SERIES</div>
       <h2>
         Source series <span>{{ list.data.value.total }}</span>
@@ -131,8 +157,16 @@ onMounted(loadList);
         >About FLEX <AppIcon name="external" :size="13"
       /></RouterLink>
     </aside>
-    <div class="chart-content">
+    <div id="measurement-plot" class="chart-content">
+      <section v-if="selectionError" class="limitations" role="status">
+        <h2>These series cannot be compared</h2>
+        <p>{{ selectionError.message }}</p>
+        <a href="#series-picker" class="text-link"
+          >Change the selected series</a
+        >
+      </section>
       <RequestState
+        v-else
         :loading="charts.loading.value"
         :error="charts.error.value"
         @retry="loadCharts"
@@ -146,6 +180,7 @@ onMounted(loadList);
       </section>
       <template v-else-if="charts.data.value && !charts.error.value"
         ><section class="panel chart-panel">
+          <a href="#series-picker" class="text-link">Change selected series</a>
           <div class="section-heading">
             <div>
               <div class="eyebrow">
@@ -183,7 +218,13 @@ onMounted(loadList);
             </div>
             <span class="tag subtle">{{ detail.item.investigation_id }}</span>
           </div>
-          <p>{{ detail.item.quality_note_en }}</p>
+          <h3>Selected series limitations</h3>
+          <p>
+            {{
+              detail.item.quality_note_en ||
+              "No series-specific note is reported."
+            }}
+          </p>
           <dl class="inline-facts">
             <div>
               <dt>Uncertainty</dt>
@@ -198,9 +239,22 @@ onMounted(loadList);
               <dd>Not independently aligned</dd>
             </div>
           </dl>
-          <LimitationList :issues="detail.quality_issues" /><SourceList
-            :sources="detail.sources"
-          />
+          <LimitationList :issues="seriesIssues(detail)" />
+          <details
+            v-if="otherIssues(detail).length"
+            class="investigation-notes"
+          >
+            <summary>
+              Other investigation source notes — not assigned to this series
+            </summary>
+            <p>
+              These notes concern other sources or trials in
+              {{ detail.item.investigation_id }}. They are not established
+              limitations of the selected series.
+            </p>
+            <LimitationList :issues="otherIssues(detail)" />
+          </details>
+          <SourceList :sources="detail.sources" />
           <details class="evidence-locators">
             <summary>View evidence locators</summary>
             <div

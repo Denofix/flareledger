@@ -1,10 +1,12 @@
 """Source-linked Ask orchestration; network generation is opt-in and fail-closed."""
 
 import json
+import logging
 import re
 import sqlite3
 import time
 from collections.abc import Callable
+from enum import StrEnum
 from typing import Any
 
 from pydantic import ValidationError
@@ -17,6 +19,35 @@ STOP = set(
     "a an and are as at be can compare could data describe do does explain evidence experiment experiments find for from how i in is it know me of on or research show tell than that the their these this to two use using what which with would about available between".split()
 )
 NOTICE = "FlareLedger-generated interpretation; citation and excerpt checks do not establish scientific correctness. Verify the original source and experimental conditions."
+LOGGER = logging.getLogger(__name__)
+
+
+class RejectionCode(StrEnum):
+    REFUSAL_CONTAINS_CONTENT = "refusal_contains_content"
+    MISSING_ANSWER = "missing_answer"
+    MISSING_CITATIONS = "missing_citations"
+    MISSING_LIMITATIONS = "missing_limitations"
+    UNKNOWN_CONTEXT = "unknown_context"
+    SOURCE_NOT_IN_CONTEXT = "source_not_in_context"
+    QUOTE_NOT_EXACT = "quote_not_exact"
+    CITATION_MARKER_MISSING = "citation_marker_missing"
+    UNKNOWN_CITATION_MARKER = "unknown_citation_marker"
+    UNSEEN_NUMERIC_TOKEN = "unseen_numeric_token"
+    MODEL_SUPPLIED_URL = "model_supplied_url"
+    OVERSIZED_LIMITATION = "oversized_limitation"
+    INVALID_OUTPUT_SCHEMA = "invalid_output_schema"
+    UNEXPECTED_VALIDATION_ERROR = "unexpected_validation_error"
+
+
+class ExplanationRejected(ValueError):
+    def __init__(self, code: RejectionCode):
+        self.code = RejectionCode(code)
+        super().__init__(self.code.value)
+
+
+def log_rejection(code: RejectionCode) -> None:
+    # Only a closed enum is logged: never exception text, model output or input.
+    LOGGER.warning("ASK_VALIDATION stage=explanation code=%s", RejectionCode(code).value)
 
 
 def retrieve(repository: Repository, db: sqlite3.Connection, question: str) -> tuple[list[dict], list[dict]]:
@@ -104,33 +135,41 @@ def retrieve(repository: Repository, db: sqlite3.Connection, question: str) -> t
 def validate_explanation(result: Explanation, context: list[dict]) -> None:
     if result.status == "insufficient_evidence":
         if result.answer or result.citations:
-            raise ValueError("A refusal must not contain an answer or citations.")
+            raise ExplanationRejected(RejectionCode.REFUSAL_CONTAINS_CONTENT)
         return
-    if not result.answer.strip() or not result.citations or not result.limitations:
-        raise ValueError("A generated explanation requires support and limitations.")
+    if not result.answer.strip():
+        raise ExplanationRejected(RejectionCode.MISSING_ANSWER)
+    if not result.citations:
+        raise ExplanationRejected(RejectionCode.MISSING_CITATIONS)
+    if not result.limitations:
+        raise ExplanationRejected(RejectionCode.MISSING_LIMITATIONS)
     by_id = {c["id"]: c for c in context}
     evidence_text = ""
     for citation in result.citations:
+        if citation.context_id not in by_id:
+            raise ExplanationRejected(RejectionCode.UNKNOWN_CONTEXT)
         item = by_id[citation.context_id]
-        if citation.source_id not in item["source_ids"] or citation.quote not in item["support_text"]:
-            raise ValueError("Citation does not resolve to an exact supplied context excerpt.")
+        if citation.source_id not in item["source_ids"]:
+            raise ExplanationRejected(RejectionCode.SOURCE_NOT_IN_CONTEXT)
+        if citation.quote not in item["support_text"]:
+            raise ExplanationRejected(RejectionCode.QUOTE_NOT_EXACT)
         if f"[{citation.context_id}]" not in result.answer:
-            raise ValueError("The cited context must be marked in the answer.")
+            raise ExplanationRejected(RejectionCode.CITATION_MARKER_MISSING)
         evidence_text += " " + item["support_text"]
     cited_ids = {c.context_id for c in result.citations}
     if any(marker not in cited_ids for marker in re.findall(r"\[([^\]]+)\]", result.answer)):
-        raise ValueError("Unknown answer citation marker.")
+        raise ExplanationRejected(RejectionCode.UNKNOWN_CITATION_MARKER)
     answer = result.answer
     for identifier in by_id:
         answer = answer.replace(identifier, "")
     numbers = r"(?<![\w])[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?"
     allowed = set(re.findall(numbers, evidence_text))
     if not set(re.findall(numbers, answer)).issubset(allowed):
-        raise ValueError("Unseen numerical token in the explanation.")
+        raise ExplanationRejected(RejectionCode.UNSEEN_NUMERIC_TOKEN)
     if re.search(r"https?://|www\.", result.answer, re.I):
-        raise ValueError("Model-supplied links are not permitted.")
+        raise ExplanationRejected(RejectionCode.MODEL_SUPPLIED_URL)
     if any(len(note) > 600 for note in result.limitations):
-        raise ValueError("Oversized limitations.")
+        raise ExplanationRejected(RejectionCode.OVERSIZED_LIMITATION)
 
 
 class AskService:
@@ -243,7 +282,14 @@ class AskService:
                 if reason in {"provider_quota_exhausted", "context_too_large"}
                 else "provider_unavailable"
             )
-        except (ValidationError, ValueError, KeyError, TypeError):
+        except ExplanationRejected as error:
+            log_rejection(error.code)
+            return unavailable("invalid_model_output")
+        except ValidationError:
+            log_rejection(RejectionCode.INVALID_OUTPUT_SCHEMA)
+            return unavailable("invalid_model_output")
+        except (ValueError, KeyError, TypeError):
+            log_rejection(RejectionCode.UNEXPECTED_VALIDATION_ERROR)
             return unavailable("invalid_model_output")
         finally:
             self.store.finish(identifier)

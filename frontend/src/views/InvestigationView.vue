@@ -54,7 +54,10 @@ watch(() => route.params.id, load, { immediate: true });
     <header class="page-heading">
       <div class="eyebrow">
         {{ resource.data.value.detail.item.id }} /
-        {{ resource.data.value.detail.item.acronym }} / VERSION
+        <template v-if="resource.data.value.detail.item.acronym">
+          {{ resource.data.value.detail.item.acronym }} /
+        </template>
+        VERSION
         {{ resource.data.value.detail.item.version }}
       </div>
       <h1>
@@ -176,7 +179,11 @@ watch(() => route.params.id, load, { immediate: true });
             <RouterLink
               :to="{
                 path: '/evidence',
-                query: { q: resource.data.value.detail.item.acronym },
+                query: {
+                  q:
+                    resource.data.value.detail.item.acronym ||
+                    resource.data.value.detail.item.id,
+                },
               }"
               >Search related evidence <AppIcon name="external" :size="13"
             /></RouterLink>
@@ -223,7 +230,11 @@ watch(() => route.params.id, load, { immediate: true });
         <RouterLink
           :to="{
             path: '/ask',
-            query: { q: resource.data.value.detail.item.acronym },
+            query: {
+              q:
+                resource.data.value.detail.item.acronym ||
+                resource.data.value.detail.item.id,
+            },
           }"
           class="button secondary"
           >Explore the evidence <AppIcon name="arrow" :size="16"

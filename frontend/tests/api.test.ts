@@ -6,6 +6,28 @@ afterEach(() => {
   vi.useRealTimers();
 });
 describe("API failures remain distinguishable", () => {
+  it("reports validation input errors without claiming an API outage", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi
+        .fn()
+        .mockResolvedValue(
+          new Response(
+            JSON.stringify({
+              detail: [{ type: "string_too_long", loc: ["query", "q"] }],
+            }),
+            { status: 422 },
+          ),
+        ),
+    );
+    await expect(request("/search?q=" + "a".repeat(300))).rejects.toMatchObject(
+      {
+        status: 422,
+        message:
+          "The request contains invalid input. Check the supplied values and try again.",
+      },
+    );
+  });
   it("preserves a JSON not-found response", async () => {
     vi.stubGlobal(
       "fetch",

@@ -3,7 +3,7 @@ export interface Entity extends UnknownRecord {
   id: string;
 }
 export interface Investigation extends Entity {
-  acronym: string;
+  acronym: string | null;
   title: string;
   title_en: string;
   summary_en: string;

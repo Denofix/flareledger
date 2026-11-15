@@ -129,7 +129,7 @@ onMounted(load);
     />
     <div v-if="resource.data.value" class="investigation-grid">
       <RouterLink
-        v-for="(item, index) in items"
+        v-for="item in items"
         :key="item.id"
         :to="'/investigations/' + item.id"
         class="investigation-card"
@@ -143,7 +143,7 @@ onMounted(load);
           ><span class="mono muted">{{ item.id }}</span>
         </div>
         <div class="card-eyebrow">
-          {{ item.acronym || "INVESTIGATION " + (index + 1) }}
+          {{ item.acronym || item.id }}
         </div>
         <h3>{{ item.title_en || item.title }}</h3>
         <p>{{ item.summary_en }}</p>

@@ -240,6 +240,44 @@ The mode badge says "Generation enabled" rather than claiming upstream
 availability. A provider quota response and a rejected model output have distinct
 notice titles; all unavailable responses keep retrieved sources visible.
 
+### Operator diagnostics for rejected explanations
+
+An Ask HTTP 503 with `error.reason=invalid_model_output` means the application
+rejected the explanation. It is distinct from provider/network unavailability
+or quota exhaustion. A successful preflight does not establish that a later
+explanation will satisfy every validation rule.
+
+The API logs one warning per rejected explanation, containing only a fixed code:
+
+```text
+ASK_VALIDATION stage=explanation code=quote_not_exact
+```
+
+The codes distinguish refusal content, missing answer/citations/limitations,
+unknown context, a source outside its context, an inexact excerpt, missing or
+unknown citation markers, unseen numeric tokens, model-supplied URLs, oversized
+limitations, invalid output schema at the provider boundary, and unexpected
+validation errors. No question, answer, excerpt, identifier, key, exception
+message or traceback is logged by these diagnostics. Public response fields,
+validation rules, persistent reservations and failure status remain unchanged.
+Provider transport/JSON failures that are mapped to `provider_unavailable` are
+outside this explanation-stage diagnostic; do not infer their cause from these
+codes.
+
+From the same deployed Compose project and release environment, an operator can
+read the fixed diagnostic lines after a separately authorized single attempt:
+
+```bash
+docker compose -f compose.yaml -f compose.prod.yaml logs --no-color --since 10m api | rg 'ASK_VALIDATION'
+```
+
+Use the existing deployment process to select the reviewed diagnostic release;
+reading old logs cannot recover a code that the old image never emitted. Retain
+the original evaluation receipt. Never replay a whole acceptance set merely to
+collect logs, clear reservations, enable raw response logging or relax validation
+to force a pass. A diagnostic release does not by itself fix a rejected answer
+or establish scientific correctness.
+
 ## Scientific and data limits
 
 The model must return structured JSON. The server rejects unknown context/source

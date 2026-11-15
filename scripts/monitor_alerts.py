@@ -38,7 +38,7 @@ def send(text: str) -> None:
 
 
 def transition(directory: Path, healthy: bool, names: list[str], *, test: bool = False) -> bool:
-    """Serialize runs and persist only confirmed deliveries; return whether a message was sent."""
+    """Persist observed transitions before delivery; serialize sending and acknowledgements."""
     import fcntl  # VPS/Linux; same process holds the lock through send and state update.
 
     directory.mkdir(mode=0o700, parents=True, exist_ok=True)
@@ -46,17 +46,31 @@ def transition(directory: Path, healthy: bool, names: list[str], *, test: bool =
         fcntl.flock(lock, fcntl.LOCK_EX)
         state = directory / "incident.json"
         previous = json.loads(state.read_text()) if state.exists() else {"unhealthy": False}
+        previous.setdefault("observed_unhealthy", previous["unhealthy"])
+        previous.setdefault("pending", [])
         unhealthy = not healthy
-        if previous["unhealthy"] == unhealthy:
-            return False
-        prefix = "[TEST] " if test else ""
-        text = prefix + ("FlareLedger RECOVERED: all monitoring checks passed." if healthy else
-                         "FlareLedger FAILURE after repeated checks: " + ", ".join(names))
-        send(text[:4000])
-        temporary = directory / "incident.tmp"
-        temporary.write_text(json.dumps({"unhealthy": unhealthy}), encoding="utf-8")
-        temporary.replace(state)
-        return True
+
+        def save() -> None:
+            temporary = directory / "incident.tmp"
+            temporary.write_text(json.dumps(previous), encoding="utf-8")
+            temporary.replace(state)
+
+        if previous["observed_unhealthy"] != unhealthy:
+            prefix = "[TEST] " if test else ""
+            text = prefix + ("FlareLedger RECOVERED: all monitoring checks passed." if healthy else
+                             "FlareLedger FAILURE after repeated checks: " + ", ".join(names))
+            previous["pending"].append({"unhealthy": unhealthy, "text": text[:4000]})
+            previous["observed_unhealthy"] = unhealthy
+            save()  # An outage must survive delivery failure even if the next check is healthy.
+        sent = False
+        while previous["pending"]:
+            event = previous["pending"][0]
+            send(event["text"])
+            previous["unhealthy"] = event["unhealthy"]
+            previous["pending"].pop(0)
+            save()  # A failed later send must not repeat an acknowledged earlier event.
+            sent = True
+        return sent
 
 
 def main() -> int:

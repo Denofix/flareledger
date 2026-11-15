@@ -33,7 +33,10 @@ class AlertsTest(unittest.TestCase):
             with mock.patch.object(alerts, "send", side_effect=alerts.AlertError("failed")):
                 with self.assertRaises(alerts.AlertError):
                     alerts.transition(state, False, ["ready"])
-            self.assertFalse((state / "incident.json").exists())
+            pending = json.loads((state / "incident.json").read_text())
+            self.assertFalse(pending["unhealthy"])
+            self.assertTrue(pending["observed_unhealthy"])
+            self.assertEqual(len(pending["pending"]), 1)
             with mock.patch.object(alerts, "send") as send:
                 alerts.transition(state, False, ["ready"])
                 self.assertEqual(send.call_count, 1)
@@ -41,6 +44,49 @@ class AlertsTest(unittest.TestCase):
                 with self.assertRaises(alerts.AlertError):
                     alerts.transition(state, True, [])
             self.assertTrue(json.loads((state / "incident.json").read_text())["unhealthy"])
+
+    def test_undelivered_failure_survives_healthy_next_check(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            state = Path(tmp)
+            with mock.patch.object(alerts, "send", side_effect=alerts.AlertError("offline")):
+                with self.assertRaises(alerts.AlertError):
+                    alerts.transition(state, False, ["readiness"])
+                with self.assertRaises(alerts.AlertError):
+                    alerts.transition(state, True, [])
+            pending = json.loads((state / "incident.json").read_text())
+            self.assertEqual([event["unhealthy"] for event in pending["pending"]], [True, False])
+            with mock.patch.object(alerts, "send") as send:
+                self.assertTrue(alerts.transition(state, True, []))
+                self.assertFalse(alerts.transition(state, True, []))
+                self.assertEqual(send.call_count, 2)
+                self.assertIn("FAILURE", send.call_args_list[0].args[0])
+                self.assertIn("readiness", send.call_args_list[0].args[0])
+                self.assertIn("RECOVERED", send.call_args_list[1].args[0])
+            self.assertEqual(json.loads((state / "incident.json").read_text())["pending"], [])
+
+    def test_partial_delivery_does_not_repeat_acknowledged_failure(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            state = Path(tmp)
+            with mock.patch.object(alerts, "send", side_effect=alerts.AlertError("offline")):
+                with self.assertRaises(alerts.AlertError):
+                    alerts.transition(state, False, ["ready"])
+            with mock.patch.object(alerts, "send", side_effect=[None, alerts.AlertError("offline")]) as send:
+                with self.assertRaises(alerts.AlertError):
+                    alerts.transition(state, True, [])
+                self.assertEqual(send.call_count, 2)
+            with mock.patch.object(alerts, "send") as send:
+                alerts.transition(state, True, [])
+                self.assertEqual(send.call_count, 1)
+                self.assertIn("RECOVERED", send.call_args.args[0])
+
+    def test_existing_delivered_state_is_preserved(self):
+        with tempfile.TemporaryDirectory() as tmp, mock.patch.object(alerts, "send") as send:
+            state = Path(tmp)
+            (state / "incident.json").write_text(json.dumps({"unhealthy": True}))
+            self.assertFalse(alerts.transition(state, False, ["ready"]))
+            self.assertTrue(alerts.transition(state, True, []))
+            self.assertEqual(send.call_count, 1)
+            self.assertIn("RECOVERED", send.call_args.args[0])
 
     def test_token_not_in_exception(self):
         with mock.patch.dict(os.environ, {"BOT_TOKEN": "never-print-this", "CHAT_ID": "-1"}), \

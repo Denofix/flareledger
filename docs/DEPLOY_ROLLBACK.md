@@ -143,7 +143,11 @@ sudo systemctl start flareledger-monitor.service
 
 Failure is reported after all monitor retries fail; repeated failures are suppressed,
 then recovery is reported when every check passes. A locked persistent state
-directory serializes updates. Failed delivery retains the previous state for retry.
+directory serializes updates. Observed transitions are queued on disk before sending,
+separately from confirmed delivery. If an outage ends before Telegram becomes
+reachable, the queued failure and recovery are delivered in order on the next run.
+Each acknowledgement removes only that event; a failed recovery send does not
+repeat the already delivered failure. Existing delivered-state files remain supported.
 An ambiguous network timeout or process interruption after delivery can still cause
 a duplicate. Exceptions and Telegram response bodies are not logged because URLs
 contain the bot token. The implementation uses the official

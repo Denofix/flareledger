@@ -1,6 +1,6 @@
 # FlareLedger
 
-![Proofonauts team identity, created with SI assistance](frontend/public/brand/proofonauts-horizontal.svg)
+![FlareLedger project identity, created with SI assistance](frontend/public/brand/flareledger-horizontal.svg)
 
 **Explore microgravity combustion research. Follow each claim back to its evidence.**
 
@@ -23,7 +23,7 @@ The purpose is to make evidence easier to inspect. The application does not cert
 
 ![Compatible measured-series comparison](presentation/screenshots/desktop/39-compare-two-compatible-chart.png)
 
-Timofey supplied these captures before the Proofonauts branding refresh. They are application screenshots, not fabricated measurements or proof of a new live Ask. See the [screenshot review](docs/SCREENSHOT_REVIEW.md).
+Timofey supplied these captures before the project branding refresh. They are application screenshots, not fabricated measurements or proof of a new live Ask. See the [screenshot review](docs/SCREENSHOT_REVIEW.md).
 
 ## Data and verification
 

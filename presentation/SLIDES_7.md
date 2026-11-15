@@ -10,7 +10,7 @@ Proofonauts: **Denis Voloshyn and Timofey**.
 **Flame in Freefall: SI-Powered Fire Safety Insights from Microgravity Combustion Data.**
 2026 NASA Space Apps Challenge, Kyiv.
 
-Visual: marked team logo and catalogue screenshot.
+Visual: marked project logo and catalogue screenshot.
 
 ## 2. The problem
 

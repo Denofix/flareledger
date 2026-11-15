@@ -20,7 +20,7 @@ The frozen snapshot records zero synthetic numerical values. Original measuremen
 
 ## Visuals and audio
 
-Timofey supplied the Proofonauts logo, and Denis confirmed it was created with neural-network assistance. Served variants contain visible SI markings, and the application also displays **SI-generated logo** beside the team credit. [Branding provenance](design/BRANDING.md) records the source and transformation. No NASA insignia, flag or mission logo was generated or modified for team branding.
+Timofey supplied the FlareLedger F-logo and confirmed its final spelling. Codex assisted the SVG path composition and lettering outlines. Served variants contain visible SI markings, and the application also displays **SI-generated logo** beside the team credit. [Branding provenance](design/BRANDING.md) records the source and transformation. No NASA insignia, flag or mission logo was generated or modified for project branding.
 
 Application screenshots capture the implemented interface; they are not generated mockups or invented measurements. Captions identify their limits. A typed question is not a generated answer. The implemented software and original decorative CSS were developed with SI assistance.
 

@@ -1,21 +1,23 @@
 {
   "supplier": "Timofey (Tymofii1912)",
-  "si_generation_confirmed_by": "Denis, explicit response in this work session",
-  "exact_generator": "Not specified",
-  "source_pack_sha256": "42e6a36759d44b140532f1728633d97ff8d1bafac103dff7bf35d90f987c9b0f",
+  "project": "FlareLedger",
+  "team": "Proofonauts",
+  "exact_generator": "Codex-assisted SVG path composition and lettering outlines",
+  "source_pack_sha256": "163faf46051d0ee8966caa5c518de0b5b329880d1db0c554675d9327c7cc5596",
   "input_sha256": {
-    "proofonauts-avatar.svg": "cd7a30329958f57d95e1af6980fbfb7fdd185bc11347d052b4c8ee61fd32b8ac",
-    "proofonauts-symbol.svg": "0c0f57a90f947caace5add2ee4533ddd5142a3c9334b5cc9b36720970c2cc2d8",
-    "proofonauts-horizontal.svg": "392e85e62f4ca6c5297ae1fcd6e3469e8bb85cd0f84fd30e65178b8cdbc83f65",
-    "proofonauts-horizontal-light.svg": "a6f458c05207def82bdbc9c5b81c7271b99a328b0d86ffd9d884e68a52bdd314"
+    "flareledger-avatar.svg": "130a5a1c1e14b16cc286ce457950e1f2b42708bc1b4371261f3279725d07e800",
+    "flareledger-horizontal-light.svg": "c89d17e4b2568e4fa02439acffc0efc1686efca05e3ec421a30b7fbcaac9eba7",
+    "flareledger-horizontal-monochrome.svg": "a61ea5acd70964a67cbbf1dc7caa80ab48098879d47115397e4880c0f60763b4",
+    "flareledger-horizontal.svg": "fb1285e7655b15f1565e882bcfd1b8ba0650c3e0814b70580b6f989142761cc4",
+    "flareledger-symbol.svg": "7431df747363b887a00df5daa81558ce263058310f3acbcbfd300a18262c32c4"
   },
   "served_sha256": {
-    "frontend/public/brand/proofonauts-horizontal-light.svg": "3578d3c21498061d42ad94f8c04e7cd1ad029d8f6215ed7654c73ebad5c6067a",
-    "frontend/public/brand/proofonauts-horizontal.svg": "3ebaddafdf45a050264d4cbf60e441396df9029e9f7a1704cd9d80f93953576a",
-    "frontend/public/brand/proofonauts-mark-light.svg": "29421bc040b567deae51576b967febf36bdd260a4c27a87a1d0f9ec5cd78bbf6",
-    "frontend/public/brand/proofonauts-mark.svg": "d3377e8da9255afb0e7c3838b240dda465668dafb1827c11cae1fa79a858df5a",
-    "frontend/public/favicon.svg": "c586d915c3bdc83b412b4d27d9983d534749fa926037f68c432f3e480a404394"
+    "frontend/public/brand/flareledger-horizontal.svg": "00c1297b36016be8490ae796bb99a950201d53bd115244d3f6685e4beeb279b4",
+    "frontend/public/brand/flareledger-horizontal-light.svg": "2daa7a8cba465adf14d624db424ffc6dacd365762c229b0708ede227127eacb0",
+    "frontend/public/brand/flareledger-mark.svg": "b1603a85849925c309b4f14b14e21a3a4bd3b381c7d7fbb7022b1db8e557d008",
+    "frontend/public/brand/flareledger-mark-light.svg": "c6a247011480247c188b6be02b6fb7cbec713e431b345e5bb7056cf1b6145a76",
+    "frontend/public/favicon.svg": "ca7d0694ce65fb26b4b9746c59e512ec484e73e23b056e58ce14b4b1d890b27b"
   },
-  "adaptation": "Original supplied paths; visible SI labels, extended viewBox and reversed standalone colours",
+  "adaptation": "Approved FlareLedger spelling and orbital F; visible SI labels; dark-interface variants",
   "nasa_branding_used": false
 }

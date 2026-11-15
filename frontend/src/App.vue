@@ -24,9 +24,9 @@ onMounted(refreshCorpus);
   <header class="mobile-header">
     <RouterLink to="/" class="brand" aria-label="FlareLedger by Proofonauts"
       ><img
-        src="/brand/proofonauts-mark-light.svg"
+        src="/brand/flareledger-mark-light.svg"
         width="32"
-        height="32"
+        height="37"
         alt=""
       />FlareLedger</RouterLink
     ><button
@@ -46,12 +46,12 @@ onMounted(refreshCorpus);
       aria-label="FlareLedger by Proofonauts"
       @click="menuOpen = false"
       ><img
-        src="/brand/proofonauts-mark-light.svg"
-        width="38"
-        height="43"
-        alt=""
-      /><span>FlareLedger<small>RESEARCH, TRACEABLE.</small></span></RouterLink
-    >
+        class="product-logo"
+        src="/brand/flareledger-horizontal-light.svg"
+        width="198"
+        height="62"
+        alt="FlareLedger project logo"
+    /></RouterLink>
     <div class="nav-caption">THE RESEARCH DESK</div>
     <nav aria-label="Main navigation">
       <RouterLink
@@ -104,13 +104,7 @@ onMounted(refreshCorpus);
     </div>
     <div class="sidebar-credit">
       AN INDEPENDENT PROJECT BY
-      <img
-        class="team-logo"
-        src="/brand/proofonauts-horizontal-light.svg"
-        width="174"
-        height="55"
-        alt="Proofonauts team logo"
-      />
+      <strong class="team-name">PROOFONAUTS</strong>
       <span class="branding-disclosure">SI-generated logo · Timofey</span>
       <a
         href="https://github.com/Denofix/flareledger"

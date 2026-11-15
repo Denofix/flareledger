@@ -5,7 +5,7 @@
 | Member | Practical contribution |
 | --- | --- |
 | Denis Voloshyn | Product coordination, architecture and scope; source-data preparation; SI adapter, retrieval and citation work; evaluation tooling; repository and submission preparation |
-| Timofey | Docker/CI, deployment, monitoring, verified backup/recovery, PR reviews, responsive interface checks, screenshots and SI-assisted Proofonauts branding |
+| Timofey | Docker/CI, deployment, monitoring, verified backup/recovery, PR reviews, responsive interface checks, screenshots and SI-assisted FlareLedger project branding |
 
 Both reviewed evidence and coordinated releases. These descriptions follow project changes and operator reports, rather than assigning work to absent participants.
 

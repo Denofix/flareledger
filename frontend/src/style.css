@@ -286,11 +286,17 @@ em {
   line-height: 1.8;
   color: #6d8a8f;
 }
-.team-logo {
-  display: block;
-  width: min(174px, 100%);
+.product-logo {
+  width: min(198px, 100%);
   height: auto;
+}
+.team-name {
+  display: block;
   margin: 5px 0;
+  color: #acbfbe;
+  font-size: 11px;
+  font-weight: 450;
+  letter-spacing: 2px;
 }
 .branding-disclosure {
   display: block;

@@ -130,9 +130,9 @@ running.
 
 scripts/replace_database.py puts a verified snapshot into the running API's state
 volume. It was rehearsed on a separate project and volume (see below); it has not been
-run against the live project, and it should only be used when the live database is
-damaged, lost or must be rolled back to a snapshot. Normal releases never touch the
-database.
+run against the live project. `replace` requires a healthy baseline; use the explicit
+`recover` command below for a damaged/missing database or a stopped API. Normal
+releases never replace the database.
 
 ```sh
 cd ~/flareledger-ops
@@ -165,6 +165,36 @@ the database each); remove old ones by hand once they are no longer needed. The 
 cannot judge schema compatibility between releases: it refuses a snapshot with a schema
 version the tooling does not know, and a snapshot from a different release than the
 running one is the operator's responsibility.
+
+### Disaster recovery of missing or damaged SQLite
+
+```sh
+python3 scripts/replace_database.py recover /path/to/verified-snapshot
+python3 scripts/replace_database.py recover /path/to/verified-snapshot \
+  --execute --public-url https://api.flareledger.fun
+```
+
+This mode does not require current readiness or a successful SQLite backup of the
+broken state. It validates the snapshot offline and the selected existing container,
+image identity and named state volume. Corpus identity is read from that container's
+read-only mounts in an isolated helper even when the API is stopped. Current files
+are kept in the state volume, including orphaned WAL/SHM when the main database is
+missing. Restored readiness, every snapshot count and public corpus identity must
+pass. A missing whole volume/container still requires the separate-project restore
+procedure, not implicit creation of an empty live volume.
+
+Manual rollback also preserves the file it displaces. If its helper or subsequent
+checks fail, it attempts to restore/restart the last working state and returns
+ROLLED_BACK / exit 1 when that succeeds. Otherwise it reports ROLLBACK_FAILED /
+exit 2 with container, volume and kept/away stamps for manual recovery; it does not
+label an interrupted swap as a harmless refusal.
+
+The included deploy_tools module supplies public checks before and after changes;
+--public-url has no missing lazy-import dependency. Shared operation_lock and backup
+helpers match PR12. All host tooling must be updated together: backup, deploy and
+replacement use `.operation-<project>.lock` in the same snapshots directory. A nested
+safety backup inherits the parent's locked descriptor. Keep the merge order PR12,
+then update this branch from main, preserving both deploy and replacement CI tests.
 
 ### Rehearsal
 

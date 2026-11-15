@@ -34,6 +34,23 @@ The LLM is disabled and the budget is USD 0. Ask returns a structured 503.
 
 See [backup and recovery](BACKUP_RECOVERY.md).
 
+## Recovery review fixes
+
+`recover` explicitly supports missing/corrupt SQLite and a stopped API without a
+healthy baseline or successful SQLite backup. Remaining database/WAL/SHM files are
+preserved. Manual rollback failures attempt to restart the last working state and
+otherwise print ROLLBACK_FAILED with recovery locations. The public-check helper
+and common operation lock are included; merge PR12 first, then update this branch
+from main and retain both workflow test sets before a new review.
+
+Validation of these fixes: 29 replacement/lock tests passed in Python 3.12 on Linux;
+18 snapshot tests and 2 backup tests passed on the Windows host with Git. API, file
+swaps and HTTP were also exercised on a separate local Docker Compose project for
+missing, corrupt and stopped cases, plus injected helper and post-check rollback
+failures. Host flock was substituted in that Windows rehearsal and tested separately
+with real Linux cross-process locks. It did not exercise live ingress, TLS or the VPS.
+All test projects and their volumes were removed; no live database was replaced.
+
 ## Not done
 
 - Frontend, and the Vercel rewrite of /api to https://api.flareledger.fun plus any CORS policy.

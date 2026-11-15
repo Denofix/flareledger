@@ -26,6 +26,7 @@ import rehearse_replace  # noqa: E402
 import replace_database as replace  # noqa: E402
 import snapshot_tools as snap  # noqa: E402
 import test_snapshots as fixtures  # noqa: E402
+import deploy_tools  # noqa: E402
 
 
 def run_script(script: str, state: Path, snapshot: Path | None, *arguments: str) -> subprocess.CompletedProcess:
@@ -67,6 +68,7 @@ class FakeHost:
         self.unready: set[str] = set()
         self.fail_swap = False
         self.fail_undo = False
+        self.fail_start = False
 
     def words(self) -> list[str]:
         return [word for command in self.log for word in command]
@@ -78,18 +80,27 @@ class FakeHost:
         database = self.state / snap.DATABASE_NAME
         if not database.exists() or self.live_sha() in self.unready:
             return {"ready": "unavailable"}
-        return {"ready": "ready", **snap.database_facts(database)}
+        try:
+            return {"ready": "ready", **snap.database_facts(database)}
+        except snap.SnapshotError:
+            return {"ready": "unavailable"}
 
-    def __call__(self, command, env=None, cwd=None):
+    def __call__(self, command, env=None, cwd=None, pass_fds=()):
         self.log.append(list(command))
         if command[:2] == ["docker", "ps"]:
-            return "cid1\n"
+            return "cid1\n" if self.running or "--all" in command else ""
+        if command[:3] == ["docker", "image", "inspect"]:
+            return "sha256:test-image\n"
+        if command[:3] == ["docker", "volume", "inspect"]:
+            return "vol1\n"
         if command[:2] == ["docker", "inspect"]:
             fmt = command[-1]
             if "Config.Image" in fmt:
                 return "flareledger-api:abc1234\n"
             if "Mounts" in fmt:
                 return "vol1\n"
+            if fmt == "{{.Image}}":
+                return "sha256:test-image\n"
             return "healthy\n" if self.running else "exited\n"
         if command[:2] == ["docker", "exec"]:
             if not self.running:
@@ -99,12 +110,16 @@ class FakeHost:
             self.running = False
             return ""
         if command[:2] == ["docker", "start"]:
+            if self.fail_start:
+                raise replace.ReplaceError("container start failed")
             self.running = True
             return ""
         if command[:3] == ["docker", "run", "--rm"]:
             index = command.index("-c")
             script, arguments = command[index + 1], command[index + 2:]
-            if (self.fail_swap and ".incoming" in script) or (self.fail_undo and "replaced-away" in script):
+            if "seed-reference" in script:
+                return self.seed + "\n"
+            if (self.fail_swap and ".incoming" in script) or (self.fail_undo and "no kept previous file" in script):
                 raise replace.ReplaceError("helper failed")
             mounts = [word for word in command if word.endswith(":/snapshot:ro")]
             snapshot = Path(mounts[0][: -len(":/snapshot:ro")]) if mounts else None
@@ -183,7 +198,7 @@ class ReplaceFlowTests(unittest.TestCase):
         self.host = FakeHost(self.state)
         for patch in (
             mock.patch.object(replace, "run", self.host),
-            mock.patch.object(replace, "lock", lambda directory: contextlib.nullcontext()),
+            mock.patch.object(replace, "lock", lambda directory, project="flareledger": contextlib.nullcontext()),
             mock.patch.object(replace.time, "sleep", lambda seconds: None),
         ):
             patch.start()
@@ -312,6 +327,119 @@ class ReplaceFlowTests(unittest.TestCase):
             replace.main(["replace", str(self.variant(marker=True)), "--execute"])
         self.assertEqual(stop.exception.code, 2)
 
+    def test_disaster_recovery_handles_missing_corrupt_and_stopped_api(self):
+        snapshot = self.variant(marker=True)
+        for mode in ("missing", "corrupt", "stopped"):
+            with self.subTest(mode=mode):
+                database = self.state / snap.DATABASE_NAME
+                fixtures.make_database(database) if not database.exists() else None
+                old = database.read_bytes()
+                if mode == "missing":
+                    database.unlink()
+                    (self.state / (snap.DATABASE_NAME + "-wal")).write_bytes(b"orphaned-wal")
+                elif mode == "corrupt":
+                    database.write_bytes(b"damaged database")
+                else:
+                    self.host.running = False
+                with mock.patch.object(deploy_tools, "public_ready", lambda base: (
+                    deploy_tools.Check("public ready", self.host.running and self.host.facts().get("ready") == "ready"),
+                    self.host.facts().get("corpus_version") if self.host.running else None,
+                )):
+                    code, out, err = self.invoke("recover", str(snapshot), "--execute", "--public-url", "https://test.invalid")
+                self.assertEqual(code, 0, err)
+                self.assertIn("RECOVER_OK", out)
+                self.assertTrue(self.host.running)
+                self.assertEqual(self.host.live_sha(), snap.sha256_file(snapshot / snap.DATABASE_NAME))
+                self.assertFalse(any(c[0] == sys.executable for c in self.host.log[-8:]))
+                if mode == "corrupt":
+                    self.assertTrue(any(p.read_bytes() == b"damaged database" for p in self.state.glob("*.replaced-*")))
+                if mode == "missing":
+                    self.assertFalse((self.state / (snap.DATABASE_NAME + "-wal")).exists())
+                    self.assertTrue(any(p.read_bytes() == b"orphaned-wal" for p in self.state.glob("*.replaced-*-wal")))
+                database.write_bytes(old)
+
+    def test_normal_replace_still_refuses_unavailable_database(self):
+        (self.state / snap.DATABASE_NAME).unlink()
+        code, _, err = self.invoke("replace", str(self.variant(marker=True)), "--execute")
+        self.assertEqual(code, 1)
+        self.assertIn("explicit recover", err)
+        self.assertNotIn("stop", self.host.words())
+
+    def test_public_url_success_and_failure_use_the_actual_helper(self):
+        snapshot = self.variant(marker=True)
+        version = snap.verify_snapshot(snapshot)["corpus"]["corpus_version"]
+        with mock.patch.object(deploy_tools, "public_ready", return_value=(deploy_tools.Check("ready", True), version)) as public:
+            code, _, err = self.invoke("replace", str(snapshot), "--execute", "--public-url", "https://test.invalid")
+        self.assertEqual(code, 0, err)
+        public.assert_called_with("https://test.invalid")
+        with mock.patch.object(deploy_tools, "public_ready", return_value=(deploy_tools.Check("ready", True), version)):
+            self.assertEqual(self.invoke("rollback", "--execute", "--public-url", "https://test.invalid")[0], 0)
+        with mock.patch.object(deploy_tools, "public_ready", return_value=(deploy_tools.Check("ready", False), None)):
+            code, _, err = self.invoke("replace", str(snapshot), "--execute", "--public-url", "https://test.invalid")
+        self.assertEqual(code, 2)
+        self.assertIn("ROLLBACK_FAILED", err)
+
+    def test_manual_rollback_helper_failure_restarts_last_working_api(self):
+        snapshot = self.variant(marker=True)
+        self.assertEqual(self.invoke("replace", str(snapshot), "--execute")[0], 0)
+        current = self.host.live_sha()
+        self.host.fail_undo = True
+        code, _, err = self.invoke("rollback", "--execute")
+        self.assertEqual(code, 1, err)
+        self.assertIn("ROLLED_BACK", err)
+        self.assertTrue(self.host.running)
+        self.assertEqual(self.host.live_sha(), current)
+
+    def test_manual_rollback_bad_database_returns_to_current_working_file(self):
+        snapshot = self.variant(marker=True)
+        self.assertEqual(self.invoke("replace", str(snapshot), "--execute")[0], 0)
+        current = self.host.live_sha()
+        self.host.unready.add(self.original)
+        code, _, err = self.invoke("rollback", "--execute")
+        self.assertEqual(code, 1, err)
+        self.assertIn("ROLLED_BACK", err)
+        self.assertTrue(self.host.running)
+        self.assertEqual(self.host.live_sha(), current)
+
+    def test_retagged_image_and_missing_volume_are_refused_before_stop(self):
+        snapshot = self.variant(marker=True)
+        for kind in ("image", "volume"):
+            def changed(command, env=None, cwd=None, pass_fds=()):
+                if command[:3] == ["docker", kind, "inspect"]:
+                    return "different-object\n"
+                return self.host(command, env, cwd, pass_fds)
+            with mock.patch.object(replace, "run", changed):
+                code, _, _ = self.invoke("recover", str(snapshot), "--execute")
+            self.assertEqual(code, 1)
+            self.assertNotIn("stop", self.host.words())
+
+    def test_partial_undo_failure_returns_the_displaced_working_file(self):
+        snapshot = self.variant(marker=True)
+        self.assertEqual(self.invoke("replace", str(snapshot), "--execute")[0], 0)
+        current = self.host.live_sha()
+        failed = [False]
+        def partial(command, env=None, cwd=None, pass_fds=()):
+            if command[:3] == ["docker", "run", "--rm"] and replace.UNDO in command and not failed[0]:
+                failed[0] = True
+                command = list(command)
+                index = command.index(replace.UNDO)
+                command[index] = replace.UNDO.replace("os.rename(saved, live)", "raise RuntimeError('failed after moving current file')")
+            return self.host(command, env, cwd, pass_fds)
+        with mock.patch.object(replace, "run", partial):
+            code, _, err = self.invoke("rollback", "--execute")
+        self.assertEqual(code, 1, err)
+        self.assertTrue(self.host.running)
+        self.assertEqual(self.host.live_sha(), current)
+
+    def test_failed_restart_during_manual_rollback_reports_recovery_details(self):
+        self.assertEqual(self.invoke("replace", str(self.variant(marker=True)), "--execute")[0], 0)
+        self.host.fail_start = True
+        code, _, err = self.invoke("rollback", "--execute")
+        self.assertEqual(code, 2)
+        self.assertIn("ROLLBACK_FAILED", err)
+        self.assertIn("volume vol1", err)
+        self.assertNotIn("REPLACE_REFUSED", err)
+
 
 class RehearsalGuardTests(unittest.TestCase):
     def test_the_rehearsal_refuses_project_names_that_could_hit_the_live_stack(self):
@@ -331,6 +459,30 @@ class RehearsalGuardTests(unittest.TestCase):
             bad = rehearse_replace.make_variant(source, root / "bad", marker=True, tamper=True)
             with self.assertRaises(snap.SnapshotError):
                 snap.verify_snapshot(bad)
+
+
+@unittest.skipUnless(sys.platform == "linux", "Linux host flock")
+class ReplacementLockTests(unittest.TestCase):
+    def test_replacement_blocks_a_real_scheduled_backup_process(self):
+        with tempfile.TemporaryDirectory() as folder:
+            with replace.lock(Path(folder)):
+                code = "import backup_production as b,sys; sys.exit(b.main(['--dest',sys.argv[1]]))"
+                child = subprocess.run([sys.executable, "-c", code, folder],
+                                       cwd=Path(__file__).resolve().parent, capture_output=True, text=True, timeout=10)
+            self.assertEqual(child.returncode, 1)
+            self.assertIn("Another backup, deploy or database operation", child.stderr)
+
+    def test_nested_backup_inherits_replacement_lock_without_unlocking_it(self):
+        import operation_lock
+        with tempfile.TemporaryDirectory() as folder:
+            with replace.lock(Path(folder)) as handle:
+                code = "import backup_production as b,sys; from pathlib import Path; b.lock(Path(sys.argv[1]),'flareledger',int(sys.argv[2])).close()"
+                child = subprocess.run([sys.executable, "-c", code, folder, str(handle.fileno())],
+                                       cwd=Path(__file__).resolve().parent, capture_output=True, text=True,
+                                       pass_fds=(handle.fileno(),), timeout=10)
+                self.assertEqual(child.returncode, 0, child.stderr)
+                with self.assertRaises(OSError):
+                    operation_lock.acquire(Path(folder), "flareledger")
 
 
 if __name__ == "__main__":

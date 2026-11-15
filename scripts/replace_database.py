@@ -1,6 +1,6 @@
-"""Replace the SQLite database of a running FlareLedger API with a verified snapshot.
+"""Replace or recover FlareLedger SQLite using a verified snapshot.
 
-Subcommands: replace and rollback. Both only describe what they would do unless
+Subcommands: replace, recover and rollback. They only describe what they would do unless
 --execute is given. Use --project to point them at a rehearsal project instead of
 the live one; rehearse there first (scripts/rehearse_replace.py).
 
@@ -13,6 +13,9 @@ fails, the previous file is put back and checked again. Nothing is deleted.
 
 rollback: puts the newest (or --stamp) kept previous file back.
 
+recover: explicitly handles damaged/missing SQLite or a stopped API without requiring
+current readiness or a successful SQLite backup. Remaining files are preserved.
+
 The API is stopped for the swap, so the live service is unavailable for about half
 a minute. A snapshot must come from a compatible schema; the checks refuse one whose
 schema version the tooling does not know.
@@ -23,14 +26,17 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import secrets
 import subprocess
 import sys
 import time
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from datetime import datetime, timezone
 from pathlib import Path
 
 import snapshot_tools as snap
+import deploy_tools
+import operation_lock
 from restore_snapshot import PROBE
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -74,9 +80,9 @@ except BaseException:
 saved = live + ".replaced-" + stamp
 if os.path.exists(live):
     os.rename(live, saved)
-    for suffix in ("-wal", "-shm"):
-        if os.path.exists(live + suffix):
-            os.rename(live + suffix, saved + suffix)
+for suffix in ("-wal", "-shm"):
+    if os.path.exists(live + suffix):
+        os.rename(live + suffix, saved + suffix)
 os.rename(incoming, live)
 try:  # durability of the rename; best effort where directories cannot be opened
     fd = os.open(state, os.O_RDONLY)
@@ -91,15 +97,19 @@ UNDO = """
 import hashlib, json, os, sys
 state = os.environ.get("STATE_DIR", "/app/state")
 stamp = sys.argv[1]
+away_stamp = sys.argv[2] if len(sys.argv) > 2 else stamp
+prefix = sys.argv[3] if len(sys.argv) > 3 else "replaced"
+if prefix not in ("replaced", "replaced-away"):
+    raise SystemExit("unsupported saved file kind")
 live = state + "/flareledger.sqlite3"
-saved = live + ".replaced-" + stamp
+saved = live + "." + prefix + "-" + stamp
 if not os.path.exists(saved):
     raise SystemExit("no kept previous file for stamp " + stamp)
 if os.path.exists(live):
-    os.rename(live, live + ".replaced-away-" + stamp)
+    os.rename(live, live + ".replaced-away-" + away_stamp)
     for suffix in ("-wal", "-shm"):
         if os.path.exists(live + suffix):
-            os.rename(live + suffix, live + ".replaced-away-" + stamp + suffix)
+            os.rename(live + suffix, live + ".replaced-away-" + away_stamp + suffix)
 os.rename(saved, live)
 for suffix in ("-wal", "-shm"):
     if os.path.exists(saved + suffix):
@@ -130,10 +140,11 @@ class ReplaceError(Exception):
     pass
 
 
-def run(command: list[str], env: dict | None = None, cwd: Path | None = None) -> str:
+def run(command: list[str], env: dict | None = None, cwd: Path | None = None, pass_fds: tuple[int, ...] = ()) -> str:
     try:
         result = subprocess.run(
-            command, capture_output=True, text=True, check=False, env={**os.environ, **(env or {})}, cwd=cwd
+            command, capture_output=True, text=True, check=False, env={**os.environ, **(env or {})}, cwd=cwd,
+            **({"pass_fds": pass_fds} if pass_fds else {}),
         )
     except OSError as error:
         raise ReplaceError(f"Cannot run {command[0]}: {error}") from error
@@ -143,22 +154,16 @@ def run(command: list[str], env: dict | None = None, cwd: Path | None = None) ->
 
 
 @contextmanager
-def lock(directory: Path):
-    import fcntl  # Linux only
-
-    with (directory / ".replace.lock").open("w") as handle:
-        try:
-            fcntl.flock(handle, fcntl.LOCK_EX | fcntl.LOCK_NB)
-        except OSError as error:
-            raise ReplaceError("Another replacement, deploy or backup is running") from error
-        yield
+def lock(directory: Path, project: str = LIVE_PROJECT):
+    with operation_lock.acquire(directory, project) as handle:
+        yield handle
 
 
-def target(project: str) -> tuple[str, str, str]:
+def target(project: str, include_stopped: bool = False) -> tuple[str, str, str]:
     """(container id, image reference, state volume name) of the project's API."""
     ids = run(
         [
-            "docker", "ps", "--quiet",
+            "docker", "ps", *(["--all"] if include_stopped else []), "--quiet",
             "--filter", f"label=com.docker.compose.project={project}",
             "--filter", "label=com.docker.compose.service=api",
         ]
@@ -172,6 +177,11 @@ def target(project: str) -> tuple[str, str, str]:
     ).strip()
     if not volume:
         raise ReplaceError("The API container has no named volume at /app/state")
+    actual_image = run(["docker", "image", "inspect", image, "--format", "{{.Id}}"]).strip()
+    if not actual_image or actual_image != run(["docker", "inspect", cid, "--format", "{{.Image}}"]).strip():
+        raise ReplaceError("The selected API image is unavailable or its tag points to another image")
+    if run(["docker", "volume", "inspect", volume, "--format", "{{.Name}}"]).strip() != volume:
+        raise ReplaceError("The selected state volume is unavailable")
     return cid, image, volume
 
 
@@ -183,8 +193,12 @@ def probe(cid: str) -> dict:
         return {"ready": "unavailable"}
 
 
-def running_seed(cid: str) -> str:
+def running_seed(cid: str, image: str | None = None) -> str:
     code = "import json; print(json.load(open('/app/data/demo/seed-reference.json'))['sha256'])"
+    if image is not None:
+        # Read the actual mounted corpus even if the API container cannot run.
+        return run(["docker", "run", "--rm", "--read-only", "--network", "none",
+                    "--volumes-from", cid + ":ro", "--entrypoint", "python", image, "-c", code]).strip()
     return run(["docker", "exec", cid, "python", "-c", code]).strip()
 
 
@@ -225,8 +239,6 @@ def matches(observed: dict, expected: dict, strict: bool) -> bool:
 def public_ok(public: str | None, version: str) -> bool:
     if not public:
         return True
-    import deploy_tools
-
     check, found = deploy_tools.public_ready(public)
     return check.ok and found == version
 
@@ -237,10 +249,12 @@ def log(directory: Path, entry: dict) -> None:
         handle.write(json.dumps(entry, sort_keys=True) + "\n")
 
 
-def safety_backup(project: str, snapshots: Path, repo: Path) -> str:
+def safety_backup(project: str, snapshots: Path, repo: Path, handle=None) -> str:
+    fd = handle.fileno() if handle is not None else None
     output = run(
         [sys.executable, str(BACKUP_SCRIPT), "--dest", str(snapshots), "--kind", "pre-update",
-         "--repo", str(repo), "--project", project]
+         "--repo", str(repo), "--project", project, *(["--lock-fd", str(fd)] if fd is not None else [])],
+        pass_fds=(fd,) if fd is not None else (),
     )
     for part in output.split("|"):
         if part.strip().startswith("snapshot="):
@@ -248,9 +262,9 @@ def safety_backup(project: str, snapshots: Path, repo: Path) -> str:
     raise ReplaceError("The safety backup did not report a snapshot")
 
 
-def put_back(cid: str, image: str, volume: str, stamp: str) -> dict:
+def put_back(cid: str, image: str, volume: str, stamp: str, away_stamp: str | None = None) -> dict:
     run(["docker", "stop", cid])
-    result = json.loads(helper(image, volume, UNDO, stamp).strip().splitlines()[-1])
+    result = json.loads(helper(image, volume, UNDO, stamp, away_stamp or stamp).strip().splitlines()[-1])
     restart(cid)
     return result
 
@@ -258,68 +272,69 @@ def put_back(cid: str, image: str, volume: str, stamp: str) -> dict:
 def do_replace(args: argparse.Namespace) -> int:
     snapshot = args.snapshot.resolve()
     manifest = snap.verify_snapshot(snapshot)
-    cid, image, volume = target(args.project)
-    seed = running_seed(cid)
+    recovery = args.command == "recover"
+    cid, image, volume = target(args.project, include_stopped=recovery)
+    seed = running_seed(cid, image if recovery else None)
     if manifest["corpus"]["seed_sha256"] != seed and not args.allow_corpus_change:
         raise ReplaceError(
             "The snapshot is from a different corpus than the one the running API serves; "
             "pass --allow-corpus-change only for a deliberate corpus change"
         )
     baseline = probe(cid)
-    if baseline.get("ready") != "ready":
-        raise ReplaceError("The API is not ready now; refusing to replace its database")
+    if baseline.get("ready") != "ready" and not recovery:
+        raise ReplaceError("The API is not ready now; use explicit recover with a verified snapshot")
     print(f"snapshot: {snapshot.name}  corpus {manifest['corpus']['corpus_version'][:30]}")
     print(f"target:   project {args.project}, container {cid[:12]}, volume {volume}, image {image}")
-    print(f"current:  {baseline['investigations']} investigations, {baseline['records']} records, {baseline['points']} points")
+    print(f"current:  ready={baseline.get('ready')}, {baseline.get('records', 'unavailable')} records")
     if not args.execute:
-        print("PLAN_ONLY | add --execute: safety backup, stop the API, swap the file, start, verify, "
+        first = "preserve remaining files" if recovery else "safety backup"
+        print(f"PLAN_ONLY | add --execute: {first}, stop the API, swap the file, start, verify, "
               "and put the previous file back if anything fails")
         return 0
-    stamp = snap.utc_stamp()
-    strict = not args.allow_corpus_change
+    stamp = snap.utc_stamp() + "-" + secrets.token_hex(4)
     expected = expected_facts(manifest)
-    with lock(args.snapshots):
-        backup = safety_backup(args.project, args.snapshots, args.repo)
-        print(f"safety backup of the current database: {backup}")
-        log(args.snapshots, {"event": "started", "project": args.project, "snapshot": snapshot.name, "stamp": stamp, "backup": backup})
-        failure = None
-        try:
-            run(["docker", "stop", cid])
-            output = helper(image, volume, SWAP, stamp, manifest["database_sha256"], snapshot=snapshot)
-            print("swapped: " + output.strip().splitlines()[-1])
+    backup = ("disaster-recovery-files-preserved-in-volume" if recovery else
+              safety_backup(args.project, args.snapshots, args.repo, getattr(args, "lock_handle", None)))
+    print(f"safety backup of the current database: {backup}")
+    log(args.snapshots, {"event": "started", "project": args.project, "snapshot": snapshot.name, "stamp": stamp, "backup": backup})
+    failure = None
+    try:
+        run(["docker", "stop", cid])
+        output = helper(image, volume, SWAP, stamp, manifest["database_sha256"], snapshot=snapshot)
+        print("swapped: " + output.strip().splitlines()[-1])
+        restart(cid)
+        observed = probe(cid)
+        version = manifest["corpus"]["corpus_version"]
+        good = matches(observed, expected, True) and public_ok(args.public_url, version)
+        print(f"after replacement: ready={observed.get('ready')}, {observed.get('investigations')} investigations, "
+              f"{observed.get('records')} records, {observed.get('trial_rows')} trial_row, {observed.get('series')} series, {observed.get('points')} points")
+        if not good:
+            failure = "the replaced database does not serve what the snapshot contains"
+    except Exception as error:
+        failure = str(error)
+    if failure is None:
+        log(args.snapshots, {"event": "ok", "project": args.project, "stamp": stamp, "backup": backup})
+        print(f"{'RECOVER' if recovery else 'REPLACE'}_OK | stamp {stamp} | previous files kept as flareledger.sqlite3.replaced-{stamp} | backup {backup}")
+        return 0
+    print(f"FAILED | {failure}", file=sys.stderr)
+    try:
+        # Put the kept file back if the swap got as far as moving it; otherwise the
+        # live file was never touched and the API only needs to be running again.
+        if stamp in [line for line in helper(image, volume, LIST).splitlines() if line.strip()]:
+            put_back(cid, image, volume, stamp)
+        else:
             restart(cid)
-            observed = probe(cid)
-            version = manifest["corpus"]["corpus_version"]
-            good = matches(observed, expected, strict) and public_ok(args.public_url, version if strict else observed.get("corpus_version", ""))
-            print(f"after replacement: ready={observed.get('ready')}, {observed.get('investigations')} investigations, "
-                  f"{observed.get('records')} records, {observed.get('trial_rows')} trial_row, {observed.get('series')} series, {observed.get('points')} points")
-            if not good:
-                failure = "the replaced database does not serve what the snapshot contains"
-        except (ReplaceError, snap.SnapshotError, ValueError, KeyError) as error:
-            failure = str(error)
-        if failure is None:
-            log(args.snapshots, {"event": "ok", "project": args.project, "stamp": stamp, "backup": backup})
-            print(f"REPLACE_OK | stamp {stamp} | previous file kept as flareledger.sqlite3.replaced-{stamp} | backup {backup}")
-            return 0
-        print(f"FAILED | {failure}", file=sys.stderr)
-        try:
-            # Put the kept file back if the swap got as far as moving it; otherwise the
-            # live file was never touched and the API only needs to be running again.
-            if stamp in [line for line in helper(image, volume, LIST).splitlines() if line.strip()]:
-                put_back(cid, image, volume, stamp)
-            else:
-                restart(cid)
-            back = probe(cid)
-            if matches(back, baseline, strict=True) and public_ok(args.public_url, baseline["corpus_version"]):
-                log(args.snapshots, {"event": "rolled_back", "project": args.project, "stamp": stamp, "failure": failure})
-                print(f"ROLLED_BACK | the previous database is serving again and matches the state before; failure: {failure}", file=sys.stderr)
-                return 1
-            failure += "; the restored state does not match the state before"
-        except (ReplaceError, ValueError, KeyError) as error:
-            failure += f"; putting the previous file back failed: {error}"
-        log(args.snapshots, {"event": "rollback_failed", "project": args.project, "stamp": stamp, "failure": failure})
-        print(f"ROLLBACK_FAILED | manual recovery needed; safety backup {backup}; kept file flareledger.sqlite3.replaced-{stamp}. {failure}", file=sys.stderr)
-        return 2
+        back = probe(cid)
+        if baseline.get("ready") == "ready" and matches(back, baseline, strict=True) and public_ok(args.public_url, baseline["corpus_version"]):
+            log(args.snapshots, {"event": "rolled_back", "project": args.project, "stamp": stamp, "failure": failure})
+            print(f"ROLLED_BACK | the previous database is serving again and matches the state before; failure: {failure}", file=sys.stderr)
+            return 1
+        failure += "; the restored state does not match the state before"
+    except Exception as error:
+        failure += f"; putting the previous file back failed: {error}"
+    log(args.snapshots, {"event": "rollback_failed", "project": args.project, "stamp": stamp, "failure": failure})
+    print(f"ROLLBACK_FAILED | manual recovery needed; safety backup {backup}; kept file flareledger.sqlite3.replaced-{stamp}. {failure}", file=sys.stderr)
+    return 2
 
 
 def do_rollback(args: argparse.Namespace) -> int:
@@ -335,24 +350,40 @@ def do_rollback(args: argparse.Namespace) -> int:
     if not args.execute:
         print("PLAN_ONLY | add --execute: stop the API, put the kept file back, start and check readiness")
         return 0
-    with lock(args.snapshots):
-        before = probe(cid)
-        result = put_back(cid, image, volume, stamp)
+    before = probe(cid)
+    away_stamp = snap.utc_stamp() + "-" + secrets.token_hex(4)
+    try:
+        result = put_back(cid, image, volume, stamp, away_stamp)
         after = probe(cid)
-        ok = after.get("ready") == "ready" and public_ok(args.public_url, after.get("corpus_version", ""))
-        log(args.snapshots, {"event": "manual_rollback_ok" if ok else "manual_rollback_failed", "project": args.project, "stamp": stamp})
-        print(f"restored {result['restored']} (sha256 {result['live_sha256'][:16]}); ready={after.get('ready')}; before had {before.get('records')} records")
-        if not ok:
-            print("ROLLBACK_FAILED | the API is not ready after restoring the kept file", file=sys.stderr)
-            return 2
-        print("ROLLBACK_OK")
+        if after.get("ready") != "ready" or not public_ok(args.public_url, after.get("corpus_version", "")):
+            raise ReplaceError("The API is not ready after restoring the kept file")
+        log(args.snapshots, {"event": "manual_rollback_ok", "project": args.project, "stamp": stamp})
+        print(f"ROLLBACK_OK | restored {result['restored']} (sha256 {result['live_sha256'][:16]})")
         return 0
+    except Exception as error:
+        failure = str(error)
+        try:
+            exists = "import os,sys; root=os.environ.get('STATE_DIR','/app/state'); print(int(os.path.isfile(root + '/flareledger.sqlite3.replaced-away-' + sys.argv[1])))"
+            if helper(image, volume, exists, away_stamp).strip() == "1":
+                run(["docker", "stop", cid])
+                helper(image, volume, UNDO, away_stamp, away_stamp + "-failed", "replaced-away")
+            restart(cid)
+            back = probe(cid)
+            if before.get("ready") == "ready" and matches(back, before, True) and public_ok(args.public_url, before["corpus_version"]):
+                log(args.snapshots, {"event": "manual_rollback_returned", "project": args.project, "stamp": stamp, "failure": failure})
+                print(f"ROLLED_BACK | rollback failed; last working state restarted: {failure}", file=sys.stderr)
+                return 1
+        except Exception as error:
+            failure += f"; return failed: {error}"
+        log(args.snapshots, {"event": "manual_rollback_failed", "project": args.project, "stamp": stamp, "away_stamp": away_stamp, "failure": failure})
+        print(f"ROLLBACK_FAILED | project {args.project}, container {cid}, volume {volume}; kept stamp {stamp}, away stamp {away_stamp}; {failure}", file=sys.stderr)
+        return 2
 
 
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
-    parser.add_argument("command", choices=("replace", "rollback"))
-    parser.add_argument("snapshot", nargs="?", type=Path, help="snapshot directory (replace only)")
+    parser.add_argument("command", choices=("replace", "recover", "rollback"))
+    parser.add_argument("snapshot", nargs="?", type=Path, help="snapshot directory (replace or recover)")
     parser.add_argument("--execute", action="store_true")
     parser.add_argument("--project", default=LIVE_PROJECT, help="Compose project of the API (rehearsals use their own)")
     parser.add_argument("--snapshots", type=Path, default=Path("/var/backups/flareledger/snapshots"))
@@ -361,12 +392,14 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--allow-corpus-change", action="store_true", help="snapshot may come from a different corpus")
     parser.add_argument("--stamp", help="rollback: which kept file to restore (default newest)")
     args = parser.parse_args(argv)
-    if args.command == "replace" and args.snapshot is None:
-        parser.error("replace needs a snapshot directory")
+    if args.command in ("replace", "recover") and args.snapshot is None:
+        parser.error(f"{args.command} needs a snapshot directory")
     if args.project == LIVE_PROJECT and args.execute and not args.public_url:
         parser.error(f"the live project needs --public-url {PUBLIC_API} so the public service is checked too")
     try:
-        return do_replace(args) if args.command == "replace" else do_rollback(args)
+        with (lock(args.snapshots, args.project) if args.execute else nullcontext()) as handle:
+            args.lock_handle = handle
+            return do_replace(args) if args.command in ("replace", "recover") else do_rollback(args)
     except (ReplaceError, snap.SnapshotError, OSError) as error:
         print(f"REPLACE_REFUSED | {error}", file=sys.stderr)
         return 1

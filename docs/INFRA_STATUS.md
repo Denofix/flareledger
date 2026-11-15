@@ -29,11 +29,42 @@ The LLM is disabled and the budget is USD 0. Ask returns a structured 503.
 | Daily systemd timer | Enabled on the VPS on 14 November 2026 (flareledger-backup.timer, 03:10 UTC, tooling checkout /home/tymofii/flareledger-ops at main 2d8e60c). First run by systemd succeeded at 21:10 UTC (BACKUP_OK, exit 0); the next scheduled run is 15 November about 03:11 UTC and its result is not yet observed |
 | Copy outside the VPS | Pulled by the team laptop with scripts/pull-backup.ps1; verified end to end |
 | Restore from the off-VPS copy | Verified on 14 November 2026 from a fresh clone of this branch: tooling checkout plus a separate worktree at the snapshot revision (8be005f, which has no recovery scripts), restoring the copy pulled to the laptop into a new project and volume: ready, 10 investigations, 1132 records (647 trial_row), 6 series, 1844 points. Refusals checked: wrong snapshot path and wrong application checkout both stop before any Docker command; the volume list was identical before and after |
-| Live database replacement | Not scripted and not rehearsed |
+| Live database replacement | Scripted (scripts/replace_database.py: verify, safety backup, swap inside the volume with the previous file kept, checks, automatic return, rollback command) and rehearsed on 14 November 2026 on a separate project and volume: tampered snapshot refused, other corpus refused, valid replacement, rollback byte-identical, rejected corpus change rolled back automatically. Not yet run against the live project |
 | Second off-site location | Not configured |
 | Snapshot made by the timer's service | Pulled to the laptop with scripts/pull-backup.ps1 and restored from that copy (fresh worktree at the snapshot revision, tooling from main): ready, 10 investigations, 1132 records (647 trial_row), 6 series, 1844 points; live volumes unchanged |
 
 See [backup and recovery](BACKUP_RECOVERY.md).
+
+## Recovery review fixes
+
+`recover` explicitly supports missing/corrupt SQLite and a stopped API without a
+healthy baseline or successful SQLite backup. Remaining database/WAL/SHM files are
+preserved. Manual rollback failures attempt to restart the last working state and
+otherwise print ROLLBACK_FAILED with recovery locations. The public-check helper
+and common operation lock are included. PR12 is merged in main at 3fdd06f; this
+branch includes that main and retains deploy, lock and replacement workflow tests.
+
+Validation of these fixes: 29 replacement/lock tests passed in Python 3.12 on Linux;
+18 snapshot tests and 2 backup tests passed on the Windows host with Git. API, file
+swaps and HTTP were also exercised on a separate local Docker Compose project for
+missing, corrupt and stopped cases, plus injected helper and post-check rollback
+failures. Host flock was substituted in that Windows rehearsal and tested separately
+with real Linux cross-process locks. It did not exercise live ingress, TLS or the VPS.
+All test projects and their volumes were removed; no live database was replaced.
+
+Rehearsal cleanup review: each wrapper invocation passes a random ownership token
+to restore. Its new container, volume and network receive that label. Cleanup filters
+by both project and token and rechecks the owner before individual removals; no
+project-wide compose down is used by the wrapper. Partial failed restores can be
+cleaned while pre-existing resources remain untouched. Six regression tests cover
+refusal, existing volumes, partial creation, later failure, --keep and wrong ownership.
+
+Local Docker verification also exercised the real restore and rehearsal commands:
+refusal preserved an existing running container and the exact SQLite bytes; a new
+restore passed readiness and corpus-count checks and removed its owned resources;
+an injected startup failure removed only that failed run's resources. The combined
+Linux replacement, cleanup and operation-lock suite passed 39 tests. These checks
+used disposable local projects and did not touch the VPS or production data.
 
 ## Deploy, rollback and monitoring
 

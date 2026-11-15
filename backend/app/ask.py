@@ -1,9 +1,6 @@
 """Source-linked Ask orchestration; network generation is opt-in and fail-closed."""
 
-import json
 import logging
-import re
-import sqlite3
 import time
 from collections.abc import Callable
 from typing import Any
@@ -15,11 +12,9 @@ from app.explanations import ExplanationRejected as ExplanationRejected
 from app.explanations import RejectionCode as RejectionCode
 from app.explanations import validate_explanation as validate_explanation
 from app.llm import GeminiProvider, LLMSettings, Provider, ProviderUnavailable
+from app.retrieval import retrieve as retrieve
 from app.storage import CorpusUnavailable, Repository
 
-STOP = set(
-    "a an and are as at be can compare could data describe do does explain evidence experiment experiments find for from how i in is it know me of on or research show tell than that the their these this to two use using what which with would about available between".split()
-)
 NOTICE = "FlareLedger-generated interpretation; citation and excerpt checks do not establish scientific correctness. Verify the original source and experimental conditions."
 LOGGER = logging.getLogger(__name__)
 
@@ -27,88 +22,6 @@ LOGGER = logging.getLogger(__name__)
 def log_rejection(code: RejectionCode) -> None:
     # Only a closed enum is logged: never exception text, model output or input.
     LOGGER.warning("ASK_VALIDATION stage=explanation code=%s", RejectionCode(code).value)
-
-
-def retrieve(repository: Repository, db: sqlite3.Connection, question: str) -> tuple[list[dict], list[dict]]:
-    tokens = list(
-        dict.fromkeys(t for t in re.findall(r"[\w-]+", question.casefold()) if len(t) >= 3 and t not in STOP)
-    )[:8]
-    if not tokens:
-        return [], []
-    terms = ["%" + t.replace("\\", "\\\\").replace("_", "\\_") + "%" for t in tokens]
-    clauses = ["search_text LIKE ? ESCAPE '\\'" for _ in terms]
-    score = "+".join(f"CASE WHEN {c} THEN 1 ELSE 0 END" for c in clauses)
-    rows = db.execute(
-        f"SELECT kind, payload_json FROM fl_entities WHERE kind IN ('investigation','record','knowledge_card','series','source') AND ({' OR '.join(clauses)}) "
-        f"ORDER BY ({score}) DESC, CASE kind WHEN 'investigation' THEN 0 WHEN 'series' THEN 1 WHEN 'knowledge_card' THEN 2 WHEN 'record' THEN 3 ELSE 4 END, ordinal LIMIT 20",
-        [*terms, *terms],
-    )
-    hits: list[dict] = []
-    context: list[dict] = []
-    used = 0
-    for kind, raw in rows:
-        item = json.loads(raw)
-        detail = repository.detail(db, kind, item)
-        sources = [s for s in detail["sources"] if s]
-        if not sources:
-            continue
-        # Keep complete fields; omit oversized items rather than truncating numbers or quotes.
-        content = {
-            k: v
-            for k, v in item.items()
-            if k
-            not in {
-                "points",
-                "source_rows",
-                "file_catalog_retrieval",
-                "file_catalog",
-                "original_bytes_base64",
-            }
-        }
-        content["quality_issues"] = detail["quality_issues"]
-        support = json.dumps(content, ensure_ascii=False, sort_keys=True)
-        if len(support.encode()) > 5000:
-            continue
-        entry = {
-            "id": item["id"],
-            "kind": kind,
-            "source_ids": [s["id"] for s in sources],
-            "support_text": support,
-            "evidence": detail["evidence"],
-            "source_titles": [
-                {"id": s["id"], "title": s.get("title", ""), "doi": s.get("doi")} for s in sources
-            ],
-        }
-        size = len(json.dumps(entry).encode())
-        if used + size > 16000:
-            continue
-        used += size
-        context.append(entry)
-        hits.append(
-            {
-                "kind": kind,
-                "id": item["id"],
-                "investigation_id": item.get("investigation_id"),
-                "title": item.get("title_en")
-                or item.get("title")
-                or item.get("original_trial_label")
-                or item.get("material")
-                or item["id"],
-                "excerpt": (
-                    item.get("text_en")
-                    or item.get("summary_en")
-                    or item.get("quality_note_en")
-                    or item.get("material")
-                    or ""
-                )[:500],
-                "source_ids": entry["source_ids"],
-                "evidence_ids": item.get("evidence_ids", []),
-                "sources": sources,
-            }
-        )
-        if len(hits) == 5:
-            break
-    return hits, context
 
 
 class AskService:

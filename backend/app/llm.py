@@ -105,24 +105,28 @@ class NoRedirect(urllib.request.HTTPRedirectHandler):
         return None
 
 
+def request_payload(settings: LLMSettings, question: str, context: list[dict[str, Any]]) -> dict[str, Any]:
+    """Build the exact provider input without credentials or a network call."""
+    return {
+        "model": settings.model,
+        "system_instruction": SYSTEM,
+        "input": json.dumps({"question": question, "context": context}, ensure_ascii=False),
+        "store": False,
+        "generation_config": {"thinking_level": "low", "max_output_tokens": settings.output_tokens},
+        "response_format": {
+            "type": "text",
+            "mime_type": "application/json",
+            "schema": ExplanationDraft.model_json_schema(),
+        },
+    }
+
+
 class GeminiProvider:
     def __init__(self, settings: LLMSettings):
         self.settings = settings
 
     def generate(self, question: str, context: list[dict[str, Any]]) -> Explanation:
-        payload = {
-            "model": self.settings.model,
-            "system_instruction": SYSTEM,
-            "input": json.dumps({"question": question, "context": context}, ensure_ascii=False),
-            "store": False,
-            "generation_config": {"thinking_level": "low", "max_output_tokens": self.settings.output_tokens},
-            "response_format": {
-                "type": "text",
-                "mime_type": "application/json",
-                "schema": ExplanationDraft.model_json_schema(),
-            },
-        }
-        encoded = json.dumps(payload).encode()
+        encoded = json.dumps(request_payload(self.settings, question, context)).encode()
         if len(encoded) > 32768:
             raise ProviderUnavailable("context_too_large")
         request = urllib.request.Request(

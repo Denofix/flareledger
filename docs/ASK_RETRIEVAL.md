@@ -34,7 +34,7 @@ of context entry accounting and 32,768 bytes per complete provider request. An
 oversized item is omitted rather than silently truncating its numbers or quote.
 Historical context, normalized metadata, project annotations and original cells
 or document text have distinct basis labels. The provider's claim-bound schema
-and final strict validator remain in force; see [AI setup](AI_SETUP.md).
+and final strict validator remain in force; see [SI setup](AI_SETUP.md).
 
 ## Offline inspection
 

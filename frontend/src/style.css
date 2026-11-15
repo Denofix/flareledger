@@ -141,6 +141,7 @@ em {
 }
 .sidebar {
   position: fixed;
+  overflow-y: auto;
   inset: 0 auto 0 0;
   width: var(--sidebar);
   background: #142d35;
@@ -285,11 +286,23 @@ em {
   line-height: 1.8;
   color: #6d8a8f;
 }
-.sidebar-credit strong {
-  font-size: 11px;
+.product-logo {
+  width: min(198px, 100%);
+  height: auto;
+}
+.team-name {
+  display: block;
+  margin: 5px 0;
   color: #acbfbe;
+  font-size: 11px;
   font-weight: 450;
   letter-spacing: 2px;
+}
+.branding-disclosure {
+  display: block;
+  color: #acbfbe;
+  font-size: 9px;
+  letter-spacing: 0;
 }
 .sidebar-credit a {
   display: block;
@@ -1683,7 +1696,7 @@ pre {
     font-size: 18px;
     gap: 5px;
   }
-  .brand img {
+  .brand img:not(.product-logo) {
     width: 33px;
     height: 33px;
   }

@@ -22,11 +22,11 @@ onMounted(refreshCorpus);
 <template>
   <a class="skip-link" href="#main">Skip to research</a>
   <header class="mobile-header">
-    <RouterLink to="/" class="brand"
+    <RouterLink to="/" class="brand" aria-label="FlareLedger by Proofonauts"
       ><img
-        src="/favicon.svg"
+        src="/brand/flareledger-mark-light.svg"
         width="32"
-        height="32"
+        height="37"
         alt=""
       />FlareLedger</RouterLink
     ><button
@@ -40,11 +40,18 @@ onMounted(refreshCorpus);
     </button>
   </header>
   <aside id="sidebar" class="sidebar" :class="{ 'is-open': menuOpen }">
-    <RouterLink to="/" class="brand" @click="menuOpen = false"
-      ><img src="/favicon.svg" width="38" height="38" alt="" /><span
-        >FlareLedger<small>RESEARCH, TRACEABLE.</small></span
-      ></RouterLink
-    >
+    <RouterLink
+      to="/"
+      class="brand"
+      aria-label="FlareLedger by Proofonauts"
+      @click="menuOpen = false"
+      ><img
+        class="product-logo"
+        src="/brand/flareledger-horizontal-light.svg"
+        width="198"
+        height="62"
+        alt="FlareLedger project logo"
+    /></RouterLink>
     <div class="nav-caption">THE RESEARCH DESK</div>
     <nav aria-label="Main navigation">
       <RouterLink
@@ -96,8 +103,10 @@ onMounted(refreshCorpus);
       </button>
     </div>
     <div class="sidebar-credit">
-      AN INDEPENDENT PROJECT BY<br /><strong>PROOFONAUTS</strong
-      ><a
+      AN INDEPENDENT PROJECT BY
+      <strong class="team-name">PROOFONAUTS</strong>
+      <span class="branding-disclosure">SI-generated logo · Timofey</span>
+      <a
         href="https://github.com/Denofix/flareledger"
         target="_blank"
         rel="noopener noreferrer"

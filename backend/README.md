@@ -1,5 +1,7 @@
 # Backend
 
+Current operator-reported release/status is recorded in [RELEASE_STATUS.md](../docs/RELEASE_STATUS.md). Earlier verified revisions below remain historical evidence; do not interpret them as an assertion of the current running SHA.
+
 Python 3.12, FastAPI and SQLite. This implementation imports the committed English
 NASA demo v2 after checking its manifest. Native tests cover the real source data,
 idempotent ingestion and backend backup restoration. The frontend and production
@@ -76,14 +78,14 @@ Follow the backup and off-volume copy procedure in [infra/README.md](../infra/RE
 Backend tests rehearse backup/restore with the real corpus and a new app instance.
 Full VPS recovery, external HTTPS and off-host retention remain infrastructure work.
 
-## Live AI
+## Live SI
 
 An optional Gemini adapter is implemented and **disabled by default**. Disabled,
 unconfigured or unmigrated Ask returns HTTP 503, answer=null, llm_unavailable and
 available lexical evidence. A flag alone is insufficient: the verified model,
 backend key, positive bounded quotas and explicit Ask-state migration are required.
 
-Read [AI setup](../docs/AI_SETUP.md) before enabling it. That runbook covers the
+Read [SI setup](../docs/AI_SETUP.md) before enabling it. That runbook covers the
 additive migration (`python -m app.migrate_ask` after a verified backup), exact
 Gemini configuration, persistent rolling limits, timeout/failure behavior,
 scientific validation limits and controlled local evaluation. Changing model or

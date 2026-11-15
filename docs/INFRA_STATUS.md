@@ -1,5 +1,7 @@
 # Infrastructure status
 
+Current operator-reported release/status is recorded in [RELEASE_STATUS.md](RELEASE_STATUS.md). Earlier verified revisions below remain historical evidence; do not interpret them as an assertion of the current running SHA.
+
 Owner: Timofey. Updated 15 November 2026. Each line states what was actually
 verified; planned work is labelled as such.
 

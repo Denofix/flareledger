@@ -22,5 +22,6 @@ Backup and recovery tools, described in [backup and recovery](../docs/BACKUP_REC
 | test_replace.py | CI, local | Tests the swap scripts for real and the replacement flow with a fake Docker host |
 | deploy_production.py | VPS host | status, plan, deploy and rollback to an explicit commit with checks and automatic return |
 | monitor_production.py | GitHub Actions, VPS | Frontend/API readiness, matching corpus version, TLS and backup-age checks with retries |
+| monitor_alerts.py | VPS | Telegram incident/recovery transitions with persistent deduplication and separate labelled delivery tests |
 | deploy_tools.py | Shared | HTTP, TLS and backup-age checks used by the two scripts above |
 | test_deploy.py | CI, local | Tests the release logic and monitor rules with fakes |

@@ -93,6 +93,14 @@ not evidence that the expanded scheduled monitor or VPS timer is installed.
 
 ## Not done
 
+Post-PR13 tooling update: the VPS tooling checkout is on main ab17e84. A manual
+local monitor run passed both HTTPS endpoints, frontend shell, proxied readiness
+and corpus agreement, catalogue reads, daily backup age (4.4 hours) and disk
+headroom (52% free). API containers were not changed. The monitor timer is not
+installed yet because systemd installation needs interactive sudo. Telegram
+transition support and six offline regression tests are prepared separately;
+credentials, installation and actual message delivery verification remain pending.
+
 - Scheduled execution of the expanded monitor after merge; the new checks cover the
   frontend page/TLS, frontend-domain readiness and agreement with the direct API corpus.
   Frontend CI and the Vercel same-origin /api rewrite now exist; no CORS change is required.

@@ -1,0 +1,11 @@
+[Unit]
+Description=Run the FlareLedger health check every 30 minutes
+
+[Timer]
+OnCalendar=*-*-* *:00,30:00 UTC
+RandomizedDelaySec=60
+Persistent=false
+Unit=flareledger-monitor.service
+
+[Install]
+WantedBy=timers.target

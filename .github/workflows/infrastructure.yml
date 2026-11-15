@@ -35,6 +35,12 @@ jobs:
         run: python scripts/test_snapshots.py
       - name: Test database replacement and rollback
         run: python scripts/test_replace.py
+      - name: Test rehearsal cleanup ownership and refusal safety
+        run: python scripts/test_rehearsal_cleanup.py
+      - name: Test deploy, rollback and monitoring logic
+        run: python scripts/test_deploy.py
+      - name: Test cross-process operation locks and inherited backup
+        run: python scripts/test_operation_lock.py
       - name: Check Caddy routing with disposable test fixtures
         run: python scripts/test_caddy.py
       - name: Validate production isolation without deployment

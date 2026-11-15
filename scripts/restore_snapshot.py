@@ -15,16 +15,19 @@ from __future__ import annotations
 import argparse
 import json
 import os
+import re
 import secrets
 import subprocess
 import sys
 import time
+import tempfile
 from pathlib import Path
 
 import snapshot_tools as tools
 
 ROOT = Path(__file__).resolve().parents[1]
 PROJECT_PREFIX = "flareledger-restore"
+OWNER_LABEL = "org.flareledger.restore-owner"
 
 PROBE = """
 import json, sys, urllib.request
@@ -78,6 +81,32 @@ def exists(command: list[str]) -> bool:
     return True
 
 
+def cleanup_owned(project: str, owner: str) -> int:
+    """Remove only resources labelled with this exact project AND invocation token.
+
+    Do not use compose down: its orphans/volumes may predate this invocation.
+    Labels are checked again before each removal; lookup failure preserves resources.
+    """
+    if not project.startswith(PROJECT_PREFIX) or not re.fullmatch(r"[a-f0-9]{32}", owner):
+        raise RestoreError("Invalid rehearsal cleanup ownership")
+    filters = ["--filter", f"label=com.docker.compose.project={project}",
+               "--filter", f"label={OWNER_LABEL}={owner}"]
+    removed = 0
+    for kind, listing, labels in (
+        ("container", ["docker", "ps", "--all", "--quiet"], ".Config.Labels"),
+        ("volume", ["docker", "volume", "ls", "--quiet"], ".Labels"),
+        ("network", ["docker", "network", "ls", "--quiet"], ".Labels"),
+    ):
+        for identifier in run(listing + filters).split():
+            found = run(["docker", kind, "inspect", identifier, "--format",
+                         '{{index ' + labels + ' "' + OWNER_LABEL + '"}}']).strip()
+            if found != owner:
+                continue
+            run(["docker", kind, "rm", *(["--force"] if kind == "container" else []), identifier])
+            removed += 1
+    return removed
+
+
 def check_source(source: Path, manifest: dict, revision: str | None) -> tuple[str, str]:
     """Validate the application source before any Docker command. Returns (revision, release tag)."""
     application = manifest["application"]
@@ -113,16 +142,20 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--project", help=f"Compose project; must start with {PROJECT_PREFIX} (default: unique name)")
     parser.add_argument("--build", action="store_true", help="build the image from --project-dir when it is missing")
     parser.add_argument("--cleanup", action="store_true", help="remove what this run created afterwards")
+    parser.add_argument("--owner-token", help=argparse.SUPPRESS)
     args = parser.parse_args(argv)
     project = args.project or f"{PROJECT_PREFIX}-{secrets.token_hex(3)}"
     if not project.startswith(PROJECT_PREFIX):
         parser.error(f"--project must start with {PROJECT_PREFIX} so the live project is never touched")
+    if args.owner_token and not re.fullmatch(r"[a-f0-9]{32}", args.owner_token):
+        parser.error("invalid --owner-token")
     snapshot = args.snapshot.resolve()
     source = args.project_dir.resolve()
     compose = ["docker", "compose", "--project-name", project, "--file", str(source / "compose.yaml")]
     volume = f"{project}_app_state"
     created = False  # cleanup is allowed only after this run created the project
     status = 1
+    owner_file: Path | None = None
     try:
         manifest = tools.verify_snapshot(snapshot)
         facts = manifest["corpus"]
@@ -134,6 +167,14 @@ def main(argv: list[str] | None = None) -> int:
             ["docker", "ps", "--all", "--quiet", "--filter", f"label=com.docker.compose.project={project}"]
         ).strip():
             raise RestoreError(f"Compose project {project} already exists; choose another --project or remove it yourself")
+        if args.owner_token:
+            labels = {OWNER_LABEL: args.owner_token}
+            with tempfile.NamedTemporaryFile(mode="w", suffix=".json", encoding="utf-8", delete=False) as handle:
+                owner_file = Path(handle.name)
+                json.dump({"services": {"api": {"labels": labels}},
+                           "volumes": {"app_state": {"labels": labels}},
+                           "networks": {"app": {"labels": labels}}}, handle)
+            compose += ["--file", str(owner_file)]
         env = {"IMAGE_TAG": tag, "APP_ENV": "production", "LLM_ENABLED": "false"}
         if not exists(["docker", "image", "inspect", reference]):
             if not args.build:
@@ -141,6 +182,11 @@ def main(argv: list[str] | None = None) -> int:
             run(compose + ["build", "api"], env=env, cwd=source)
         created = True
         run(compose + ["create", "api"], env=env, cwd=source)
+        if args.owner_token:
+            found = run(["docker", "volume", "inspect", volume, "--format",
+                         '{{index .Labels "' + OWNER_LABEL + '"}}']).strip()
+            if found != args.owner_token:
+                raise RestoreError("State volume is not owned by this restore; refusing to copy the database")
         run(
             [
                 "docker", "run", "--rm", "--read-only", "--network", "none", "--user", "0",
@@ -174,13 +220,18 @@ def main(argv: list[str] | None = None) -> int:
     finally:
         if args.cleanup and created:
             try:
-                run(compose + ["down", "--volumes", "--remove-orphans"], cwd=source)
+                if args.owner_token:
+                    cleanup_owned(project, args.owner_token)
+                else:
+                    run(compose + ["down", "--volumes", "--remove-orphans"], cwd=source)
                 print(f"CLEANED | project={project}")
             except RestoreError as error:
                 print(f"CLEANUP_FAILED | {error}", file=sys.stderr)
                 status = 1
         elif args.cleanup:
             print(f"NOT_CLEANED | nothing was created by this run for project {project}", file=sys.stderr)
+        if owner_file is not None:
+            owner_file.unlink(missing_ok=True)
     return status
 
 

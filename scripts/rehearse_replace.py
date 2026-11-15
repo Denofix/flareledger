@@ -30,6 +30,7 @@ from contextlib import closing
 from pathlib import Path
 
 import snapshot_tools as snap
+import restore_snapshot
 
 ROOT = Path(__file__).resolve().parents[1]
 PREFIX = "flareledger-restore-rehearsal"
@@ -88,7 +89,7 @@ def main(argv: list[str] | None = None) -> int:
     journal = scratch / "journal"
     journal.mkdir()
     results: list[tuple[str, bool, str]] = []
-    created = False
+    owner = secrets.token_hex(16)
 
     def record(name: str, ok: bool, detail: str = "") -> None:
         results.append((name, ok, detail))
@@ -108,8 +109,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         code, out, err = sh([sys.executable, str(ROOT / "scripts" / "restore_snapshot.py"), str(snapshot),
-                             "--project-dir", str(app), "--project", project])
-        created = True
+                             "--project-dir", str(app), "--project", project, "--owner-token", owner])
         print(out.strip().splitlines()[-1] if out.strip() else err.strip())
         if code != 0:
             record("restore the snapshot into the rehearsal project", False, err.strip()[-200:])
@@ -141,10 +141,12 @@ def main(argv: list[str] | None = None) -> int:
     except (RuntimeError, IndexError, OSError, snap.SnapshotError) as error:
         record("rehearsal error", False, str(error))
     finally:
-        if created and not args.keep:
-            code, _, err = sh(["docker", "compose", "--project-name", project, "--file", str(app / "compose.yaml"),
-                               "down", "--volumes", "--remove-orphans"])
-            print(f"  {'CLEANED' if code == 0 else 'CLEANUP FAILED: ' + err.strip()[-200:]} {project}")
+        if not args.keep:
+            try:
+                removed = restore_snapshot.cleanup_owned(project, owner)
+                print(f"  {'CLEANED' if removed else 'NOT_CLEANED: no owned resources'} {project}")
+            except (restore_snapshot.RestoreError, OSError) as error:
+                record("cleanup owned resources", False, str(error))
         shutil.rmtree(scratch, ignore_errors=True)
     failed = [name for name, ok, _ in results if not ok]
     print("REHEARSAL_OK" if not failed and len(results) == 6 else f"REHEARSAL_FAILED | {', '.join(failed) or 'incomplete'}")

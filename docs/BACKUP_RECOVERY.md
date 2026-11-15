@@ -193,8 +193,8 @@ The included deploy_tools module supplies public checks before and after changes
 --public-url has no missing lazy-import dependency. Shared operation_lock and backup
 helpers match PR12. All host tooling must be updated together: backup, deploy and
 replacement use `.operation-<project>.lock` in the same snapshots directory. A nested
-safety backup inherits the parent's locked descriptor. Keep the merge order PR12,
-then update this branch from main, preserving both deploy and replacement CI tests.
+safety backup inherits the parent's locked descriptor. PR12 is merged and this
+branch has been updated from main, preserving deploy, lock and replacement CI tests.
 
 ### Rehearsal
 
@@ -215,6 +215,15 @@ other-corpus snapshot which the API rejects is rolled back automatically. It pri
 REHEARSAL_OK only if all six steps pass and removes the rehearsal project afterwards
 (--keep leaves it). The variants are built in a temporary folder and never enter the
 real snapshot directory.
+
+Every rehearsal passes a unique invocation token to restore. Newly created API,
+state-volume and network resources receive the ownership label. Cleanup uses both
+the project and that token, then rechecks labels before removing individual resources.
+It never calls project-wide compose down, so an existing project/volume refused by
+restore is preserved. Resources genuinely created by a partially failed restore are
+still cleaned. --keep deliberately preserves the rehearsal's owned resources too.
+scripts/test_rehearsal_cleanup.py runs six regression cases through the real restore
+and wrapper command paths with a fake Docker inventory.
 
 Rehearsed on the VPS on 14 November 2026 from a fresh clone of this branch with the
 snapshot made by the daily timer: all six steps passed, the rehearsal project and

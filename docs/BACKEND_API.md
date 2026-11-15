@@ -24,7 +24,7 @@ Swagger: /api/docs. OpenAPI: /api/openapi.json. Public text uses English.
 | GET /api/files | Public-file metadata and URLs; no binary fetching |
 | GET /api/search?q=PMMA | Lexical keyword matches with source references |
 | GET /api/compare?ids=id1,id2 | Two to four compatible series, without transformations |
-| POST /api/ask | Always 503 in this release, with available lexical evidence |
+| POST /api/ask | Optional bounded explanation; otherwise structured refusal/unavailability with lexical evidence |
 
 List routes return {items, total, limit, offset}. Default page size: 20, maximum:
 100, offset: zero. records, trials, series and files accept investigation_id;
@@ -45,8 +45,8 @@ ingress and HTTPS are separate infrastructure work, not enabled by this backend.
 
 Suggested first flow: check ready and meta, list investigations, scope records and
 series to an investigation, fetch a measured-series detail, show sources and quality
-notes, and provide keyword search. Keep Ask visibly unavailable while data and
-evidence remain accessible.
+notes, and provide keyword search. Keep data and evidence accessible when Ask is
+disabled, rate limited or unavailable. See [AI setup](AI_SETUP.md) before activation.
 
 ## Scientific display
 
@@ -79,8 +79,25 @@ evidence_ids, sources} object, not a detail wrapper with an item property.
 Fetch the linked record or evidence detail for full locators and quality limitations;
 the search excerpt alone does not contain those fields.
 
-Ask accepts {"question":"PMMA"}, one to 1000 characters. It returns
-error.code=llm_unavailable, answer=null, retrieved_evidence,
-retrieval_method=lexical_keywords and live_generation_available=false.
-An empty search result is not a generated insufficient-evidence answer.
-No provider request, credential or paid fallback is used in this release.
+Ask accepts only {"question":"PMMA"}, one to 1000 characters, and at most 8192 JSON
+bytes. Its own bounded keyword ranking uses OR matching and retains the same flat
+retrieved-evidence shape. Search's existing AND keyword behavior is unchanged.
+
+By default Ask returns 503, error.code=llm_unavailable, answer=null,
+retrieved_evidence, retrieval_method=lexical_keywords, status=unavailable and
+live_generation_available=false. Enabled mode requires a backend key, verified
+Gemini/Hydrogen configuration, positive persistent limits and explicit migration.
+GET meta reports configuration/state availability without calling the provider.
+
+Generated responses are 200/status=generated with answer, citations
+({context_id, source_id, quote}), limitations, provider, model, corpus_version,
+generated_by=FlareLedger, scientific_review=false and a visible notice. Exact
+excerpts are checked against supplied corpus context, not claimed as NASA quotes
+or proof of scientific correctness. No measured points are modified or generated.
+
+200/status=insufficient_evidence has answer=null. No-context requests do not call
+the model. Local rolling quotas or an active lease return 429/status=rate_limited
+with Retry-After and retry_after_seconds. Disabled generation, provider 429,
+network errors and invalid output return 503/status=unavailable, answer=null.
+Evidence remains in these responses. There are no automatic retries or paid
+fallback. Full setup, limits and recovery requirements: [AI setup](AI_SETUP.md).

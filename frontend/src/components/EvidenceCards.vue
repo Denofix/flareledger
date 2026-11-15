@@ -4,6 +4,8 @@ import { label } from "../lib/format";
 import SourceList from "./SourceList.vue";
 defineProps<{ items: SearchItem[] }>();
 function route(item: SearchItem): string | null {
+  if (item.kind === "series")
+    return "/measurements?ids=" + encodeURIComponent(item.id);
   const group = (
     {
       investigation: "investigations",

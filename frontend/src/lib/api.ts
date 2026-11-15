@@ -15,12 +15,13 @@ export async function request<T>(
   path: string,
   init: RequestInit = {},
   acceptStatuses: number[] = [],
+  timeoutMs = 18_000,
 ): Promise<T> {
   const timeout = new AbortController();
   const signal = init.signal
     ? AbortSignal.any([init.signal, timeout.signal])
     : timeout.signal;
-  const timer = window.setTimeout(() => timeout.abort(), 18_000);
+  const timer = window.setTimeout(() => timeout.abort(), timeoutMs);
   try {
     const response = await fetch(base + path, {
       ...init,

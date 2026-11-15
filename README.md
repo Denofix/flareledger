@@ -15,8 +15,9 @@ The backend API runs on the VPS at https://api.flareledger.fun (readiness:
 `/api/health/ready`) with the verified corpus, verified SQLite snapshots (an off-VPS copy is pulled
 by the team laptop) and a tested restore procedure. The Vue frontend now provides
 investigation browsing, original measured charts, compatible-series comparison,
-source records and evidence search. Ask displays the backend's structured unavailable
-response and retrieved evidence; live LLM generation remains disabled. See
+source records and evidence search. Ask supports optional source-linked Gemini
+explanations with persistent quotas and remains disabled by default. Production
+activation and independent scientific evaluation are still pending. See [AI setup](docs/AI_SETUP.md),
 [frontend setup](frontend/README.md), [Vercel handoff](docs/FRONTEND_HANDOFF.md),
 [infrastructure status](docs/INFRA_STATUS.md)
 and [backup and recovery](docs/BACKUP_RECOVERY.md).
@@ -46,7 +47,7 @@ For a new Ubuntu VM, follow the [Ubuntu and GitHub setup guide](docs/SETUP_UBUNT
 
 | Path | Responsibility |
 | --- | --- |
-| `backend/` | Python 3.12, FastAPI, SQLite ingestion and source retrieval; live LLM adapter pending |
+| `backend/` | Python 3.12, FastAPI, SQLite ingestion, source retrieval and opt-in Gemini Ask |
 | `frontend/` | Vue 3, TypeScript, Vite, measured charts and source-linked evidence browsing |
 | `data/` | Dataset documentation, reviewed demo data, and local raw/processed files |
 | `infra/` | Docker, Compose, ingress, and deployment implementation |

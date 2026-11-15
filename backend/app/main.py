@@ -1,4 +1,4 @@
-"""NASA corpus browsing and citation retrieval; live generation remains unavailable."""
+"""NASA corpus browsing with optional bounded, source-linked Gemini explanations."""
 
 import sqlite3
 from collections.abc import Iterator
@@ -8,7 +8,10 @@ from fastapi import Depends, FastAPI, HTTPException, Query, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, ConfigDict, Field
 
+from app.ask import AskService
+from app.ask_body import AskBodyLimit
 from app.config import Settings
+from app.llm import LLMSettings, Provider
 from app.storage import CorpusUnavailable, Repository
 
 RecordType = Literal[
@@ -42,8 +45,13 @@ class AskRequest(BaseModel):
     question: str = Field(min_length=1, max_length=1000)
 
 
-def create_app(settings: Settings | None = None) -> FastAPI:
+def create_app(
+    settings: Settings | None = None,
+    llm_settings: LLMSettings | None = None,
+    provider: Provider | None = None,
+) -> FastAPI:
     repository = Repository(settings or Settings.from_env())
+    ask_service = AskService(repository, llm_settings or LLMSettings.from_env(), provider)
     api = FastAPI(
         title="FlareLedger API",
         version="0.1.0",
@@ -51,6 +59,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         redoc_url=None,
         openapi_url="/api/openapi.json",
     )
+    api.add_middleware(AskBodyLimit)
 
     @api.exception_handler(CorpusUnavailable)
     async def unavailable(_request: Request, exc: CorpusUnavailable) -> JSONResponse:
@@ -94,7 +103,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @api.get("/api/meta")
     def meta(database: Database) -> dict:
-        return {**repository.metadata(database), "live_generation_available": False}
+        return {**repository.metadata(database), "live_generation_available": ask_service.available}
 
     @api.get("/api/investigations", response_model=Page)
     def investigations(database: Database, limit: Limit = 20, offset: Offset = 0) -> dict:
@@ -193,26 +202,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             ],
         }
 
-    @api.post("/api/ask", status_code=503)
+    @api.post("/api/ask")
     def ask(body: AskRequest) -> JSONResponse:
-        try:
-            with repository.connection() as database:
-                retrieved = repository.search(database, body.question, 5)
-        except CorpusUnavailable:
-            retrieved = []
-        return JSONResponse(
-            status_code=503,
-            content={
-                "error": {
-                    "code": "llm_unavailable",
-                    "message": "Live generation is not configured in this release.",
-                },
-                "answer": None,
-                "retrieved_evidence": retrieved,
-                "retrieval_method": "lexical_keywords",
-                "live_generation_available": False,
-            },
-        )
+        status, content, headers = ask_service.answer(body.question)
+        return JSONResponse(status_code=status, content=content, headers=headers)
 
     return api
 

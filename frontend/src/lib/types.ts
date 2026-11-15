@@ -113,11 +113,20 @@ export interface SearchResult {
   items: SearchItem[];
 }
 export interface AskResult {
-  error?: { code: string; message: string };
+  status?:
+    "generated" | "insufficient_evidence" | "rate_limited" | "unavailable";
+  error?: { code: string; message: string; reason?: string };
   answer: string | null;
   retrieved_evidence: SearchItem[];
   retrieval_method: string;
   live_generation_available: boolean;
+  model?: string;
+  provider?: string;
+  corpus_version?: string;
+  notice?: string;
+  limitations?: string[];
+  retry_after_seconds?: number;
+  citations?: { context_id: string; source_id: string; quote: string }[];
 }
 export interface Comparison {
   series: Detail<Series>[];

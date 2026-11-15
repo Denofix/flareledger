@@ -13,9 +13,11 @@ not create a Vercel project, connect a domain, enable a model, or change the VPS
 4. Open a comparison URL directly, refresh it and inspect an original point.
    Droplet diameter and flame diameter must not share an overlay. Source-specific
    camera/calibration limitations and unknown uncertainty must stay visible.
-5. Submit an Ask question. In this release, the API returns structured 503
+5. Submit an Ask question. By default the API returns structured 503
    llm_unavailable; the screen displays retrieved evidence and explicitly states
    that no AI answer was generated. A different outage must display an error.
+   For controlled enabled-mode review, follow [AI setup](AI_SETUP.md); check model,
+   source links, exact excerpts, limitations, insufficient evidence and quota states.
 6. Check a nonexistent record and a nonexistent frontend route. Check keyboard
    navigation and a narrow phone viewport. No page should silently replace errors
    with empty research data.
@@ -82,7 +84,7 @@ Record the deployment URL, commit and verification time in infrastructure status
 Use Vercel's prior verified deployment to roll back the web application. A frontend
 rollback does not require touching SQLite, corpus ingestion, Nginx or QResto.
 
-LLM integration, provider/quota verification, server-side request limits for an
-enabled model, bilingual presentation and final submission remain separate tasks.
+Production activation and scientific evaluation of the optional LLM adapter,
+bilingual presentation and final submission remain separate tasks.
 The current VPS lease ends on 1 December 2026; confirm the exact cutoff and keep a
 tested off-VPS backup before judging or the lease end.

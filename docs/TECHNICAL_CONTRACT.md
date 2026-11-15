@@ -9,8 +9,9 @@ See [backend setup](../backend/README.md) and the [API handoff](BACKEND_API.md).
 The Vue frontend is implemented with npm dependencies, type checks, lint, tests,
 a production build, a local API proxy and Vercel routing configuration. See
 [frontend setup](../frontend/README.md) and [deployment handoff](FRONTEND_HANDOFF.md).
-The backend is deployed on the VPS. Frontend publication and enabled LLM
-generation remain separate work.
+The backend is deployed on the VPS and the frontend is published on Vercel.
+An optional Gemini adapter is implemented; enabled production generation and
+independent scientific evaluation remain separate work.
 
 ## Backend target
 
@@ -32,11 +33,14 @@ Readiness checks the installed corpus without LLM calls or re-importing data.
 Implemented checks are python -m ruff check ., python -m ruff format --check .,
 python -m mypy app and python -m pytest -q.
 
-LLM failure must not disable catalog, source access or measured data. Ask currently
-returns a structured unavailable response and source retrieval, without generation.
-Before generation is enabled, implement its complete timeout, rate limits,
-concurrency guard and insufficient-evidence behavior. Reserved LLM environment names
-are not functioning safeguards for an enabled adapter in this release.
+LLM failure must not disable catalog, source access or measured data. Ask defaults
+to a structured unavailable response and source retrieval. The opt-in Gemini
+adapter requires an explicitly allowed Gemini model, key, positive rolling quotas and
+explicit `python -m app.migrate_ask` after a backup. Reservations persist in the
+same SQLite snapshot; quota writes never change source entities. A transactional
+lease, network timeout, byte limits, no retries and explicit insufficient-evidence
+behavior bound enabled operation. See [AI setup](AI_SETUP.md) for precise limits,
+mechanical validation gaps and recovery precautions. Budget: USD 0, no paid fallback.
 
 ## Frontend contract
 
@@ -60,8 +64,10 @@ Runtime API keys never belong in VITE_* values.
 Charts preserve source point order, missing values and original time coordinates.
 Comparison requires matching axis quantity names and units; matching axes do not
 establish matched experimental conditions. Unknown values render as Not reported.
-Ask accepts the backend's structured llm_unavailable response and displays retrieved
-evidence without claiming that a model generated an answer.
+Ask handles structured unavailable, rate-limited and insufficient-evidence results
+without claiming generation. Generated text is escaped and labeled FlareLedger,
+with model/corpus, exact context excerpts, verified source links and limitations.
+Mechanical citation checks do not constitute independent scientific review.
 
 ## Data target
 

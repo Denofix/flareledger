@@ -61,7 +61,7 @@ environment files. A Docker build is included in frontend CI.
 | `/compare?ids=...`             | Two to four compatible series with their source limitations                 |
 | `/evidence?q=...`              | Lexical search across the corpus with source evidence                       |
 | `/sources/:id`, `/records/:id` | Original source or typed record, locators and full payload                  |
-| `/ask`                         | Retrieved evidence and an explicit unavailable-generation state             |
+| `/ask`                         | Optional source-linked explanation; explicit quota, refusal and outage states |
 
 Vue Router uses HTML5 history. A static host must route non-API deep links to
 `index.html`; API requests must retain their JSON response and HTTP status.
@@ -81,8 +81,10 @@ The `/evidence/:id` route opens the original evidence locator, extraction method
   Source record counts, actual trial rows and other record types remain distinct.
 - An ingestion checksum establishes source identity, not an independent scientific
   review. Review status and evidence locators remain available alongside sources.
-- Live LLM generation is disabled and the budget remains USD 0. Ask does not call an
-  external model, manufacture an answer or turn lexical matches into a safety claim.
+- Live LLM generation is disabled by default and the budget remains USD 0. When
+  explicitly enabled, Ask can call the backend Gemini adapter and displays the
+  model, corpus, exact context excerpts, linked sources and limitations. Mechanical
+  checks are not scientific review; see [AI setup](../docs/AI_SETUP.md).
 - API errors have explicit loading/error/retry states. There is no sample-data
   fallback, upload flow, authentication system or browser-held API key.
 - Branding, SVG icons and abstract CSS artwork are original project assets.

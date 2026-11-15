@@ -1,5 +1,7 @@
 # Deploy, rollback and monitoring
 
+Current operator-reported release/status is recorded in [RELEASE_STATUS.md](RELEASE_STATUS.md). Earlier verified revisions below remain historical evidence; do not interpret them as an assertion of the current running SHA.
+
 Scope: the FlareLedger API on the VPS (Compose project flareledger, compose.yaml plus
 compose.prod.yaml). The frontend is deployed by Vercel and rolled back there. Denis confirmed frontend
 commit 1d258c9 from main at https://flareledger.fun/ (primary) and

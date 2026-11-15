@@ -1,5 +1,7 @@
 # Deployment decision
 
+Current operator-reported release/status is recorded in [RELEASE_STATUS.md](RELEASE_STATUS.md). Earlier verified revisions below remain historical evidence; do not interpret them as an assertion of the current running SHA.
+
 The team selected Vercel for the frontend at flareledger.fun and the existing VPS
 for FastAPI and persistent SQLite. The API half is deployed: application commit
 8be005f runs at https://api.flareledger.fun behind the existing Nginx, which keeps

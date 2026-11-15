@@ -1,0 +1,21 @@
+{
+  "supplier": "Timofey (Tymofii1912)",
+  "si_generation_confirmed_by": "Denis, explicit response in this work session",
+  "exact_generator": "Not specified",
+  "source_pack_sha256": "42e6a36759d44b140532f1728633d97ff8d1bafac103dff7bf35d90f987c9b0f",
+  "input_sha256": {
+    "proofonauts-avatar.svg": "cd7a30329958f57d95e1af6980fbfb7fdd185bc11347d052b4c8ee61fd32b8ac",
+    "proofonauts-symbol.svg": "0c0f57a90f947caace5add2ee4533ddd5142a3c9334b5cc9b36720970c2cc2d8",
+    "proofonauts-horizontal.svg": "392e85e62f4ca6c5297ae1fcd6e3469e8bb85cd0f84fd30e65178b8cdbc83f65",
+    "proofonauts-horizontal-light.svg": "a6f458c05207def82bdbc9c5b81c7271b99a328b0d86ffd9d884e68a52bdd314"
+  },
+  "served_sha256": {
+    "frontend/public/brand/proofonauts-horizontal-light.svg": "3578d3c21498061d42ad94f8c04e7cd1ad029d8f6215ed7654c73ebad5c6067a",
+    "frontend/public/brand/proofonauts-horizontal.svg": "3ebaddafdf45a050264d4cbf60e441396df9029e9f7a1704cd9d80f93953576a",
+    "frontend/public/brand/proofonauts-mark-light.svg": "29421bc040b567deae51576b967febf36bdd260a4c27a87a1d0f9ec5cd78bbf6",
+    "frontend/public/brand/proofonauts-mark.svg": "d3377e8da9255afb0e7c3838b240dda465668dafb1827c11cae1fa79a858df5a",
+    "frontend/public/favicon.svg": "c586d915c3bdc83b412b4d27d9983d534749fa926037f68c432f3e480a404394"
+  },
+  "adaptation": "Original supplied paths; visible SI labels, extended viewBox and reversed standalone colours",
+  "nasa_branding_used": false
+}

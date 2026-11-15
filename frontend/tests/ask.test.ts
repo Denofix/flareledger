@@ -31,7 +31,7 @@ it("an unavailable model shows retrieved evidence mode instead of a fabricated a
   await wrapper.get("textarea").setValue("PMMA");
   await wrapper.get("form").trigger("submit");
   await flushPromises();
-  expect(wrapper.text()).toContain("No AI answer was generated");
+  expect(wrapper.text()).toContain("No SI answer was generated");
   expect(wrapper.text()).toContain("No matching evidence found");
   expect(wrapper.find(".generated-answer").exists()).toBe(false);
   wrapper.unmount();
@@ -67,7 +67,7 @@ it("retains populated source retrieval when the model is unavailable", async () 
   await wrapper.get("textarea").setValue("Test-only question");
   await wrapper.get("form").trigger("submit");
   await flushPromises();
-  expect(wrapper.text()).toContain("No AI answer was generated");
+  expect(wrapper.text()).toContain("No SI answer was generated");
   expect(wrapper.text()).toContain("Synthetic test fixture record");
   expect(wrapper.get(".evidence-card h3 a").attributes("href")).toBe(
     "/records/TEST-RECORD",
@@ -138,7 +138,7 @@ it.each(["gemini-3.6-flash", "gemini-4-hydrogen"])(
     expect(answer.text()).toContain("Exact context excerpt");
     expect(answer.get("a").attributes("href")).toBe("/sources/TEST-SOURCE");
     expect(answer.text()).toContain("Test-only limitation");
-    expect(wrapper.text()).not.toContain("No AI answer was generated");
+    expect(wrapper.text()).not.toContain("No SI answer was generated");
     wrapper.unmount();
   },
 );
@@ -191,7 +191,7 @@ it("shows an explicit insufficient-evidence state without a generated answer", a
     limitations: ["No measured support"],
   });
   expect(wrapper.text()).toContain("Insufficient supporting evidence");
-  expect(wrapper.text()).toContain("No AI answer was generated");
+  expect(wrapper.text()).toContain("No SI answer was generated");
   expect(wrapper.find(".generated-answer").exists()).toBe(false);
   wrapper.unmount();
 });

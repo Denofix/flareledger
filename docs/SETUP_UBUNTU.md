@@ -65,7 +65,7 @@ For an existing clean clone, switch to main and pull with git pull --ff-only ori
 
 ## Team access
 
-The owner manages invitations in [repository access settings](https://github.com/Denofix/flareledger/settings/access). Confirm exact accounts before inviting anyone. Known accounts are Denofix, Tymofii1912, and sayat228. Ivan's account must be confirmed separately.
+The owner manages invitations in [repository access settings](https://github.com/Denofix/flareledger/settings/access). Confirm exact accounts before inviting anyone. The confirmed two-person team uses Denofix and Tymofii1912; earlier proposals for additional participants are superseded.
 
 Inspect pending invitations and accepted collaborators:
 
@@ -82,7 +82,7 @@ In [Settings > Rules > Rulesets](https://github.com/Denofix/flareledger/settings
 
 Have another contributor accept access before relying on one required approval. An author cannot approve their own PR. Keep code-owner approval optional while CODEOWNERS lists only the owner. Requiring signed commits is a separate configuration from web-based commit sign-off.
 
-Current CI checks repository metadata. It does not build the future application. Timofey adds application CI after the real dependency files and component commands are merged.
+Current CI includes repository metadata, backend, frontend and infrastructure workflows. Inspect the actual run for the reviewed commit; historical green checks do not verify a later deployment.
 
 ## First development tasks
 

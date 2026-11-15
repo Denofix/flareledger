@@ -46,7 +46,7 @@ ingress and HTTPS are separate infrastructure work, not enabled by this backend.
 Suggested first flow: check ready and meta, list investigations, scope records and
 series to an investigation, fetch a measured-series detail, show sources and quality
 notes, and provide keyword search. Keep data and evidence accessible when Ask is
-disabled, rate limited or unavailable. See [AI setup](AI_SETUP.md) before activation.
+disabled, rate limited or unavailable. See [SI setup](AI_SETUP.md) before activation.
 
 ## Scientific display
 
@@ -100,4 +100,4 @@ the model. Local rolling quotas or an active lease return 429/status=rate_limite
 with Retry-After and retry_after_seconds. Disabled generation, provider 429,
 network errors and invalid output return 503/status=unavailable, answer=null.
 Evidence remains in these responses. There are no automatic retries or paid
-fallback. Full setup, limits and recovery requirements: [AI setup](AI_SETUP.md).
+fallback. Full setup, limits and recovery requirements: [SI setup](AI_SETUP.md).

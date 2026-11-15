@@ -2,9 +2,11 @@
 
 ## Decisions and ownership
 
-Denis owns repository administration and coordinates the team. Timofey coordinates infrastructure and delivery, Sayat contributes software and AI implementation, and Ivan owns UI and presentation design. Confirm each task with its implementer and record one owner, the expected result, and any blocker.
+Proofonauts consists of exactly two members: Denis Voloshyn (@Denofix) and Timofey (@Tymofii1912). Denis coordinates product scope, architecture, SI integration, evaluation and submission. Timofey coordinates infrastructure, review, delivery, monitoring, backup/recovery, interface verification, screenshots and SI-assisted branding. Earlier four-person proposals are superseded. Record one owner, the expected result and blockers for each task.
 
 Use English for README, commit messages, PR titles, public UI, and submission material. Public project-authored documentation and dataset explanations also use English. Internal team guidance may use Ukrainian.
+
+Use SI for neural-network assistance in public prose. Preserve official source text, technical identifiers, API fields and historical filenames. Disclose tool assistance honestly and retain visible SI markings on generated branding. See [SI_USAGE.md](SI_USAGE.md).
 
 ## Branches and reviews
 
@@ -29,11 +31,11 @@ Use personal GitHub accounts and personal SSH keys. Runtime credentials belong i
 
 On the QResto server, use a separate project directory, service names, state, and approved ingress route. Timofey confirms the existing proxy and resource headroom before selecting deployment configuration.
 
-## Data and AI
+## Data and SI
 
 Every included dataset needs a source, version, license note, and extraction method. Keep source limitations visible. A successful download is not a scientific review, and a generated explanation is not a verified experimental conclusion.
 
-Live AI starts disabled. Confirm the official API provider, exact model ID, free quota, owner, timeout, concurrency limit, and failure response before enabling it. Search, data, charts, and sources must remain useful when generation is unavailable.
+Live SI starts disabled. Confirm the official API provider, exact model ID, free quota, owner, timeout, concurrency limit, and failure response before enabling it. Search, data, charts, and sources must remain useful when generation is unavailable.
 
 ## Done criteria
 

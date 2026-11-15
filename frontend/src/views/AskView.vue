@@ -122,7 +122,7 @@ function submit() {
           <div>
             <h2>{{ unavailableTitle }}</h2>
             <p>
-              No AI answer was generated. The source-linked keyword results
+              No SI answer was generated. The source-linked keyword results
               below are retrieved evidence, not a generated explanation.
             </p>
           </div>
@@ -144,7 +144,7 @@ function submit() {
               }}
             </h2>
             <p>
-              No AI answer was generated.
+              No SI answer was generated.
               {{
                 result.data.value.error?.message ||
                 "The retrieved context does not support a reliable answer."

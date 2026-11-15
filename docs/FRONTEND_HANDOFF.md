@@ -15,8 +15,8 @@ not create a Vercel project, connect a domain, enable a model, or change the VPS
    camera/calibration limitations and unknown uncertainty must stay visible.
 5. Submit an Ask question. By default the API returns structured 503
    llm_unavailable; the screen displays retrieved evidence and explicitly states
-   that no AI answer was generated. A different outage must display an error.
-   For controlled enabled-mode review, follow [AI setup](AI_SETUP.md); check model,
+   that no SI answer was generated. A different outage must display an error.
+   For controlled enabled-mode review, follow [SI setup](AI_SETUP.md); check model,
    source links, exact excerpts, limitations, insufficient evidence and quota states.
 6. Check a nonexistent record and a nonexistent frontend route. Check keyboard
    navigation and a narrow phone viewport. No page should silently replace errors

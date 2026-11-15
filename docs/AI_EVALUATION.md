@@ -1,4 +1,4 @@
-# AI evidence evaluation: 15 candidate questions
+# SI evidence evaluation: 15 candidate questions
 
 Prepared on 15 November 2026. Owner: Denis; a second team reviewer is still required.
 

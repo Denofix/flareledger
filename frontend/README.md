@@ -84,7 +84,7 @@ The `/evidence/:id` route opens the original evidence locator, extraction method
 - Live LLM generation is disabled by default and the budget remains USD 0. When
   explicitly enabled, Ask can call the backend Gemini adapter and displays the
   model, corpus, exact context excerpts, linked sources and limitations. Mechanical
-  checks are not scientific review; see [AI setup](../docs/AI_SETUP.md).
+  checks are not scientific review; see [SI setup](../docs/AI_SETUP.md).
 - API errors have explicit loading/error/retry states. There is no sample-data
   fallback, upload flow, authentication system or browser-held API key.
 - Branding, SVG icons and abstract CSS artwork are original project assets.

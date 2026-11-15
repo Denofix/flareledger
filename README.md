@@ -1,96 +1,94 @@
 # FlareLedger
 
-Explore NASA microgravity combustion research and trace fire safety explanations to their evidence.
+![Proofonauts team identity, created with SI assistance](frontend/public/brand/proofonauts-horizontal.svg)
 
-FlareLedger is a team project for the **2026 NASA Space Apps Challenge**, addressing [Flame in Freefall](https://www.spaceappschallenge.org/2026/challenges/flame-in-freefall/?tab=resources). The planned workflow is to find an investigation, inspect its test conditions, compare suitable measurements, and read an explanation linked to the original sources.
+**Explore microgravity combustion research. Follow each claim back to its evidence.**
 
-## Current status
+[Open the application](https://flareledger.fun/) | [Screenshot demonstration](presentation/DEMO.md) | [NASA sources](docs/NASA_DATA.md) | [SI disclosure](SI_USAGE.md)
 
-The first backend provides explicit checksum-verified SQLite ingestion, investigation
-browsing, typed source records, measured series, lexical search and source-linked
-comparison. Native tests exercise the real corpus and backend backup restoration.
-See [backend setup](backend/README.md) and the [API handoff](docs/BACKEND_API.md).
+FlareLedger is a research exploration application built by **Proofonauts, a two-person team: Denis Voloshyn and Timofey**. It addresses **Flame in Freefall: SI-Powered Fire Safety Insights from Microgravity Combustion Data**, a 2026 NASA Space Apps challenge. Users browse investigations, inspect original records and source locators, read measured curves, compare compatible series, and ask questions using selected source context.
 
-The backend API runs on the VPS at https://api.flareledger.fun (readiness:
-`/api/health/ready`) with the verified corpus, verified SQLite snapshots (an off-VPS copy is pulled
-by the team laptop) and a tested restore procedure. The Vue frontend now provides
-investigation browsing, original measured charts, compatible-series comparison,
-source records and evidence search. Ask supports optional source-linked Gemini
-explanations with persistent quotas and remains disabled by default. Production
-activation and independent scientific evaluation are still pending. See [AI setup](docs/AI_SETUP.md),
-[frontend setup](frontend/README.md), [Vercel handoff](docs/FRONTEND_HANDOFF.md),
-[infrastructure status](docs/INFRA_STATUS.md)
-and [backup and recovery](docs/BACKUP_RECOVERY.md).
+The purpose is to make evidence easier to inspect. The application does not certify materials, predict safe operating conditions or replace experimental and engineering review.
 
-The registered project domain is **flareledger.fun**. The frontend is published at https://flareledger.fun/ and https://flareledger.vercel.app/
-from main commit 1d258c9, with same-origin /api forwarding to the VPS. The VPS lease ends on 1 December 2026. [Deployment decisions](docs/DEPLOYMENT.md) describe the layout.
+## Implemented workflow
 
-## Start here
+- Browse and filter ten NASA PSI investigations.
+- Inspect original units, missing values, qualifiers, row locators, DOI, file versions, hashes and licenses.
+- Explore six measured series with 1,844 original points and compare matching physical quantities and units.
+- Search source-linked records; distinguish metadata, trial rows, operating conditions and historical context.
+- Use optional Gemini Ask with bounded retrieval, claim-bound citations, server-rendered markers and visible limitations. Retrieved evidence remains available when generation fails.
+- Use a responsive Vue interface backed by FastAPI/SQLite, Docker/Compose, CI, monitoring and backup/recovery tooling.
+
+![Investigation catalogue](presentation/screenshots/desktop/01-home-first-screen.png)
+
+![Compatible measured-series comparison](presentation/screenshots/desktop/39-compare-two-compatible-chart.png)
+
+Timofey supplied these captures before the Proofonauts branding refresh. They are application screenshots, not fabricated measurements or proof of a new live Ask. See the [screenshot review](docs/SCREENSHOT_REVIEW.md).
+
+## Data and verification
+
+The frozen snapshot contains 10 investigations, 9 experimental tables, 1,132 records including non-trials, 6 numerical series, 46 source records and 13 quality issues. Its 647 records typed as trial rows are not a validated count of independent experiments. The catalogue's 8,369 entries are external file listings, not 8,369 embedded measurements. No synthetic numerical values are recorded in this snapshot.
+
+Corpus SHA256: `90be248ab23b24f6eaa51e3923ba5937631493630fd4833e18a2dbb51897bc52`.
+
+The last operator-confirmed backend release is `969cb9460de9115fe0a16016bd02bf168aa7175e`. Timofey reported healthy readiness, preserved state and enabled Gemini. New installations still disable generation by default. Shared application limits are 10 reservations per rolling 24 hours, 3 per minute and one active call, with no automatic retry or paid fallback. Remaining quota is transient.
+
+At PR22, 163 backend tests and a 15-question offline inspection passed; 45/45 frozen anchors matched. **These are technical checks, not a 15/15 scientific answer score. The full new-release live answer evaluation and independent scientific review are unfinished.** [Evidence and limitations](docs/RELEASE_STATUS.md).
+
+## Run locally
+
+Requirements: Git, Python 3.12, Node 24 and npm. These commands create local development state; they are not a production update procedure.
 
 ```bash
-gh repo clone Denofix/flareledger
+git clone https://github.com/Denofix/flareledger.git
 cd flareledger
 python3 scripts/check_repository.py
+cd backend
+python3 -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements-dev.txt
+python -m app.ingest
+LLM_ENABLED=false python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
 ```
 
-For a new Ubuntu VM, follow the [Ubuntu and GitHub setup guide](docs/SETUP_UBUNTU.md). It covers installation, GitHub device-code login, Git identity, invitations, branch rules, and your next tasks.
+In a second terminal, from the repository root:
 
-- [Team rules](TEAM_RULES.md)
-- [Contribution workflow](CONTRIBUTING.md)
-- [Monorepo layout](docs/MONOREPO.md)
-- [Backend and frontend contract](docs/TECHNICAL_CONTRACT.md)
-- [Implementation roadmap](docs/ROADMAP.md)
-- [Domain setup](docs/DOMAIN_SETUP.md)
-- [Data and licensing](DATA_LICENSES.md)
+```bash
+cd frontend
+npm ci
+API_PROXY_TARGET=http://127.0.0.1:8000 npm run dev -- --host 127.0.0.1 --port 5173 --strictPort
+```
 
-## Repository layout
+Open <http://127.0.0.1:5173/>. Browsing, search, charts and sources require no Gemini key. Read the [SI runbook](docs/AI_SETUP.md) before deliberate enabled-generation setup; its explicit migration and persistent quotas are separate from corpus import.
 
-| Path | Responsibility |
+## Project structure
+
+| Directory | Responsibility |
 | --- | --- |
-| `backend/` | Python 3.12, FastAPI, SQLite ingestion, source retrieval and opt-in Gemini Ask |
-| `frontend/` | Vue 3, TypeScript, Vite, measured charts and source-linked evidence browsing |
-| `data/` | Dataset documentation, reviewed demo data, and local raw/processed files |
-| `infra/` | Docker, Compose, ingress, and deployment implementation |
-| `scripts/` | Repository checks and future reproducible maintenance commands |
-| `docs/` | Setup, contracts, architecture decisions, and delivery plan |
-| `design/` | Original UI assets, design exports, and their credits |
-| `presentation/` | Pitch material, screenshots, demo script, and source credits |
-| `.github/` | Repository checks, issue templates, PR template, and code owners |
+| backend/ | Python 3.12, FastAPI, SQLite, source retrieval and optional Gemini adapter |
+| frontend/ | Vue 3, TypeScript, Vite, measured charts and source-linked interface |
+| data/ | Frozen NASA snapshot, source manifests and hash-pinned ReadMe |
+| infra/ | Docker, Compose, ingress, monitoring and operational tooling |
+| scripts/ | Repository checks, bounded offline inspection and maintenance |
+| docs/ | Contracts, source register, submission text, verification and runbooks |
+| design/ | Branding provenance and asset credits |
+| presentation/ | Screenshot walkthrough, seven-slide plan and pitch script |
 
-Python and frontend dependencies will be owned by their respective directories. A root JavaScript workspace or additional monorepo framework is not required for the current scope.
+## Two-person team
 
-## Target implementation
-
-- **Backend:** Python 3.12, FastAPI, `backend/app/main.py`, `app.main:app`, port `8000`.
-- **Frontend:** Vue 3, TypeScript, Vite, npm, committed `package-lock.json`, output `frontend/dist/`.
-- **API:** same-origin `/api`; health endpoints `/api/health/live` and `/api/health/ready`.
-- **Data:** SQLite and a versioned, source-linked NASA demo corpus. Generated state stays outside Git.
-- **AI:** disabled by default; a free API is enabled only after its model, quota, and failure behavior are verified. The current LLM budget is **USD 0**, with no paid fallback.
-- **Deployment:** frontend on Vercel and API/SQLite on the VPS, as selected by the team.
-  The API hostname, HTTPS and ingress are configured. The frontend includes the
-  Vercel `/api` rewrite and SPA routing configuration; the public frontend and its proxied readiness are available at flareledger.fun.
-
-The [technical contract](docs/TECHNICAL_CONTRACT.md) separates implemented commands from planned interfaces. Public project material uses English under the [language decision](docs/adr/0002-public-language.md).
-
-## Scientific scope
-
-Original values, units, source identifiers, missing values, and measurement limitations must remain visible. Liquid droplets, solid samples, smoke measurements, and historical incidents have different meanings. A chart or generated explanation must preserve those distinctions.
-
-This is an independent hackathon project. NASA has not reviewed or endorsed FlareLedger or its generated conclusions.
-
-## Working together
-
-`main` is the shared integration branch. Use short-lived branches such as `feat/backend-health`, `feat/frontend-shell`, `infra/docker-ci`, or `docs/demo-script`, then open a pull request against `main`. See [CONTRIBUTING.md](CONTRIBUTING.md) for the commands and review process.
-
-| Team member | Project responsibility |
+| Member | Contribution |
 | --- | --- |
-| Denis / [Denofix](https://github.com/Denofix) | Team lead, AI integration, architecture, repository ownership |
-| Timofey [Tymofii1912](https://github.com/Tymofii1912) | Infrastructure, Docker, CI, and deployment coordination |
-| Sayat / [sayat228](https://github.com/sayat228) | Software development, AI integration, and application security |
-| Ivan | UI/UX, graphic design, and presentation design |
+| Denis Voloshyn / [Denofix](https://github.com/Denofix) | Coordination, scope, architecture, source-data preparation, SI integration, retrieval/validation, evaluation tooling and submission material |
+| Timofey / [Tymofii1912](https://github.com/Tymofii1912) | Infrastructure, Docker/CI, VPS delivery, monitoring, verified backups, PR review, interface checks, screenshots and SI-assisted branding |
 
-Confirm task ownership and availability in the team before assigning implementation work. Additional code owners will be registered after their GitHub accounts and access are confirmed.
+We practised full-stack integration, provenance, scientific-data handling, bounded LLM integration, tests, Git review, Linux operations, deployment, backup recovery, responsive verification and English technical communication. [Practical contributions and learning](docs/TEAM_AND_LEARNING.md) records concrete outcomes without claiming scientific accreditation.
 
-## License and attribution
+Code, text and parts of the design were developed with neural-network assistance. Gemini can generate runtime interpretations from selected context. [SI_USAGE.md](SI_USAGE.md) discloses tools, uses, human responsibilities and visible logo markings. Original measurements are not represented as generated data.
 
-Project code and original project documentation are licensed under the [MIT License](LICENSE). NASA datasets, publications, images, logos, and other third-party materials retain their own terms. See [DATA_LICENSES.md](DATA_LICENSES.md) before adding or redistributing source material.
+## Submission materials and scope
+
+[English form text](docs/submission/FIELD_TEXT.md), [submission checklist](docs/submission/CHECKLIST.md), [NASA source register](docs/NASA_DATA.md), [screenshot walkthrough](presentation/DEMO.md), [seven-slide plan](presentation/SLIDES_7.md) and [three-minute pitch](presentation/PITCH_3MIN.md) are included. A walkthrough or source repository does not replace the required public slide file/PDF or short video.
+
+Independent hackathon project. NASA has not reviewed or endorsed FlareLedger or its interpretations. Original code and project documentation use the [MIT License](LICENSE); third-party data and media retain their own terms under [DATA_LICENSES.md](DATA_LICENSES.md).
+
+See also [team rules](TEAM_RULES.md), [contribution workflow](CONTRIBUTING.md), [technical contract](docs/TECHNICAL_CONTRACT.md), [deployment](docs/DEPLOYMENT.md) and [backup/recovery](docs/BACKUP_RECOVERY.md).

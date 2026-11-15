@@ -1,35 +1,20 @@
-# Implementation roadmap
+# Delivery status and remaining work
 
-## Start
+Updated 15 November 2026. Team: Denis Voloshyn and Timofey only. Evidence baseline: backend `969cb9460de9115fe0a16016bd02bf168aa7175e`. Production statements below are Timofey's operator report, not an assertion made from source inspection alone.
 
-| Task | Coordinator | Completion evidence |
+| Work | Status and evidence | Owner |
 | --- | --- | --- |
-| Authenticate Ubuntu VM and clone main | Denis | gh auth status, correct account, clean clone |
-| Confirm GitHub usernames and invite contributors | Denis | Accepted invitations and push access |
-| Enable main branch rules | Denis | One approval and actual repository check required |
-| Assign the first implementation tasks | Denis with the team | One owner and acceptance criteria per task |
+| Corpus, importer and API | Implemented; frozen source hash, native tests and source-linked endpoints | Denis with Timofey review |
+| Vue interface and charts | Implemented browsing, search, source pages and compatibility checks | Denis with Timofey verification |
+| Deployment and recovery | Reported healthy Vercel/VPS deployment; checked backup copied off VPS | Timofey |
+| Bounded Gemini Ask | Enabled on reported production release; defaults disabled for new installations | Both |
+| Citation and retrieval fixes | PR20-22 merged; 163 backend tests at PR22 | Denis with Timofey review/deployment |
+| Offline inspection | 15 questions and 45 anchors checked; not scientific answer grades | Denis |
+| Current live answer evaluation | Separate journal prepared; no completed 15-case report provided | Timofey execution, Denis review |
+| Final interface verification | Current-branding and genuine generated-answer captures still needed | Timofey |
+| Submission text and branding | Prepared in this change; needs reviewed publication | Denis with Timofey review |
+| Final demo and submission | Content plan prepared; final demo file/URL, participant checks and Submit for Judging remain owner actions | Denis |
 
-## First implementation PRs
+Preserve the running backend and quota history during evaluation. Static branding/docs do not require a corpus migration or backend deployment. Record frontend and backend revisions separately. Run one AE-01 control after fresh operator preflight, then remaining cases individually as quota permits; retain failures and old-release results separately. Fix actual blockers through focused reviewed changes.
 
-| Task | Proposed coordination | Completion evidence |
-| --- | --- | --- |
-| Backend scaffold and health endpoints | Denis and Sayat | Real dependency files, both health routes, readiness checks, existing tests |
-| Frontend shell | Sayat with Ivan | package.json, lock file, working scripts, routes, /api proxy |
-| Reviewed NASA seed and ingestion | Denis with backend developer | Source hash, explicit import command, versioned corpus, data checks |
-| UI and evidence presentation | Ivan with frontend developer | Screens and states aligned with real available data |
-| Docker and application CI | Timofey | Local builds and CI using the merged component commands |
-
-These are coordination proposals. Confirm the implementer and availability in the team.
-
-## Public demo
-
-1. Timofey confirms permission, resource headroom, SSH access, and existing QResto ingress.
-2. Select hosting, document the decision, and build the application at a known commit.
-3. Connect flareledger.fun to that hosting and verify DNS and HTTPS.
-4. Verify search, source links, charts, readiness, and AI-disabled behavior from another device.
-5. Enable live AI only after official free access, the exact model, quotas, and failure behavior are verified.
-6. Record the demo commit, local backup procedure, public URL, and an owner for recovery.
-
-## Current open decisions
-
-The hosting address, deploy user, ingress route, LLM provider/model, and Ivan's GitHub username are not confirmed in this repository. No additional server or LLM purchase is required for repository preparation.
+Submission preparation can proceed while scientific evaluation is unfinished. Describe that limitation honestly; do not invent a score or delay a valid partial submission solely to consume model calls. Confirm the public demo file, anonymous link access, recovery procedure and final confirmation banner before declaring submission complete.

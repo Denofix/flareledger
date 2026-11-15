@@ -8,11 +8,11 @@ readiness and backups do not call a model.
 ## Verified access and limits
 
 On 15 November 2026 Denis successfully tested `gemini-4-hydrogen` using the official
-Google Gen AI Python SDK 3.3.0: the interaction completed and returned
+Google Gemini Python SDK 3.3.0: the interaction completed and returned
 `FLARELEDGER_OK`. This proves account/model access, not scientific answer quality
 or successful execution of this adapter's structured-output request.
 
-The FlareLedger project's AI Studio screen showed Free Tier and these Hydrogen
+The FlareLedger project's Google Studio dashboard screen showed Free Tier and these Hydrogen
 limits: **5 requests/minute, 250,000 tokens/minute and 20 requests/day**. Quotas
 belong to the Google project, not an individual API key. Other tools using that
 project consume the same allowance. Recheck the actual project before activation;
@@ -32,7 +32,7 @@ Google documents this stable model, Interactions support, structured JSON output
 `thinking_level=low` and a Standard Free Tier. `gemini-4-hydrogen` remains an
 explicitly supported alternative; there is no automatic substitution after an
 error. An existing `LLM_MODEL` setting takes precedence over the default. Check
-actual project access and the selected model's quotas in AI Studio before live
+actual project access and the selected model's quotas in Google Studio dashboard before live
 activation. The Hydrogen limits above must not be assumed to apply to Flash.
 Listed Free Tier pricing does not establish this project's eligibility or
 available quota.

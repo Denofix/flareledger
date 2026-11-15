@@ -39,7 +39,7 @@ adapter requires an explicitly allowed Gemini model, key, positive rolling quota
 explicit `python -m app.migrate_ask` after a backup. Reservations persist in the
 same SQLite snapshot; quota writes never change source entities. A transactional
 lease, network timeout, byte limits, no retries and explicit insufficient-evidence
-behavior bound enabled operation. See [AI setup](AI_SETUP.md) for precise limits,
+behavior bound enabled operation. See [SI setup](AI_SETUP.md) for precise limits,
 mechanical validation gaps and recovery precautions. Budget: USD 0, no paid fallback.
 
 ## Frontend contract

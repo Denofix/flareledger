@@ -22,3 +22,7 @@ Use original project branding. NASA insignia and logos do not become MIT assets.
 ## New assets
 
 For each added dataset, publication extract, font, icon set, image, or design asset, record its title, creator or publisher, source URL, license, and any attribution requirement near the artifact. Keep original license notices and relevant limitations.
+
+## Project branding and screenshots
+
+Timofey supplied the SI-assisted Proofonauts branding and application screenshots. Served variants have visible SI markings; [design/BRANDING.md](design/BRANDING.md) records provenance and hashes. Captures are retained with a manifest in presentation/screenshots/. Project assets use MIT project terms; scientific values and third-party resources retain separate terms. No NASA insignia is used as team branding.

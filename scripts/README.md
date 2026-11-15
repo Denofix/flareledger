@@ -17,3 +17,7 @@ Backup and recovery tools, described in [backup and recovery](../docs/BACKUP_REC
 | restore_snapshot.py | Any Docker host | Restore into a separate Compose project and verify it |
 | snapshot_tools.py | Anywhere | Shared verification; `verify DIRECTORY` checks a snapshot offline |
 | test_snapshots.py | CI, local | Tests verification, tampering detection and retention |
+| deploy_production.py | VPS host | status, plan, deploy and rollback to an explicit commit with checks and automatic return |
+| monitor_production.py | GitHub Actions, VPS | Frontend/API readiness, matching corpus version, TLS and backup-age checks with retries |
+| deploy_tools.py | Shared | HTTP, TLS and backup-age checks used by the two scripts above |
+| test_deploy.py | CI, local | Tests the release logic and monitor rules with fakes |

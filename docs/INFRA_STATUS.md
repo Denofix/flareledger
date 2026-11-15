@@ -7,6 +7,7 @@ verified; planned work is labelled as such.
 
 | Item | State | Evidence |
 | --- | --- | --- |
+| Frontend on Vercel | Published at https://flareledger.fun/ and https://flareledger.vercel.app/ from main commit 1d258c9, as confirmed by Denis | Public HTML and frontend-domain readiness/meta independently checked; readiness is HTTP 200 / ready, original corpus version retained |
 | API on the VPS | Running application commit 8be005f (image flareledger-api:8be005f) | /api/health/ready returns 200 with status ready; corpus 2026-11-14:90be248a... |
 | Compose project | flareledger, compose.yaml plus compose.prod.yaml, checkout /home/tymofii/flareledger | API is the only service; no host port is published |
 | Corpus import | Explicit python -m app.ingest, run once | 10 investigations, 1132 records (647 trial_row), 6 series, 1844 points |
@@ -34,12 +35,37 @@ The LLM is disabled and the budget is USD 0. Ask returns a structured 503.
 
 See [backup and recovery](BACKUP_RECOVERY.md).
 
+## Deploy, rollback and monitoring
+
+| Item | State |
+| --- | --- |
+| deploy, rollback, plan and status commands with explicit commit, pre/post-checks and automatic return | Implemented and unit-tested (scripts/test_deploy.py in CI). On the VPS, status, plan and refusal paths were run read-only on 14 November 2026 against the real deployment (running 8be005f, all checks passing). A live rollback to bc4c681 was run on 14 November 2026 at 22:39 UTC: the pre-checks passed, a pre-update snapshot was taken, bc4c681 was started and the overlapping-read post-check failed (22 of 42 requests returned 503, the concurrency fault fixed in PR 8), and the script returned to 8be005f by itself; all checks passed again afterwards and the data was unchanged. The success path of deploy (build and restart onto a newer commit) has not been run live |
+| External monitor (GitHub Actions every 30 minutes) | Added in this change; first scheduled run happens after it reaches main |
+| VPS monitor timer (readiness, certificate, backup age, disk) | Units added in infra/systemd; the check ran manually on the VPS with every check passing; timer not installed yet |
+| Alert channel for the VPS-side monitor | Not chosen; failures show in systemctl --failed and the journal |
+
+See [deploy, rollback and monitoring](DEPLOY_ROLLBACK.md).
+
+Review fixes: explicit recovery rollback no longer requires current readiness and
+can restart a stopped API. It requires a known-good image/revision and an explicit
+expected corpus version. Backup and deploy share one per-project operation lock,
+including safe inheritance by nested backup. Regression checks: 32 deploy/monitor
+tests, 18 snapshot tests and 2 SQLite backup tests passed locally; 4 additional real
+Linux cross-process lock tests passed inside an isolated Python 3.12 container.
+These new recovery paths have not yet been run against the live deployment.
+
+Frontend monitor extension verified externally on 14 November 2026 at 23:06 UTC:
+frontend HTML shell, frontend and direct API TLS, readiness through flareledger.fun,
+matching corpus_version and all seven direct API read probes passed. The 28 local
+deploy/monitor regression tests passed. These are manual checks of this revision,
+not evidence that the expanded scheduled monitor or VPS timer is installed.
+
 ## Not done
 
-- Frontend, and the Vercel rewrite of /api to https://api.flareledger.fun plus any CORS policy.
-- Application CI for the frontend; the backend and infrastructure workflows run.
-- Explicit deploy and rollback commands, pre/post-update checks, external monitoring
-  of readiness and TLS, and alerting when the newest successful backup is too old.
+- Scheduled execution of the expanded monitor after merge; the new checks cover the
+  frontend page/TLS, frontend-domain readiness and agreement with the direct API corpus.
+  Frontend CI and the Vercel same-origin /api rewrite now exist; no CORS change is required.
+- A live success-path deploy rehearsal, the VPS monitor installation and an alert channel.
 - Confirmed shutdown time. The VPS lease ends on 1 December 2026; the exact hour is
   not confirmed.
 - Independent scientific review of the corpus.

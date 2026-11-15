@@ -21,7 +21,8 @@ response and retrieved evidence; live LLM generation remains disabled. See
 [infrastructure status](docs/INFRA_STATUS.md)
 and [backup and recovery](docs/BACKUP_RECOVERY.md).
 
-The registered project domain is **flareledger.fun**. The apex frontend on Vercel is not connected yet. The VPS lease ends on 1 December 2026. [Deployment decisions](docs/DEPLOYMENT.md) describe the layout.
+The registered project domain is **flareledger.fun**. The frontend is published at https://flareledger.fun/ and https://flareledger.vercel.app/
+from main commit 1d258c9, with same-origin /api forwarding to the VPS. The VPS lease ends on 1 December 2026. [Deployment decisions](docs/DEPLOYMENT.md) describe the layout.
 
 ## Start here
 
@@ -66,8 +67,7 @@ Python and frontend dependencies will be owned by their respective directories. 
 - **AI:** disabled by default; a free API is enabled only after its model, quota, and failure behavior are verified. The current LLM budget is **USD 0**, with no paid fallback.
 - **Deployment:** frontend on Vercel and API/SQLite on the VPS, as selected by the team.
   The API hostname, HTTPS and ingress are configured. The frontend includes the
-  Vercel `/api` rewrite and SPA routing configuration; Vercel publication is still a
-  deployment task.
+  Vercel `/api` rewrite and SPA routing configuration; the public frontend and its proxied readiness are available at flareledger.fun.
 
 The [technical contract](docs/TECHNICAL_CONTRACT.md) separates implemented commands from planned interfaces. Public project material uses English under the [language decision](docs/adr/0002-public-language.md).
 

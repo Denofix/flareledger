@@ -218,13 +218,17 @@ install Ask tables, provide a Gemini key or enable generation.
 and at most 8192 JSON bytes, including streamed requests. Users cannot select a
 provider, URL, key, model, system prompt, output limit or tools.
 
-Ask uses up to eight non-stopword keywords, OR matching and a stable match-count
-rank to select up to five source-linked entities. `/api/search` retains its
-existing AND keyword contract. Ask's context contains complete selected fields,
-source IDs, quality issues and evidence locators within byte limits. Oversized
-entities are omitted; original measured points and original file payloads are
-not sent. This is lexical retrieval, not embeddings, scientific reasoning over
-the full corpus, curve analysis or a search of the live web.
+Ask uses bounded lexical matching with up to 32 significant query words,
+investigation/trial scoping and priority for explicitly named historical cards.
+It selects up to five source-linked items, including bounded original-table and
+local document-text packets. Packets keep complete headers, selected raw cells
+or paragraphs, locators and explicit subset/basis labels. `/api/search` retains
+its existing AND keyword contract. Oversized items are omitted; full measured
+curves and original binary payloads are not sent. The numerical seed and SQLite
+state are unchanged. The hash-pinned ReadMe companion must be present in the
+deployment's read-only data mount. See [retrieval and offline inspection](ASK_RETRIEVAL.md).
+This is lexical retrieval, not embeddings, scientific reasoning over the full
+corpus, curve analysis or a search of the live web.
 
 | HTTP / status | Behavior |
 | --- | --- |

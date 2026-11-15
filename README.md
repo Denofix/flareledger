@@ -1,6 +1,10 @@
 # FlareLedger
 
-![FlareLedger project identity, created with SI assistance](frontend/public/brand/flareledger-horizontal.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="frontend/public/brand/flareledger-horizontal-light.svg">
+  <source media="(prefers-color-scheme: light)" srcset="frontend/public/brand/flareledger-horizontal.svg">
+  <img alt="FlareLedger project identity, created with SI assistance" src="frontend/public/brand/flareledger-horizontal.svg">
+</picture>
 
 **Explore microgravity combustion research. Follow each claim back to its evidence.**
 

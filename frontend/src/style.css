@@ -1696,7 +1696,7 @@ pre {
     font-size: 18px;
     gap: 5px;
   }
-  .brand img {
+  .brand img:not(.product-logo) {
     width: 33px;
     height: 33px;
   }

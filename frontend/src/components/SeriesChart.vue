@@ -140,6 +140,7 @@ const activePoint = computed(
   <div
     ref="chartElement"
     class="chart-wrap"
+    :class="{ 'chart-wrap-expanded': expanded }"
     tabindex="0"
     role="region"
     aria-label="Measured chart; scroll horizontally when enlarged"

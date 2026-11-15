@@ -1136,6 +1136,9 @@ td:last-child {
   width: 100%;
   overflow: hidden;
 }
+.chart-wrap.chart-wrap-expanded {
+  overflow-x: auto;
+}
 .measurement-chart {
   width: 100%;
   display: block;

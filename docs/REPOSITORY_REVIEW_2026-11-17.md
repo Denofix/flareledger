@@ -30,7 +30,7 @@ Direct API readiness and frontend-proxied readiness both returned HTTP 200 / `re
 | Production frontend dependency audit | Passed; zero reported advisories |
 | Full frontend dependency audit | **Blocked** by the development-only Picomatch chain; [details](DEPENDENCY_SECURITY.md) |
 | Docker and container integration | Not executed locally: Docker is unavailable in this environment; GitHub CI remains the execution path |
-| Browser layout | Local Chromium could not launch because the runtime denies its process-singleton socket. A separate browser preview check is recorded below when available |
+| Browser layout | Passed the scoped Chromium preview review below: restored flame, hidden sidebar track, keyboard/wheel access and narrow-layout navigation |
 
 ## GitHub CI and Vercel preview
 
@@ -42,13 +42,26 @@ For application commit `5e52539c5538aac7bdd64406e029baef07f388f8` in [PR26](http
 - [Frontend job](https://github.com/Denofix/flareledger/actions/runs/44142300194) passed installation, typecheck, lint, tests and production build, then failed at the full dependency audit. Its frontend container build was consequently skipped. The audit gate was not disabled.
 - Vercel preview deployment `dpl_9XV6XGEenhBjzERnRNEk8xBmqjhs` reached READY and reports the same source commit.
 
-The production page was visually observed with the previous orbital F. Opening the new preview in a separate browser reached Vercel Authentication. A public sharing link was not created, and no protection setting was changed. Therefore the new preview's rendered desktop/mobile layout has **not** been visually accepted; it needs an authenticated reviewer. A READY build does not establish layout correctness. The subsequent commit only records this evidence and existing domain aliases; it does not change the application code tested above.
+The production page was visually observed with the previous orbital F. Initial preview inspection reached Vercel Authentication. After Denys explicitly authorized one share link lasting 23 hours, Vercel created a new expiring link for deployment `dpl_A3JyAe4ieMLonQcSxucwgm56cscf`, source `2eadd1a6d786aa4b4c03d351f379c2aaf76f2961`. The reviewed [deployment](https://flareledger-2j9czwvbn-denofix-2940.vercel.app/) then opened successfully. The access parameter is deliberately omitted from this repository. Project-wide Deployment Protection remains enabled; production was not promoted.
+
+## Scoped visual acceptance
+
+Chromium review on 17 November 2026 confirmed:
+
+- The desktop wordmark and mobile flame load correctly; the former visible logo disclosure badge is absent. The favicon points to `/favicon.svg?v=flame`.
+- At a CSS viewport of 1363 by 936, the main page retains its scrollbar and the sidebar has no separate visible track.
+- In the shorter 909 by 624 CSS viewport, wheel scrolling moves the sidebar to its bottom while the main page remains at scroll position zero. The source-code link remains reachable. PageDown, PageUp and End also scroll the focused sidebar, with a visible keyboard focus outline.
+- At CSS widths 545 and 340, the mobile navigation opens. Selecting Measurements closes it and loads the measured-series page. Investigation and measurement views showed no document-level horizontal overflow at the checked widths; the selected measurement chart rendered from the existing data.
+
+Narrow CSS viewports were obtained with ordinary browser zoom (100 to 400 percent), not physical mobile devices or touch emulation. The browser's DevTools policy was left unchanged. No independent Safari/Firefox or real-phone acceptance is implied. The captured console errors were from the browser extension; no application-origin error was observed in the inspected log window.
+
+[Original review screenshots and capture metadata](assets/review-2026-11-17/README.md) preserve the desktop view, narrow header and independently scrolled sidebar. These are genuine application captures, not generated measurements. No live Ask was submitted. The follow-up evidence commit changes documentation and captures only; application code is unchanged from the tested preview.
 
 Original corpus, hash-pinned ReadMe, evaluation fixture and screenshot bytes are preserved. No backend schema, quota policy, runtime credential, DNS assignment or database was changed. No live Ask was submitted. Offline source-anchor coverage is not a scientific answer score.
 
 ## Remaining work and integration
 
-Review the preview and browser evidence, resolve the blocking development dependency finding and obtain the other team member's review before squash merge. Vercel can then build from main; confirm the served flame, navigation and same-origin API after promotion. These static changes do not require a VPS update or migration.
+The scoped visual preview review is complete. Resolve the blocking development dependency finding and obtain the other team member's review before squash merge. Vercel can then build from main; confirm the served flame, navigation and same-origin API after promotion. These static changes do not require a VPS update or migration.
 
 PR24's useful runbook corrections are incorporated here; after this PR is reviewed and merged, reconcile or close the older overlapping documentation PR rather than merging stale README/roadmap text over the result. Dependabot PR1/2 remain separate dependency reviews, not automatically approved work.
 

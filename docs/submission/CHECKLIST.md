@@ -1,6 +1,8 @@
 # Submission checklist
 
-Project: **FlareLedger**. Team: **Proofonauts - Denis Voloshyn and Timofey**. Local Event: Kyiv. Public material is English.
+> Historical hackathon material prepared on 15 November 2026. Development continues after the event; this file does not attest that a submission or pitch occurred. The current application uses the restored flame; see [branding provenance](../../design/BRANDING.md).
+
+Project: **FlareLedger**. Team: **Proofonauts - Denys Voloshyn and Tymofii Chernoivanov**. Local Event: Kyiv. Public material is English.
 
 Basis: the supplied full Project Submission Guide PDF/HTML and the quoted Kyiv organizer messages. The guide's direct endpoint returned HTTP 502 to automated retrieval; the supplied text was read. The official 2026 overview and NASA Space Apps public discussion confirm the demo limits/local deadline. Primary guide: https://www.spaceappschallenge.org/resources/project-submission-guide/. Overview: https://www.spaceappschallenge.org/2026/. Public clarification: https://github.com/nasa/spaceapps/discussions/1991.
 
@@ -16,7 +18,7 @@ Basis: the supplied full Project Submission Guide PDF/HTML and the quoted Kyiv o
 
 ## Before submitting
 
-- [ ] Both members are confirmed participants at the same Local Event; the official roster contains exactly Denis and Timofey. Editing repository credits does not change the NASA roster.
+- [ ] Both members are confirmed participants at the same Local Event; the official roster contains exactly Denys and Tymofii. Editing repository credits does not change the NASA roster.
 - [ ] Final deck is English and at most 7 slides including title/closing, or video is at most 30 seconds. Non-English speech has English subtitles.
 - [ ] Slides name Proofonauts, both participants and the full challenge.
 - [ ] SI-created visual media have visible generation markings; code/text assistance is disclosed; any later generated audio is acknowledged in description/metadata.

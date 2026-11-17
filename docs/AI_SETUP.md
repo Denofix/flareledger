@@ -1,18 +1,28 @@
 # Optional Gemini explanations
 
-This change implements an opt-in adapter; it does not enable generation on the VPS.
+The adapter is opt-in and disabled by default in code. As checked on 15 November
+2026, production explicitly enables `gemini-3.6-flash` on backend release
+`969cb9460de9115fe0a16016bd02bf168aa7175e`. Ask state is already migrated. The
+shared limits are 10 reservations per rolling 24 hours, 3 per rolling minute and
+one active generation lease. PR20–22 are deployed; those updates required no
+additional migration and preserved the corpus and reservation history.
+
+The separate journal for this release has 15 `NOT_RUN` live outcomes. Offline
+checks matched 45/45 source anchors; this is retrieval evidence, not 15 scientific
+passes. Live evaluation is deferred pending operator authorization and available
+quota. See [release audit](RELEASE_AUDIT.md) for dated technical checks and gaps.
 The API budget remains **USD 0**, with no billing activation, paid fallback, automatic
 retries or automatic provider/model substitution. Browsing, measurements, sources,
 readiness and backups do not call a model.
 
 ## Verified access and limits
 
-On 15 November 2026 Denis successfully tested `gemini-4-hydrogen` using the official
-Google Gemini Python SDK 3.3.0: the interaction completed and returned
+On 15 November 2026 Denys successfully tested `gemini-4-hydrogen` using the official
+Google Gen AI Python SDK 3.3.0: the interaction completed and returned
 `FLARELEDGER_OK`. This proves account/model access, not scientific answer quality
 or successful execution of this adapter's structured-output request.
 
-The FlareLedger project's Google Studio dashboard screen showed Free Tier and these Hydrogen
+The FlareLedger project's AI Studio screen showed Free Tier and these Hydrogen
 limits: **5 requests/minute, 250,000 tokens/minute and 20 requests/day**. Quotas
 belong to the Google project, not an individual API key. Other tools using that
 project consume the same allowance. Recheck the actual project before activation;
@@ -25,19 +35,25 @@ rolling window is deliberately more conservative. A public visitor can consume
 this shared allowance; there is no per-user authentication or private judge quota.
 If it is exhausted, evidence browsing still works. Do not use paid fallback.
 
-### Gemini 3.6 Flash default
+### Gemini 3.6 Flash production selection
+
+On 15 November 2026 Denys reported that the selected project's AI Studio showed
+Free Tier for Flash, with 5 RPM, 250,000 TPM and 20 RPD. This project-specific
+report supersedes using the earlier Hydrogen access test as the activation basis.
+The dashboard's historical usage is delayed and does not prove the current
+remaining provider quota. Recheck before any separately authorized live attempt.
 
 `gemini-3.6-flash` is the default in native Python, Compose and `.env.example`.
 Google documents this stable model, Interactions support, structured JSON output,
 `thinking_level=low` and a Standard Free Tier. `gemini-4-hydrogen` remains an
 explicitly supported alternative; there is no automatic substitution after an
 error. An existing `LLM_MODEL` setting takes precedence over the default. Check
-actual project access and the selected model's quotas in Google Studio dashboard before live
+actual project access and the selected model's quotas in AI Studio before live
 activation. The Hydrogen limits above must not be assumed to apply to Flash.
 Listed Free Tier pricing does not establish this project's eligibility or
 available quota.
 
-On 15 November 2026 Denis completed a local Vite → API → Gemini 3.6 Flash → UI
+On 15 November 2026 Denys completed a local Vite → API → Gemini 3.6 Flash → UI
 run of the PMMA/BASS demonstration question. The captured response included an
 attributed explanation, PSI-25/PSI-62 citations, exact context excerpts and visible
 limitations, and the linked source record opened. Earlier Hydrogen adapter
@@ -121,7 +137,7 @@ source values, seed hash, corpus `user_version=1` and existing reservations.
 Running it twice does not reset usage. Startup, GET routes and POST requests do
 not create tables or silently migrate databases.
 
-For Timofey's Docker deployment, keep generation disabled, create a fresh verified
+For Tymofii's Docker deployment, keep generation disabled, create a fresh verified
 backup, build/select the reviewed release with the existing deploy process, and
 run the migration with that **same explicit image tag, Compose project and volume**:
 
@@ -190,15 +206,17 @@ the provider on a running deployment requires restarting/recreating that API wit
 
 ## Production handoff after PR review
 
-Timofey owns the VPS release. Use the existing deployment and verified backup
+Tymofii owns the VPS release. Use the existing deployment and verified backup
 procedure with an explicitly selected reviewed image tag and the current state
 volume. Merge alone publishes the frontend; it does not update the VPS API,
 install Ask tables, provide a Gemini key or enable generation.
 
 1. Take the fresh verified backup required above, then deploy the reviewed
    backend release with generation disabled. Keep the same corpus/state volume.
-2. Run the explicit additive migration using that release and inspect
-   `python -m app.ask_status`. Corpus and Ask state must both be ready.
+2. For an unmigrated database, run the explicit additive migration using that
+   release. For an already migrated release, preserve the existing tables and
+   reservations; no re-import or new migration is needed for PR20–22. Inspect
+   `python -m app.ask_status`; corpus and Ask state must both be ready.
 3. In the backend's private environment, explicitly select `gemini-3.6-flash`,
    supply the existing project key, and confirm that project's Free Tier and
    remaining Flash allowance. Start with the shared 10/day, 3/minute limits and
@@ -211,6 +229,23 @@ install Ask tables, provide a Gemini key or enable generation.
    is not a pass for the full scientific acceptance set.
 6. If the provider fails or the answer is unsupported, disable generation and
    restart the API. Keep retrieval available and retain all reservation history.
+
+The current deploy helper explicitly starts releases with `LLM_ENABLED=false`.
+A successful image update therefore does not preserve enabled generation by
+itself. After verifying the new release, data companion and unchanged state,
+the operator may deliberately restore the existing reviewed private environment
+from the managed deployment directory, using the exact deployed image tag:
+
+```bash
+env -u LLM_ENABLED IMAGE_TAG=<deployed-7-character-sha> docker compose \
+  --project-name flareledger -f compose.yaml -f compose.prod.yaml up -d --no-deps api
+docker compose --project-name flareledger -f compose.yaml -f compose.prod.yaml \
+  exec -T api python -m app.ask_status
+```
+
+This is an operator runbook, not authorization to deploy or call Ask. Never print
+the private environment. Recheck local quotas and the active lease after restart;
+keep the same database and do not reset counters.
 
 ## Request and response contract
 

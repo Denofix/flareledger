@@ -143,7 +143,10 @@ em {
 }
 .sidebar {
   position: fixed;
+  overflow-x: hidden;
   overflow-y: auto;
+  scrollbar-width: none;
+  overscroll-behavior-y: contain;
   inset: 0 auto 0 0;
   width: var(--sidebar);
   background: #142d35;
@@ -152,6 +155,16 @@ em {
   display: flex;
   flex-direction: column;
   z-index: 30;
+}
+.sidebar::-webkit-scrollbar {
+  display: none;
+}
+.sidebar:focus-visible {
+  outline: 2px solid var(--warm);
+  outline-offset: -3px;
+}
+.sidebar > * {
+  flex-shrink: 0;
 }
 .brand {
   display: flex;
@@ -299,12 +312,6 @@ em {
   font-size: 11px;
   font-weight: 450;
   letter-spacing: 2px;
-}
-.branding-disclosure {
-  display: block;
-  color: #acbfbe;
-  font-size: 9px;
-  letter-spacing: 0;
 }
 .sidebar-credit a {
   display: block;

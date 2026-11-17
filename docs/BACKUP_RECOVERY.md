@@ -44,15 +44,19 @@ Results: /var/backups/flareledger/snapshots/backup.log (one JSON line per run) a
 last-success-daily.json / last-success-pre-update.json, whose created_at shows how
 old the newest good snapshot is.
 
-Install once (systemd units are in [infra/systemd](../infra/systemd)). The unit files
-assume user tymofii and the tooling checkout /home/tymofii/flareledger-ops; edit them
-otherwise. Keep that checkout on main and update it with git pull --ff-only.
+Install once (systemd units are in [infra/systemd](../infra/systemd)). Before
+installation, adapt a private deployment copy of the units to the actual non-root
+deployment account and its tooling checkout. Check User, WorkingDirectory,
+ExecStart and environment-file paths together; do not assume template values
+match another host. Keep the tooling checkout on main with git pull --ff-only.
+Keep those adapted copies outside Git and set `PRIVATE_UNIT_DIR` to their directory.
+Run the commands below as that deployment account, not from a root login shell.
 
 ```sh
 git clone https://github.com/Denofix/flareledger.git ~/flareledger-ops
 cd ~/flareledger-ops
-sudo install -d -o tymofii -g tymofii -m 700 /var/backups/flareledger/snapshots
-sudo install -m 644 infra/systemd/flareledger-backup.service infra/systemd/flareledger-backup.timer /etc/systemd/system/
+sudo install -d -o "$(id -un)" -g "$(id -gn)" -m 700 /var/backups/flareledger/snapshots
+sudo install -m 644 "${PRIVATE_UNIT_DIR:?Set the adapted unit directory}/flareledger-backup.service" "$PRIVATE_UNIT_DIR/flareledger-backup.timer" /etc/systemd/system/
 sudo systemctl daemon-reload
 sudo systemctl enable --now flareledger-backup.timer
 sudo systemctl start flareledger-backup.service

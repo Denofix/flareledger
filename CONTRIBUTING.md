@@ -45,7 +45,7 @@ git pull --ff-only origin main
 
 Run `python3 scripts/check_repository.py` from the repository root. It checks tracked Markdown links, UTF-8 text hygiene, JSON syntax, and conflict markers. GitHub runs the same repository check. This is not an application build, integration test, or scientific data validation.
 
-Backend and frontend checks will be added alongside real dependency files and source code. The first application PRs must document their real install, lint, typecheck, build, and test commands. Timofey can then use those commands in CI.
+Backend and frontend checks will be added alongside real dependency files and source code. The first application PRs must document their real install, lint, typecheck, build, and test commands. Tymofii can then use those commands in CI.
 
 ## Contract changes
 

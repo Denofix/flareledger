@@ -1,7 +1,9 @@
 # Frontend review and Vercel handoff
 
-This change implements the Vue interface and its routing configuration. It does
-not create a Vercel project, connect a domain, enable a model, or change the VPS.
+The Vue interface and routing are deployed on Vercel with the primary domain
+flareledger.fun. Production Gemini is explicitly enabled on the VPS; code defaults
+remain disabled. The steps below are review/reconfiguration procedures, not a claim
+that setup is still pending. See [current release audit](RELEASE_AUDIT.md).
 
 ## Review before merging
 
@@ -13,10 +15,11 @@ not create a Vercel project, connect a domain, enable a model, or change the VPS
 4. Open a comparison URL directly, refresh it and inspect an original point.
    Droplet diameter and flame diameter must not share an overlay. Source-specific
    camera/calibration limitations and unknown uncertainty must stay visible.
-5. Submit an Ask question. By default the API returns structured 503
-   llm_unavailable; the screen displays retrieved evidence and explicitly states
-   that no SI answer was generated. A different outage must display an error.
-   For controlled enabled-mode review, follow [SI setup](AI_SETUP.md); check model,
+5. Check Ask error/disabled states locally with generation disabled or mocked
+   responses. Production Ask spends shared allowance and requires separate
+   authorization, a fresh preflight and a recorded single attempt. Do not submit
+   a live question as an automatic UI smoke test.
+   For controlled enabled-mode review, follow [AI setup](AI_SETUP.md); check model,
    source links, exact excerpts, limitations, insufficient evidence and quota states.
 6. Check a nonexistent record and a nonexistent frontend route. Check keyboard
    navigation and a narrow phone viewport. No page should silently replace errors
@@ -75,7 +78,7 @@ Verify their data, sources and error states, not just the HTML status.
 
 After preview verification, attach **flareledger.fun** through the project's
 Settings → Domains. Follow only the records Vercel displays for that project.
-Keep `api.flareledger.fun` pointing to Timofey's VPS and preserve its current HTTPS
+Keep `api.flareledger.fun` pointing to Tymofii's VPS and preserve its current HTTPS
 ingress. Confirm public HTTPS, catalogue and API readiness from another network.
 Record the deployment URL, commit and verification time in infrastructure status.
 
@@ -84,7 +87,8 @@ Record the deployment URL, commit and verification time in infrastructure status
 Use Vercel's prior verified deployment to roll back the web application. A frontend
 rollback does not require touching SQLite, corpus ingestion, Nginx or QResto.
 
-Production activation and scientific evaluation of the optional LLM adapter,
-bilingual presentation and final submission remain separate tasks.
+Production activation is complete; the full live scientific evaluation, final
+presentation and submission remain separate tasks. Current live evaluation is
+deferred and all 15 outcomes in the new release journal remain NOT_RUN.
 The current VPS lease ends on 1 December 2026; confirm the exact cutoff and keep a
 tested off-VPS backup before judging or the lease end.

@@ -1,11 +1,15 @@
 # FlareLedger branding provenance
 
-Human supplier/design owner: **Timofey (Tymofii1912)**. The final approved project spelling is **FlareLedger**. Codex assisted the SVG path composition, orbital F mark and lettering outlines. The approved project wordmark and orbital F replace the earlier export.
+## Active identity
 
-The orbital F, verification mark, FlareLedger wordmark and tagline identify the product. **Proofonauts** remains the two-person team's name and appears separately as a text credit. It is not the product name.
+On 17 November 2026, the project owner requested the original flame identity again. The favicon is restored byte-for-byte from commit `969cb9460de9115fe0a16016bd02bf168aa7175e`, file `frontend/public/favicon.svg`. Both standalone mark exports use those same bytes. The horizontal exports pair the original flame with the FlareLedger wordmark and **RESEARCH, TRACEABLE.** in system fonts.
 
-Served assets are `frontend/public/favicon.svg` and the `frontend/public/brand/flareledger-*` variants. Horizontal marks carry **SI-generated logo**; standalone marks carry **SI**. The application also displays a readable disclosure beside its team credit. Light variants use the project's existing dark-background palette.
+The application header, mobile header, browser favicon and README all use the flame. The former orbital F and its visible generation label are no longer served. No new image-generation request was used for this restoration. Assistance with code, documentation and SVG layout remains disclosed in [SI_USAGE.md](../SI_USAGE.md); this is not a claim that all project design was created without assistance.
 
-No image model was used to modify scientific screenshots or measurements. Main wordmark lettering is vector paths; no font file is bundled. No NASA insignia, flag or mission identifier is included. Project-supplied assets use the repository's MIT terms; scientific data retain their separate terms.
+**FlareLedger** is the product. **Proofonauts** is the two-person team: **Denys Voloshyn and Tymofii Chernoivanov**. No NASA insignia, flag or mission identifier is used as project branding.
 
-[branding-manifest.json](branding-manifest.json) records the corrected source-pack, input and served-file hashes. The original scientific screenshot bytes remain unchanged; their manifest identifies the earlier capture branding. See [SI_USAGE.md](../SI_USAGE.md) and [DATA_LICENSES.md](../DATA_LICENSES.md).
+## Previous identity and provenance
+
+The SI-assisted orbital F supplied by Tymofii is retired, not relabelled as hand-drawn. The source-pack and served-file hashes remain under `previous_identity` in [branding-manifest.json](branding-manifest.json), and the original assets remain in Git history at `c0c8e69d4e066017ac8c275ed59830dfeef60f74`. They are not duplicated under the frontend's public directory.
+
+The manifest records the active flame's source commit, exact original hash and every served asset hash. System fonts are resolved by the browser; no font file is bundled. Original scientific screenshot bytes and measurement data remain unchanged. See [asset credits](FRONTEND_ASSETS.md) and [DATA_LICENSES.md](../DATA_LICENSES.md).

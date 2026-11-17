@@ -1,5 +1,7 @@
 # English project-form text
 
+> Historical hackathon material prepared on 15 November 2026. Development continues after the event; this file does not attest that a submission or pitch occurred. The current application uses the restored flame; see [branding provenance](../../design/BRANDING.md).
+
 Copy only the paragraphs for the named field. Review factual changes before pasting. The final-project URL is https://flareledger.fun/. The final-demo URL must be the actual public file; no URL or completed submission is invented here. Add the repository in Detailed Description.
 
 ## Project Name
@@ -32,7 +34,7 @@ At PR22, 163 backend tests and 15 offline questions passed, with 45 matching anc
 
 ### Team, tools and delivery
 
-Proofonauts has two members: Denis Voloshyn and Timofey. Denis coordinated scope, architecture, source preparation, SI integration and evaluation tooling. Timofey coordinated Docker/CI, deployment, monitoring, checked off-host backups, PR reviews, interface checks, screenshots and SI-assisted branding. Both reviewed evidence and integration decisions.
+Proofonauts has two members: Denys Voloshyn and Tymofii Chernoivanov. Denys coordinated scope, architecture, source preparation, SI integration and evaluation tooling. Tymofii coordinated Docker/CI, deployment, monitoring, checked off-host backups, PR reviews, interface checks, screenshots and SI-assisted branding. Both reviewed evidence and integration decisions.
 
 The frontend runs on Vercel; the API/SQLite run on a VPS behind HTTPS. Shared limits persist: ten reservations per rolling 24 hours, three per minute and one active call, without automatic retry or paid fallback. These limits are not a promise of current provider availability.
 
@@ -55,7 +57,7 @@ Upload actual PNGs using Inline Image; do not paste local filesystem paths as pu
 
 ## Use of Super Intelligence (SI)
 
-Yes. ChatGPT/Codex neural-network assistance supported planning and architecture options, code drafts, data parsing/provenance tooling, tests, debugging, retrieval/citation improvements, operational scripts, documentation and submission text. The team selected scope, reviewed changes, ran checks and made deployment decisions. Optional Gemini 3.6 Flash produces runtime interpretations from selected public context; no model was trained or fine-tuned. Original measurements are preserved; project summaries are not called verbatim NASA quotations. Timofey created the Proofonauts logo with neural-network assistance; served variants include visible SI markings. SI_USAGE.md documents tool use and human responsibilities. Mechanical checks do not establish scientific correctness, and full live answer evaluation is unfinished.
+Yes. ChatGPT/Codex neural-network assistance supported planning and architecture options, code drafts, data parsing/provenance tooling, tests, debugging, retrieval/citation improvements, operational scripts, documentation and submission text. The team selected scope, reviewed changes, ran checks and made deployment decisions. Optional Gemini 3.6 Flash produces runtime interpretations from selected public context; no model was trained or fine-tuned. Original measurements are preserved; project summaries are not called verbatim NASA quotations. Tymofii created the Proofonauts logo with neural-network assistance; served variants include visible SI markings. SI_USAGE.md documents tool use and human responsibilities. Mechanical checks do not establish scientific correctness, and full live answer evaluation is unfinished.
 
 ## NASA Data
 

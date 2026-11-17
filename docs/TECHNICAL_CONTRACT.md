@@ -77,10 +77,7 @@ The demo JSON includes actual source inconsistencies and measurements with camer
 
 ## Infrastructure target
 
-Timofey has prepared Dockerfiles and a local Compose scaffold against this target
-contract, plus infrastructure-only CI. Image builds and runtime compatibility remain
-unverified until the application handoff. Application CI follows the real dependency
-commands. See [infrastructure status](INFRA_STATUS.md).
+Backend and frontend Dockerfiles, pinned dependencies, Compose configuration and backup/recovery tooling are implemented. CI builds both application images and runs disposable routing checks. The public frontend is on Vercel; the API and persistent SQLite state are on the VPS. Local checks and current deployment evidence are separate: see [release status](RELEASE_STATUS.md), [the repository review](REPOSITORY_REVIEW_2026-11-17.md) and [the historical operator audit](RELEASE_AUDIT.md).
 
 The team selected a Vercel frontend and VPS API/SQLite. The local Compose web is a
 development/fallback server. For the VPS, inspect existing ingress before selecting

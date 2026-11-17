@@ -1,20 +1,31 @@
-# Delivery status and remaining work
+# Development roadmap
 
-Updated 15 November 2026. Team: Denis Voloshyn and Timofey only. Evidence baseline: backend `969cb9460de9115fe0a16016bd02bf168aa7175e`. Production statements below are Timofey's operator report, not an assertion made from source inspection alone.
+Updated 17 November 2026. FlareLedger continues as an independent project after the hackathon. Team: **Denys Voloshyn and Tymofii Chernoivanov**. Submission and pitch preparation are historical work, not the current product release gate.
 
-| Work | Status and evidence | Owner |
+## Implemented foundation
+
+- Frozen NASA corpus, explicit checksum-verified import, original source locators and measured series.
+- Vue interface for browsing, search, records, sources, numerical plots and quantity-compatible comparison.
+- Optional Gemini adapter with bounded context, claim-linked citations and persistent rolling limits.
+- Vercel frontend, VPS API/SQLite, CI, monitoring and verified-backup tooling.
+
+Source implementation, a passing test, a Vercel deployment and a running VPS revision are separate evidence. See [release status](RELEASE_STATUS.md) and [the repository review](REPOSITORY_REVIEW_2026-11-17.md).
+
+## Current priorities
+
+| Priority | Work | Acceptance |
 | --- | --- | --- |
-| Corpus, importer and API | Implemented; frozen source hash, native tests and source-linked endpoints | Denis with Timofey review |
-| Vue interface and charts | Implemented browsing, search, source pages and compatibility checks | Denis with Timofey verification |
-| Deployment and recovery | Reported healthy Vercel/VPS deployment; checked backup copied off VPS | Timofey |
-| Bounded Gemini Ask | Enabled on reported production release; defaults disabled for new installations | Both |
-| Citation and retrieval fixes | PR20-22 merged; 163 backend tests at PR22 | Denis with Timofey review/deployment |
-| Offline inspection | 15 questions and 45 anchors checked; not scientific answer grades | Denis |
-| Current live answer evaluation | Separate journal prepared; no completed 15-case report provided | Timofey execution, Denis review |
-| Final interface verification | Current-branding and genuine generated-answer captures still needed | Timofey |
-| Submission text and branding | Prepared in this change; needs reviewed publication | Denis with Timofey review |
-| Final demo and submission | Content plan prepared; final demo file/URL, participant checks and Submit for Judging remain owner actions | Denis |
+| P0 | Restore the flame and remove the sidebar scrollbar track | Consistent header/mobile/favicon/README assets; navigation remains scrollable and keyboard-reachable on short screens |
+| P0 | Resolve the frontend development dependency advisory | Verified upstream fix or separately reviewed mitigation; no forced framework downgrade or silent audit suppression |
+| P1 | Confirm the next release | Review and merge focused changes; identify frontend deployment and VPS revision separately; preserve database and quota history |
+| P1 | Resume controlled answer evaluation | Current preflight, one exact question per request, retained receipt and manual semantic review; never turn old-release results into new-release grades |
+| P1 | Improve retrieval and source/claim review | Separate independent review questions from development cases; retain source, unit and missing-value boundaries |
+| P1 | Verify browser accessibility and responsive navigation | Desktop and mobile keyboard/touch, short-height menu, focus, route reload and disabled/unavailable generation states |
+| P2 | Improve source discovery | Review lexical retrieval and the current 20-result search limit; add pagination only with corresponding API/UI checks |
+| P2 | Plan hosting continuity | Confirm the operator's VPS lease/renewal and recovery ownership before the recorded 1 December 2026 end date |
 
-Preserve the running backend and quota history during evaluation. Static branding/docs do not require a corpus migration or backend deployment. Record frontend and backend revisions separately. Run one AE-01 control after fresh operator preflight, then remaining cases individually as quota permits; retain failures and old-release results separately. Fix actual blockers through focused reviewed changes.
+## Evaluation and operation boundaries
 
-Submission preparation can proceed while scientific evaluation is unfinished. Describe that limitation honestly; do not invent a score or delay a valid partial submission solely to consume model calls. Confirm the public demo file, anonymous link access, recovery procedure and final confirmation banner before declaring submission complete.
+The 15 development questions and 45 frozen anchors are not an independent scientific benchmark. Full live answer evaluation and independent scientific review remain unfinished. Readiness and citation-format checks do not establish scientific answer correctness.
+
+The runtime budget remains USD 0. No paid fallback, provider-key change, database replacement, quota reset or additional domain purchase is part of the branding/layout cleanup. Runtime credentials remain backend-only. Historical preparation materials are under [presentation](../presentation/README.md) and [docs/submission](submission/FIELD_TEXT.md).

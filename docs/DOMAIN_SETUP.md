@@ -20,6 +20,8 @@ Registering `flareledger.fun` gives control over that name and its subdomains. I
 
 Existing projects can instead use their own `vercel.app` aliases without a FlareLedger subdomain. Paths such as `flareledger.fun/projects/pulseboard` would require explicit route/base-path integration, not a DNS rename. Moving the apex to another project would change the current FlareLedger website and is not needed to use subdomains on other projects.
 
+Existing independent platform aliases returned HTTP 200 at inspection: [PulseBoard](https://pulse-board-gilt.vercel.app/), [ServerMedic](https://servermedic.vercel.app/) and [Download & Convert](https://download-convert.vercel.app/). These are `vercel.app` addresses, not separately registered `.fun` domains.
+
 ## Routine verification
 
 Use the existing Vercel project rather than the original project-creation/bootstrap instructions. Resolve the expected project and team before a domain mutation. Inspect the required DNS values for that exact hostname; preserve unrelated records and existing certificates.

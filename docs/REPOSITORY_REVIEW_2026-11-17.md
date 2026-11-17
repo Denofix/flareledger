@@ -32,6 +32,18 @@ Direct API readiness and frontend-proxied readiness both returned HTTP 200 / `re
 | Docker and container integration | Not executed locally: Docker is unavailable in this environment; GitHub CI remains the execution path |
 | Browser layout | Local Chromium could not launch because the runtime denies its process-singleton socket. A separate browser preview check is recorded below when available |
 
+## GitHub CI and Vercel preview
+
+For application commit `5e52539c5538aac7bdd64406e029baef07f388f8` in [PR26](https://github.com/Denofix/flareledger/pull/26):
+
+- [Backend and image checks](https://github.com/Denofix/flareledger/actions/runs/44142300051) passed.
+- [Infrastructure and isolated routing checks](https://github.com/Denofix/flareledger/actions/runs/44142299978) passed.
+- [Repository metadata](https://github.com/Denofix/flareledger/actions/runs/44142299912) passed.
+- [Frontend job](https://github.com/Denofix/flareledger/actions/runs/44142300194) passed installation, typecheck, lint, tests and production build, then failed at the full dependency audit. Its frontend container build was consequently skipped. The audit gate was not disabled.
+- Vercel preview deployment `dpl_9XV6XGEenhBjzERnRNEk8xBmqjhs` reached READY and reports the same source commit.
+
+The production page was visually observed with the previous orbital F. Opening the new preview in a separate browser reached Vercel Authentication. A public sharing link was not created, and no protection setting was changed. Therefore the new preview's rendered desktop/mobile layout has **not** been visually accepted; it needs an authenticated reviewer. A READY build does not establish layout correctness. The subsequent commit only records this evidence and existing domain aliases; it does not change the application code tested above.
+
 Original corpus, hash-pinned ReadMe, evaluation fixture and screenshot bytes are preserved. No backend schema, quota policy, runtime credential, DNS assignment or database was changed. No live Ask was submitted. Offline source-anchor coverage is not a scientific answer score.
 
 ## Remaining work and integration

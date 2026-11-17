@@ -1,0 +1,14 @@
+[Unit]
+Description=Back up the FlareLedger SQLite state (verified snapshot)
+Requires=docker.service
+After=docker.service
+
+[Service]
+Type=oneshot
+User=tymofii
+# The tooling checkout is separate from the checkout the API is deployed from, so
+# rolling the application back never removes the backup scripts.
+WorkingDirectory=/home/tymofii/flareledger-ops
+UMask=0077
+TimeoutStartSec=15min
+ExecStart=/usr/bin/python3 /home/tymofii/flareledger-ops/scripts/backup_production.py --dest /var/backups/flareledger/snapshots --kind daily --keep 7 --repo /home/tymofii/flareledger-ops

@@ -1,0 +1,362 @@
+# Optional Gemini explanations
+
+This change implements an opt-in adapter; it does not enable generation on the VPS.
+The API budget remains **USD 0**, with no billing activation, paid fallback, automatic
+retries or automatic provider/model substitution. Browsing, measurements, sources,
+readiness and backups do not call a model.
+
+## Verified access and limits
+
+On 15 November 2026 Denis successfully tested `gemini-4-hydrogen` using the official
+Google Gemini Python SDK 3.3.0: the interaction completed and returned
+`FLARELEDGER_OK`. This proves account/model access, not scientific answer quality
+or successful execution of this adapter's structured-output request.
+
+The FlareLedger project's Google Studio dashboard screen showed Free Tier and these Hydrogen
+limits: **5 requests/minute, 250,000 tokens/minute and 20 requests/day**. Quotas
+belong to the Google project, not an individual API key. Other tools using that
+project consume the same allowance. Recheck the actual project before activation;
+subscription access in the Gemini chat application is a separate entitlement.
+
+Start this demo with **10 reservations per rolling 24 hours, 3 per rolling minute
+and one active generation lease**. Do not increase limits to bypass the provider's
+quota. Google resets daily request quotas at midnight Pacific; the application's
+rolling window is deliberately more conservative. A public visitor can consume
+this shared allowance; there is no per-user authentication or private judge quota.
+If it is exhausted, evidence browsing still works. Do not use paid fallback.
+
+### Gemini 3.6 Flash default
+
+`gemini-3.6-flash` is the default in native Python, Compose and `.env.example`.
+Google documents this stable model, Interactions support, structured JSON output,
+`thinking_level=low` and a Standard Free Tier. `gemini-4-hydrogen` remains an
+explicitly supported alternative; there is no automatic substitution after an
+error. An existing `LLM_MODEL` setting takes precedence over the default. Check
+actual project access and the selected model's quotas in Google Studio dashboard before live
+activation. The Hydrogen limits above must not be assumed to apply to Flash.
+Listed Free Tier pricing does not establish this project's eligibility or
+available quota.
+
+On 15 November 2026 Denis completed a local Vite → API → Gemini 3.6 Flash → UI
+run of the PMMA/BASS demonstration question. The captured response included an
+attributed explanation, PSI-25/PSI-62 citations, exact context excerpts and visible
+limitations, and the linked source record opened. Earlier Hydrogen adapter
+attempts returned upstream HTTP 503. This is evidence for that local Flash
+transport/UI flow, not permanent availability or scientific validation. Offline
+tests exercise request construction and failure handling with both allowed models.
+The demonstration is not the exact frozen AE-01 question. Live attempts and
+manual scientific grades must be recorded separately against the exact frozen
+questions in [the acceptance set](AI_EVALUATION.md); transport success is not a
+scientific pass.
+
+Model selection uses the same SQLite reservation history. Switching model, key
+or process does not refill the application's shared rolling quota. Keep the
+existing database and limits, and do not enable billing as a workaround.
+
+## Runtime configuration
+
+All values are server environment variables, read when the API starts. Native
+Python does not automatically load `.env`. Docker Compose reads its interpolation
+file and forwards the explicitly listed settings to `api`.
+
+| Variable | Initial value / behavior |
+| --- | --- |
+| `LLM_ENABLED` | `false` by default; enable explicitly after review and local evaluation |
+| `LLM_PROVIDER` | `gemini` |
+| `LLM_MODEL` | `gemini-3.6-flash` by default; explicit `gemini-4-hydrogen` also accepted |
+| `GEMINI_API_KEY` | Secret in the backend environment; never Git, Vercel or `VITE_*` |
+| `LLM_BASE_URL` | Empty; custom gateways/URLs are rejected |
+| `ASK_MAX_REQUESTS_PER_DAY` | `0` by default; use `10` for the first controlled activation; allowed 1–18 |
+| `ASK_MAX_REQUESTS_PER_MINUTE` | `0` by default; use `3`; allowed 1–3 |
+| `LLM_MAX_CONCURRENT_REQUESTS` | `1`; other values disable generation |
+| `LLM_TIMEOUT_SECONDS` | `30` network timeout; allowed 5–45 |
+| `LLM_MAX_OUTPUT_TOKENS` | `2048`; allowed 512–4096, including thinking and output |
+
+Missing credentials, invalid values, zero quotas or missing/incompatible Ask state
+disable generation. A changed key does not reset the application's counters.
+An OpenAI or other provider adapter is **not implemented**: changing its key and
+model name alone will not make it work. The provider interface allows a separate
+future implementation and review.
+
+## Read-only operator preflight
+
+From `backend/`, in the same environment and with the same database as the API:
+
+```bash
+python -m app.ask_status
+```
+
+For an already running Docker API, use the deployed Compose checkout and project:
+
+```bash
+docker compose -f compose.yaml -f compose.prod.yaml exec -T api python -m app.ask_status
+```
+
+The command reports corpus readiness, parsed configuration, key presence as a
+boolean, Ask migration state, rolling usage, remaining local allowance, active
+lease and retry delay. It only opens existing SQLite state read-only: it does not
+migrate, reserve a request, reset counters or contact Google. Missing or corrupt
+state is reported without repair. Keys and arbitrary invalid provider/model
+strings are not printed.
+
+`ready_to_attempt_generation=true` means the local prerequisites and current
+local allowance permit an attempt. `provider_probed=false` is always present:
+the command cannot establish key validity, Google availability, project Free Tier
+eligibility or the provider's remaining quota. Its exit code describes completion
+of the inspection; use the JSON fields to assess generation readiness.
+
+## Explicit additive migration
+
+Take a verified SQLite backup first, using the existing recovery runbook. Import
+the corpus only if this is a new local database. With the reviewed backend code
+and its Python environment, from `backend/`:
+
+```bash
+python -m app.migrate_ask
+```
+
+Use the same `DATABASE_PATH` and `DATA_DIR` as the API. This command adds only
+`fl_ask_schema`, `fl_ask_calls` and a time index. It preserves the original corpus,
+source values, seed hash, corpus `user_version=1` and existing reservations.
+Running it twice does not reset usage. Startup, GET routes and POST requests do
+not create tables or silently migrate databases.
+
+For Timofey's Docker deployment, keep generation disabled, create a fresh verified
+backup, build/select the reviewed release with the existing deploy process, and
+run the migration with that **same explicit image tag, Compose project and volume**:
+
+```bash
+docker compose -f compose.yaml -f compose.prod.yaml run --rm --no-deps api python -m app.migrate_ask
+```
+
+This is a runbook step, not authorization to execute it on the production VPS.
+Do not run it from an unrelated checkout with the default `local` tag. Existing
+deploy scripts do not automatically migrate Ask state. Restart/recreate the API
+through the reviewed deployment process after changing its environment.
+
+Reservations are committed to the corpus SQLite file **before** contacting Google.
+Failed, timed-out, refused and invalid-output calls count. A transactional lease
+serializes callers across processes; a crashed caller leaves its lease until
+`timeout + 60` seconds. Network timeouts are socket timeouts, not a guarantee about
+every possible OS/network stall. No background retries are performed.
+
+Existing SQLite backup API snapshots include Ask counters. **Restoring an older
+database can rewind usage**: keep `LLM_ENABLED=false` during recovery and re-enable
+only after reconciling project usage or allowing the old allowance to expire.
+A pre-migration snapshot remains corpus-ready but cannot generate until the
+explicit migration. Image-only rollback does not remove the additive tables.
+
+## Local controlled evaluation
+
+After checks and review, use a private local backend terminal. Keep the key in
+that shell; the following input does not echo it or put its value in history:
+
+```bash
+read -r -s -p "Gemini API key: " GEMINI_API_KEY
+printf '\n'
+export GEMINI_API_KEY
+export LLM_PROVIDER=gemini LLM_MODEL=gemini-3.6-flash
+export ASK_MAX_REQUESTS_PER_DAY=10 ASK_MAX_REQUESTS_PER_MINUTE=3
+export LLM_MAX_CONCURRENT_REQUESTS=1 LLM_TIMEOUT_SECONDS=30 LLM_MAX_OUTPUT_TOKENS=2048
+export LLM_ENABLED=true
+python -m uvicorn app.main:app --host 127.0.0.1 --port 8000
+```
+
+For an explicit Hydrogen evaluation, use `export LLM_MODEL=gemini-4-hydrogen`
+instead **before starting that API process**. Use the same existing
+`DATABASE_PATH`, credentials and limits. A launcher that hardcodes a model can
+override its parent environment. Older downloadable launchers also pin transport
+file hashes and can reject newer reviewed code; use this repository procedure
+for the current release instead of changing their hash checks.
+
+Run `python -m app.ask_status` before starting Uvicorn or submitting a question.
+If `remaining_24h` is zero or an active lease is reported, wait for the reported
+window; do not replace the existing database to obtain another allowance.
+
+From a second terminal, start the existing frontend with `npm run dev` and use
+`/ask`. First inspect `/api/meta` and `/api/health/ready`; neither spends quota.
+`live_generation_available` means configured and migrated, not a successful
+live probe or proof that Google quota remains. Submit only a few reviewed
+questions because the earlier access test already used project allowance.
+Check every claim, citation, linked source, number, unit and limitation against
+the original corpus. Include a question asking for an unsupported exact safety
+threshold: it must not be presented as established experimental evidence.
+Stop and revise the adapter if the structured request is rejected or the answer
+is scientifically unsupported. Do not switch to a paid model as a workaround.
+
+Stop Uvicorn and run `unset GEMINI_API_KEY LLM_ENABLED` when finished. Disabling
+the provider on a running deployment requires restarting/recreating that API with
+`LLM_ENABLED=false`. Do not share screenshots containing a key or a full env dump.
+
+## Production handoff after PR review
+
+Timofey owns the VPS release. Use the existing deployment and verified backup
+procedure with an explicitly selected reviewed image tag and the current state
+volume. Merge alone publishes the frontend; it does not update the VPS API,
+install Ask tables, provide a Gemini key or enable generation.
+
+1. Take the fresh verified backup required above, then deploy the reviewed
+   backend release with generation disabled. Keep the same corpus/state volume.
+2. Run the explicit additive migration using that release and inspect
+   `python -m app.ask_status`. Corpus and Ask state must both be ready.
+3. In the backend's private environment, explicitly select `gemini-3.6-flash`,
+   supply the existing project key, and confirm that project's Free Tier and
+   remaining Flash allowance. Start with the shared 10/day, 3/minute limits and
+   one active call. Keep billing and fallback disabled.
+4. Enable generation and recreate the API through the reviewed release process.
+   Check readiness, `/api/meta` and the read-only preflight before any model call.
+5. If allowance remains, submit one reviewed question through the public `/ask`
+   page. Inspect the attributed answer, exact excerpts, verified source links and
+   limitations. Record the release, model and corpus; a generic generated answer
+   is not a pass for the full scientific acceptance set.
+6. If the provider fails or the answer is unsupported, disable generation and
+   restart the API. Keep retrieval available and retain all reservation history.
+
+## Request and response contract
+
+`POST /api/ask` accepts only `{"question":"..."}`, 1–1000 characters after trim,
+and at most 8192 JSON bytes, including streamed requests. Users cannot select a
+provider, URL, key, model, system prompt, output limit or tools.
+
+Ask uses bounded lexical matching with up to 32 significant query words,
+investigation/trial scoping and priority for explicitly named historical cards.
+It selects up to five source-linked items, including bounded original-table and
+local document-text packets. Packets keep complete headers, selected raw cells
+or paragraphs, locators and explicit subset/basis labels. `/api/search` retains
+its existing AND keyword contract. Oversized items are omitted; full measured
+curves and original binary payloads are not sent. The numerical seed and SQLite
+state are unchanged. The hash-pinned ReadMe companion must be present in the
+deployment's read-only data mount. See [retrieval and offline inspection](ASK_RETRIEVAL.md).
+This is lexical retrieval, not embeddings, scientific reasoning over the full
+corpus, curve analysis or a search of the live web.
+
+| HTTP / status | Behavior |
+| --- | --- |
+| 200 / `generated` | Plain-text explanation, verified context/source IDs, exact context excerpts, limitations, provider/model/corpus, `scientific_review=false` |
+| 200 / `insufficient_evidence` | `answer=null`; no invented answer; no provider call if no context was retrieved |
+| 429 / `rate_limited` | Shared local quota/lease reached; `Retry-After` and `retry_after_seconds`; retrieved evidence remains visible |
+| 503 / `unavailable` | Disabled/missing state, provider quota, network/provider error, incomplete or invalid output; `answer=null`, evidence retained |
+| 413 / 422 | Oversized body / invalid input; no provider call |
+
+Every response is `Cache-Control: no-store`. Provider 429 does not cause retries
+or paid fallback. The UI gives Ask a separate 55-second timeout, handles these
+states and renders generated text with normal Vue escaping. Source links are
+constructed from validated corpus IDs, never model-provided URLs.
+The mode badge says "Generation enabled" rather than claiming upstream
+availability. A provider quota response and a rejected model output have distinct
+notice titles; all unavailable responses keep retrieved sources visible.
+
+### Claim-bound provider drafts
+
+The Gemini wire schema is private to the adapter. It returns `status`, `claims`
+and `limitations`. A generated draft has one to five claims; each contains at
+most 300 characters of plain text and exactly one citation (`context_id`,
+`source_id`, `quote`). An insufficient-evidence draft has an empty claims list.
+The model must not insert square brackets, citation markers or URLs in claim
+text. The server rejects them rather than stripping or repairing model text.
+
+For each claim the server validates its citation's context/source membership,
+exact excerpt and permitted numeric tokens against that claim's cited context.
+It then renders `claim text [context_id]`, joins the claims as paragraphs and
+deduplicates identical context/source/quote triples. The existing strict final
+explanation validator runs again. The public API still returns the same
+`answer`, `citations` and `limitations` fields and the same failure statuses;
+clients do not receive `claims`. All existing output and request byte bounds,
+one-call behavior, timeouts and persistent quota reservations remain in force.
+Older free-answer provider output is rejected rather than accepted as a fallback.
+
+This addresses the structural failure reported on release `f50fbc9` for a
+separately recorded AE-11 diagnostic at `2026-11-15T17:36:39.993835919Z`:
+`citation_marker_missing`. The raw rejected model answer was not retained, so
+the regression is synthetic and does not identify the missing citation. This
+change does not establish the cause of earlier undiagnosed failures.
+
+Offline tests cover rendering, the original marker rejection, invalid evidence,
+per-claim numeric checks and the real API/quota path with mocked transport.
+All 15 frozen questions are also checked for unchanged retrieval input and the
+32,768-byte request bound. These are not live model executions or scientific
+grades. After review and deployment, a separately authorized single diagnostic
+attempt is still needed; do not replay the full evaluation set automatically.
+
+### Operator diagnostics for rejected explanations
+
+An Ask HTTP 503 with `error.reason=invalid_model_output` means the application
+rejected the explanation. It is distinct from provider/network unavailability
+or quota exhaustion. A successful preflight does not establish that a later
+explanation will satisfy every validation rule.
+
+The API logs one warning per rejected explanation, containing only a fixed code:
+
+```text
+ASK_VALIDATION stage=explanation code=quote_not_exact
+```
+
+The codes distinguish refusal content, missing claims/answer/citations/limitations,
+unknown context, a source outside its context, an inexact excerpt, missing or
+unknown citation markers, unseen numeric tokens, model-supplied URLs, oversized
+limitations, invalid output schema at the provider boundary, and unexpected
+validation errors. Claim text containing square brackets uses the fixed code
+`claim_contains_markers`. No question, answer, excerpt, identifier, key, exception
+message or traceback is logged by these diagnostics. Persistent reservations
+and the public failure response remain unchanged. A completed interaction with
+nonempty model text that violates the private draft schema now reports
+`invalid_output_schema` and `invalid_model_output`; transport failures, malformed
+outer interaction JSON, incomplete interactions and empty text remain
+`provider_unavailable`. Do not infer their cause from explanation-stage codes.
+
+From the same deployed Compose project and release environment, an operator can
+read the fixed diagnostic lines after a separately authorized single attempt:
+
+```bash
+docker compose -f compose.yaml -f compose.prod.yaml logs --no-color --since 10m api | rg 'ASK_VALIDATION'
+```
+
+Use the existing deployment process to select the reviewed diagnostic release;
+reading old logs cannot recover a code that the old image never emitted. Retain
+the original evaluation receipt. Never replay a whole acceptance set merely to
+collect logs, clear reservations, enable raw response logging or relax validation
+to force a pass. A diagnostic release does not by itself fix a rejected answer
+or establish scientific correctness.
+
+## Scientific and data limits
+
+The model must return structured JSON with a citation for every claim. The server
+renders citation markers and rejects unknown context/source IDs, non-exact
+context excerpts, model-supplied markup or links, new numeric tokens and missing
+support/limitations. These are mechanical checks;
+they do **not** prove entailment, correct number-to-unit binding, causal validity,
+complete support for every sentence or scientific correctness. Independent human
+evaluation remains required before a judging demo.
+
+An "exact context excerpt" can come from FlareLedger's authored source-based
+summary or record JSON; it is not automatically a quotation from NASA. Answers
+are visibly attributed to FlareLedger, with no NASA endorsement or fire-safety
+certification. Do not infer extinguishment, safety thresholds, material rankings
+or compatible conditions merely from shared units or the model's explanation.
+Membership in an item's attached source list does not prove that a particular
+excerpt originated in that source's original file. Claim rendering does not fix
+source-specific provenance gaps or missing retrieval context; review those
+separately before assigning scientific passes.
+
+Questions and selected public corpus context are sent to Google when enabled.
+No key is included in the prompt, no arbitrary tools are enabled, and prompts,
+answers and provider bodies are not written to application logs or SQLite.
+`store=false` disables stored Interactions conversations; it is not a promise
+that Google does no processing or training. Check the applicable Free Tier terms
+before sending private data; this demo is intended for public source material.
+
+Offline tests stub the model transport and use the real corpus. They cover quota
+survival, backup/restore, cross-process reservation, invalid citations/numbers,
+large bodies, configuration errors and frontend states. They consume no API quota
+and do not establish that the live structured scientific answer has been reviewed.
+
+Official implementation references:
+
+- [Hydrogen model guidance](https://aistudio.google.com/docs/whats-new-gemini-4-hydrogen)
+- [Gemini 3.6 Flash model](https://aistudio.google.com/docs/models/gemini-3.6-flash)
+- [Thinking levels](https://aistudio.google.com/docs/thinking#thinking-levels)
+- [Interactions API errors](https://aistudio.google.com/docs/api-errors)
+- [Create Interaction](https://aistudio.google.com/api-reference/interactions-api/create-interaction)
+- [Structured output](https://aistudio.google.com/docs/structured-output)
+- [Rate limits](https://aistudio.google.com/docs/rate-limits)
+- [Pricing and Free Tier](https://aistudio.google.com/docs/pricing)

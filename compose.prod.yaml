@@ -1,0 +1,17 @@
+# API-only deployment behind the existing QResto Nginx. Never combine with dev.
+services:
+  api:
+    environment:
+      APP_ENV: production
+    networks:
+      app: {}
+      ingress:
+        aliases:
+          - flareledger-api
+  web:
+    profiles: [local-web]
+
+networks:
+  ingress:
+    name: flareledger_ingress
+    external: true

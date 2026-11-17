@@ -12,4 +12,6 @@ The expected hash is recorded in seed-reference.json. Preserve source and licens
 
 The source file includes ten investigations, nine original tables, six numerical series with 1,844 points, quality notes, and a download catalog. Matrix rows include notes and operating conditions. They are not all independent trials. Telemetry with unresolved units is separated from chart-ready series.
 
-The backend importer is still to be implemented. Do not treat copying this file as creating the SQLite database.
+The seed format is flareledger.nasa_demo.v2. Project-authored explanations and labels use English, with localized field names ending in _en. Original numerical data and source payloads are unchanged.
+
+The backend importer is implemented. Run `python -m app.ingest` from backend/ with its environment active to initialize dedicated local SQLite state. Copying the JSON alone does not initialize a database. Production import/replacement and Ask migration remain deliberate operational actions under the runbooks; preserve backups and quota history.

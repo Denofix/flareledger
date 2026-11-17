@@ -1,0 +1,28 @@
+{
+  "schema_version": 1,
+  "project": "FlareLedger",
+  "team": "Proofonauts",
+  "team_members": [
+    {
+      "name": "Denis Voloshyn",
+      "github": "Denofix"
+    },
+    {
+      "name": "Timofey",
+      "github": "Tymofii1912"
+    }
+  ],
+  "si_assistance": {
+    "development": "ChatGPT/Codex assistance with planning, implementation, tests, debugging, tooling and documentation; team review and operational verification",
+    "runtime": "Optional Gemini 3.6 Flash interpretations from selected public source context",
+    "branding": "SI-generated FlareLedger F-logo supplied by Timofey with Codex-assisted SVG paths and lettering outlines; visible labels in served variants",
+    "text": "SI-assisted project summaries and documentation; not verbatim NASA quotations",
+    "measurements": "Original frozen NASA numerical data; zero synthetic values recorded",
+    "screenshots": "Unmodified captures supplied by Timofey; not fabricated generated answers"
+  },
+  "human_responsibility": "Scope, source checks, integration review, deployment and submission remain with the two human members",
+  "complete_live_evaluation_claimed": false,
+  "independent_scientific_validation_claimed": false,
+  "disclosure_document": "../SI_USAGE.md",
+  "branding_manifest": "../design/branding-manifest.json"
+}

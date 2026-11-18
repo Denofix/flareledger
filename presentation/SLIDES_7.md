@@ -1,12 +1,14 @@
 # Seven-slide demo content
 
+> Historical hackathon material prepared on 15 November 2026. Development continues after the event; this file does not attest that a submission or pitch occurred. The current application uses the restored flame; see [branding provenance](../design/BRANDING.md).
+
 Use exactly seven English slides, including title and closing content. This is a content plan, not a published slide file. Preserve the logo's visible SI marking. Use real screenshots; do not invent an answer-accuracy score.
 
 ## 1. FlareLedger
 
 **Explore the research. Follow the evidence.**
 
-Proofonauts: **Denis Voloshyn and Timofey**.
+Proofonauts: **Denys Voloshyn and Tymofii Chernoivanov**.
 **Flame in Freefall: SI-Powered Fire Safety Insights from Microgravity Combustion Data.**
 2026 NASA Space Apps Challenge, Kyiv.
 
@@ -70,6 +72,6 @@ For students, researchers and engineers exploring microgravity combustion. Next:
 
 **Research exploration prototype. Not validated fire-safety advice.**
 Try <https://flareledger.fun/>. Code/references: <https://github.com/Denofix/flareledger>.
-Proofonauts - Denis Voloshyn and Timofey.
+Proofonauts - Denys Voloshyn and Tymofii Chernoivanov.
 
 Visual: marked logo and product image. Do not add an eighth credits slide.

@@ -1,10 +1,10 @@
 # FlareLedger: screenshot demonstration
 
-**Team:** Proofonauts - Denis Voloshyn and Timofey.
+**Team:** Proofonauts - Denys Voloshyn and Tymofii Chernoivanov.
 **Challenge:** Flame in Freefall: SI-Powered Fire Safety Insights from Microgravity Combustion Data.
 **Application:** <https://flareledger.fun/>. **Code:** <https://github.com/Denofix/flareledger>.
 
-Timofey supplied these unmodified application screenshots. Their capture release was not attested in the archive, and they show the earlier flame branding. They are not proof of a new live Ask or a completed scientific evaluation. [Original image manifest](screenshots/manifest.json).
+Tymofii supplied these unmodified application screenshots. Their capture release was not attested in the archive, and they show the earlier flame branding. They are not proof of a new live Ask or a completed scientific evaluation. [Original image manifest](screenshots/manifest.json).
 
 ## 1. Find an investigation
 

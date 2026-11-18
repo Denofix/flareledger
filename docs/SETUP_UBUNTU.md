@@ -40,7 +40,7 @@ Each contributor uses their own account. If an already authenticated account can
 Set your own name and GitHub-verified or noreply email. Check the address in [GitHub email settings](https://github.com/settings/emails). For the repository owner:
 
 ```bash
-git config --global user.name "Denis Voloshyn"
+git config --global user.name "Denys Voloshyn"
 git config --global user.email "108155470+Denofix@users.noreply.github.com"
 git config --global init.defaultBranch main
 git config --global pull.ff only

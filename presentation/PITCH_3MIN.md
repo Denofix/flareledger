@@ -1,10 +1,12 @@
 # Three-minute local pitch script
 
-Speakers: Denis Voloshyn and Timofey. Use the same seven English slides. Rehearse with a timer; word count does not prove duration. This local pitch is separate from the official 30-second video option. Do not browse the repository on stage.
+> Historical hackathon material prepared on 15 November 2026. Development continues after the event; this file does not attest that a submission or pitch occurred. The current application uses the restored flame; see [branding provenance](../design/BRANDING.md).
+
+Speakers: Denys Voloshyn and Tymofii Chernoivanov. Use the same seven English slides. Rehearse with a timer; word count does not prove duration. This local pitch is separate from the official 30-second video option. Do not browse the repository on stage.
 
 ## Slide 1 - Opening, about 20 seconds
 
-Hello, we are Denis and Timofey, the two-person Proofonauts team. Our project is FlareLedger, for the Flame in Freefall challenge. It helps people explore NASA microgravity combustion research and follow an explanation back to the evidence behind it.
+Hello, we are Denys and Tymofii, the two-person Proofonauts team. Our project is FlareLedger, for the Flame in Freefall challenge. It helps people explore NASA microgravity combustion research and follow an explanation back to the evidence behind it.
 
 ## Slide 2 - Problem, about 25 seconds
 
@@ -24,7 +26,7 @@ Ask adds an optional Gemini interpretation using selected public source context.
 
 ## Slide 6 - Delivery, about 25 seconds
 
-We built a Vue and TypeScript interface with a FastAPI and SQLite backend. Timofey handled deployment, monitoring and checked backups; I coordinated source preparation, SI integration and evaluation. At PR22, 163 backend tests and our offline inspection passed. The full live answer review is unfinished, so we do not claim a scientific accuracy score.
+We built a Vue and TypeScript interface with a FastAPI and SQLite backend. Tymofii handled deployment, monitoring and checked backups; I coordinated source preparation, SI integration and evaluation. At PR22, 163 backend tests and our offline inspection passed. The full live answer review is unfinished, so we do not claim a scientific accuracy score.
 
 ## Slide 7 - Closing, about 25 seconds
 

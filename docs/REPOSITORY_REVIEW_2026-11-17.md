@@ -59,6 +59,12 @@ Narrow CSS viewports were obtained with ordinary browser zoom (100 to 400 percen
 
 Original corpus, hash-pinned ReadMe, evaluation fixture and screenshot bytes are preserved. No backend schema, quota policy, runtime credential, DNS assignment or database was changed. No live Ask was submitted. Offline source-anchor coverage is not a scientific answer score.
 
+## Team review follow-up — 18 November 2026
+
+In his [review comment on `d590043`](https://github.com/Denofix/flareledger/pull/26#issuecomment-6979224393), Tymofii reported successful logo, favicon, responsive navigation and keyboard checks at 360/390/768/1024/1440 px, plus typecheck, lint, 44 frontend tests and production build. This is his attributed review evidence, not a new scientific evaluation or formal Approve.
+
+He identified a live `POST /api/ask` in the general deployment smoke instructions, which incorrectly expected 503 despite enabled production generation. The [frontend handoff](FRONTEND_HANDOFF.md) now uses GET-only deployment checks and documents a separate, explicitly authorized one-attempt Ask procedure with fresh operator preflight and a new receipt. This correction changes documentation only; no smoke command or live Ask was executed. The Picomatch audit finding remains unresolved and the CI gate remains enabled.
+
 ## Remaining work and integration
 
 The scoped visual preview review is complete. Resolve the blocking development dependency finding and obtain the other team member's review before squash merge. Vercel can then build from main; confirm the served flame, navigation and same-origin API after promotion. These static changes do not require a VPS update or migration.

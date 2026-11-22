@@ -14,7 +14,7 @@ Direct API readiness and frontend-proxied readiness both returned HTTP 200 / `re
 - Hide only the sidebar's scrollbar track. Keep vertical scrolling, prevent flex items from collapsing and provide a keyboard-focusable navigation region with a visible focus outline. The main page keeps its ordinary scrollbar.
 - Reconcile outdated setup, domain, monorepo, container and recovery prose using the useful documentation work from PR24. Keep its operator report explicitly dated and historical. Existing host-specific parameters remain operator-local.
 - Use the team's supplied English names consistently. Label old submission and pitch drafts as historical preparation rather than current development gates.
-- Keep the full dependency audit blocking; move it after behavioral/build checks so its failure does not obscure their results. Record the unresolved Picomatch development advisory separately.
+- Run the full dependency audit after the frontend checks and production build so their results are visible if the audit fails. Track the Picomatch advisory in the dependency audit record.
 
 ## Checks
 
@@ -28,7 +28,7 @@ Direct API readiness and frontend-proxied readiness both returned HTTP 200 / `re
 | Offline retrieval inspection | 15 questions and 45/45 frozen anchors passed; zero HTTP/model requests and zero scientific grades |
 | Repository metadata and asset integrity | Passed; all five SVG hashes and all 66 original screenshot hashes verified |
 | Production frontend dependency audit | Passed; zero reported advisories |
-| Full frontend dependency audit | **Blocked** by the development-only Picomatch chain; [details](DEPENDENCY_SECURITY.md) |
+| Full frontend dependency audit | Failed on 17 November with the Picomatch advisory. Fresh audit passed on 22 November after its withdrawal. [Details](DEPENDENCY_SECURITY.md) |
 | Docker and container integration | Not executed locally: Docker is unavailable in this environment; GitHub CI remains the execution path |
 | Browser layout | Passed the scoped Chromium preview review below: restored flame, hidden sidebar track, keyboard/wheel access and narrow-layout navigation |
 
@@ -63,11 +63,11 @@ Original corpus, hash-pinned ReadMe, evaluation fixture and screenshot bytes are
 
 In his [review comment on `d590043`](https://github.com/Denofix/flareledger/pull/26#issuecomment-6979224393), Tymofii reported successful logo, favicon, responsive navigation and keyboard checks at 360/390/768/1024/1440 px, plus typecheck, lint, 44 frontend tests and production build. This is his attributed review evidence, not a new scientific evaluation or formal Approve.
 
-He identified a live `POST /api/ask` in the general deployment smoke instructions, which incorrectly expected 503 despite enabled production generation. The [frontend handoff](FRONTEND_HANDOFF.md) now uses GET-only deployment checks and documents a separate, explicitly authorized one-attempt Ask procedure with fresh operator preflight and a new receipt. This correction changes documentation only; no smoke command or live Ask was executed. The Picomatch audit finding remains unresolved and the CI gate remains enabled.
+He identified a live `POST /api/ask` in the general deployment smoke instructions, which expected 503 despite enabled production generation. Commit `e64f222` removed the POST from the smoke test. Live Ask has its own procedure with authorization, operator preflight and a new receipt. Tymofii confirmed the correction. [Frontend handoff](FRONTEND_HANDOFF.md)
 
 ## Remaining work and integration
 
-The scoped visual preview review is complete. Resolve the blocking development dependency finding and obtain the other team member's review before squash merge. Vercel can then build from main; confirm the served flame, navigation and same-origin API after promotion. These static changes do not require a VPS update or migration.
+The visual preview review and documentation follow-up are complete. GitHub withdrew the Picomatch advisory, and the 22 November full npm audit passed with zero findings. Obtain green CI and a formal approval from the other team member before squash merge. After Vercel builds from main, confirm the served flame, navigation and same-origin API. [Dependency audit record](DEPENDENCY_SECURITY.md)
 
 PR24's useful runbook corrections are incorporated here; after this PR is reviewed and merged, reconcile or close the older overlapping documentation PR rather than merging stale README/roadmap text over the result. Dependabot PR1/2 remain separate dependency reviews, not automatically approved work.
 

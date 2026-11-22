@@ -39,7 +39,7 @@ The last operator-confirmed backend release is `969cb9460de9115fe0a16016bd02bf16
 
 At PR22, 163 backend tests and a 15-question offline inspection passed; 45/45 frozen anchors matched. **These are technical checks, not a 15/15 scientific answer score. The full new-release live answer evaluation and independent scientific review are unfinished.** [Evidence and limitations](docs/RELEASE_STATUS.md).
 
-The 17 November review records 44 passing frontend tests and a passing production dependency audit. The full development dependency audit is blocked by the [tracked Picomatch advisory](docs/DEPENDENCY_SECURITY.md); its CI gate remains enabled.
+The 17 November review records 44 passing frontend tests. On 22 November the full frontend dependency audit passed with zero reported vulnerabilities after GitHub withdrew the Picomatch advisory. The full audit is required in CI. [Dependency audit record](docs/DEPENDENCY_SECURITY.md)
 
 ## Run locally
 

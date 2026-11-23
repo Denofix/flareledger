@@ -2,11 +2,11 @@
 
 ## Decisions and ownership
 
-Proofonauts consists of exactly two members: Denis Voloshyn (@Denofix) and Timofey (@Tymofii1912). Denis coordinates product scope, architecture, SI integration, evaluation and submission. Timofey coordinates infrastructure, review, delivery, monitoring, backup/recovery, interface verification, screenshots and SI-assisted branding. Earlier four-person proposals are superseded. Record one owner, the expected result and blockers for each task.
+Proofonauts consists of exactly two members: Denys Voloshyn (@Denofix) and Tymofii Chernoivanov (@Tymofii1912). Denys coordinates product scope, architecture, SI integration, evaluation and submission. Tymofii coordinates infrastructure, review, delivery, monitoring, backup/recovery, interface verification, screenshots and SI-assisted branding. Earlier four-person proposals are superseded. Record one owner, the expected result and blockers for each task.
 
 Use English for README, commit messages, PR titles, public UI, and submission material. Public project-authored documentation and dataset explanations also use English. Internal team guidance may use Ukrainian.
 
-Use SI for neural-network assistance in public prose. Preserve official source text, technical identifiers, API fields and historical filenames. Disclose tool assistance honestly and retain visible SI markings on generated branding. See [SI_USAGE.md](SI_USAGE.md).
+Use SI for neural-network assistance in public prose. Preserve official source text, technical identifiers, API fields and historical filenames. Disclose tool assistance honestly in SI_USAGE.md and preserve asset provenance. Historical competition materials retain their dated disclosure requirements. See [SI_USAGE.md](SI_USAGE.md).
 
 ## Branches and reviews
 
@@ -29,7 +29,7 @@ Before the presentation, agree on a demo commit, record the public URL and local
 
 Use personal GitHub accounts and personal SSH keys. Runtime credentials belong in the approved server environment or secret store. Commit only empty examples. Repository administration, DNS access, and runtime API access are distinct permissions.
 
-On the QResto server, use a separate project directory, service names, state, and approved ingress route. Timofey confirms the existing proxy and resource headroom before selecting deployment configuration.
+On the QResto server, use a separate project directory, service names, state, and approved ingress route. Tymofii confirms the existing proxy and resource headroom before selecting deployment configuration.
 
 ## Data and SI
 

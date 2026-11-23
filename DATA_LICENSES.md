@@ -25,4 +25,4 @@ For each added dataset, publication extract, font, icon set, image, or design as
 
 ## Project branding and screenshots
 
-Timofey supplied the SI-assisted FlareLedger project branding and application screenshots. Served variants have visible SI markings; [design/BRANDING.md](design/BRANDING.md) records provenance and hashes. Captures are retained with a manifest in presentation/screenshots/. Project assets use MIT project terms; scientific values and third-party resources retain separate terms. No NASA insignia is used as project branding.
+The active project logo is the original flame restored from the repository's pre-branding revision. The SI-assisted orbital F is retired; [design/BRANDING.md](design/BRANDING.md) records both identities and their source hashes. Tymofii Chernoivanov supplied the application screenshots, retained unchanged with a manifest in presentation/screenshots/. Project code/assets use MIT project terms; scientific values and third-party resources retain their separate terms. No NASA insignia is used as project branding.

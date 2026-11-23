@@ -26,7 +26,7 @@ onMounted(refreshCorpus);
       ><img
         src="/brand/flareledger-mark-light.svg"
         width="32"
-        height="37"
+        height="32"
         alt=""
       />FlareLedger</RouterLink
     ><button
@@ -39,7 +39,13 @@ onMounted(refreshCorpus);
       <AppIcon :name="menuOpen ? 'close' : 'grid'" />
     </button>
   </header>
-  <aside id="sidebar" class="sidebar" :class="{ 'is-open': menuOpen }">
+  <aside
+    id="sidebar"
+    class="sidebar"
+    :class="{ 'is-open': menuOpen }"
+    aria-label="Research navigation"
+    tabindex="0"
+  >
     <RouterLink
       to="/"
       class="brand"
@@ -49,8 +55,8 @@ onMounted(refreshCorpus);
         class="product-logo"
         src="/brand/flareledger-horizontal-light.svg"
         width="198"
-        height="62"
-        alt="FlareLedger project logo"
+        height="52"
+        alt="FlareLedger flame logo"
     /></RouterLink>
     <div class="nav-caption">THE RESEARCH DESK</div>
     <nav aria-label="Main navigation">
@@ -105,7 +111,6 @@ onMounted(refreshCorpus);
     <div class="sidebar-credit">
       AN INDEPENDENT PROJECT BY
       <strong class="team-name">PROOFONAUTS</strong>
-      <span class="branding-disclosure">SI-generated logo · Timofey</span>
       <a
         href="https://github.com/Denofix/flareledger"
         target="_blank"

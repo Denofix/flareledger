@@ -56,7 +56,7 @@ Liveness checks the process; readiness returns 503 until a complete matching cor
 exists. Readiness checks the required manifest version and entity/point counts;
 it does not call an LLM or replace independent scientific or backup review.
 
-## Container handoff for Timofey
+## Container handoff for Tymofii
 
 The following commands use the existing Dockerfile and agreed container paths.
 Image construction and startup still require verification on a Docker host:

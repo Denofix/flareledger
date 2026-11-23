@@ -1,24 +1,24 @@
 {
-  "schema_version": 1,
+  "schema_version": 2,
   "project": "FlareLedger",
   "team": "Proofonauts",
   "team_members": [
     {
-      "name": "Denis Voloshyn",
+      "name": "Denys Voloshyn",
       "github": "Denofix"
     },
     {
-      "name": "Timofey",
+      "name": "Tymofii Chernoivanov",
       "github": "Tymofii1912"
     }
   ],
   "si_assistance": {
     "development": "ChatGPT/Codex assistance with planning, implementation, tests, debugging, tooling and documentation; team review and operational verification",
     "runtime": "Optional Gemini 3.6 Flash interpretations from selected public source context",
-    "branding": "SI-generated FlareLedger F-logo supplied by Timofey with Codex-assisted SVG paths and lettering outlines; visible labels in served variants",
+    "branding": "Original flame restored from commit 969cb94 on 17 November 2026; system-font wordmarks. Retired SI-assisted orbital F and its provenance remain in Git history and design/branding-manifest.json. No new image generation for the restoration.",
     "text": "SI-assisted project summaries and documentation; not verbatim NASA quotations",
     "measurements": "Original frozen NASA numerical data; zero synthetic values recorded",
-    "screenshots": "Unmodified captures supplied by Timofey; not fabricated generated answers"
+    "screenshots": "Unmodified captures supplied by Tymofii Chernoivanov; not fabricated generated answers"
   },
   "human_responsibility": "Scope, source checks, integration review, deployment and submission remain with the two human members",
   "complete_live_evaluation_claimed": false,

@@ -3,16 +3,16 @@
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="frontend/public/brand/flareledger-horizontal-light.svg">
   <source media="(prefers-color-scheme: light)" srcset="frontend/public/brand/flareledger-horizontal.svg">
-  <img alt="FlareLedger project identity, created with SI assistance" src="frontend/public/brand/flareledger-horizontal.svg">
+  <img alt="FlareLedger flame logo" src="frontend/public/brand/flareledger-horizontal.svg">
 </picture>
 
 **Explore microgravity combustion research. Follow each claim back to its evidence.**
 
 [Open the application](https://flareledger.fun/) | [Screenshot demonstration](presentation/DEMO.md) | [NASA sources](docs/NASA_DATA.md) | [SI disclosure](SI_USAGE.md)
 
-FlareLedger is a research exploration application built by **Proofonauts, a two-person team: Denis Voloshyn and Timofey**. It addresses **Flame in Freefall: SI-Powered Fire Safety Insights from Microgravity Combustion Data**, a 2026 NASA Space Apps challenge. Users browse investigations, inspect original records and source locators, read measured curves, compare compatible series, and ask questions using selected source context.
+FlareLedger is a research exploration application built by **Proofonauts, a two-person team: Denys Voloshyn and Tymofii Chernoivanov**. It addresses **Flame in Freefall: SI-Powered Fire Safety Insights from Microgravity Combustion Data**, a 2026 NASA Space Apps challenge. Users browse investigations, inspect original records and source locators, read measured curves, compare compatible series, and ask questions using selected source context.
 
-The purpose is to make evidence easier to inspect. The application does not certify materials, predict safe operating conditions or replace experimental and engineering review.
+Development continues after the hackathon as an independent research prototype. The purpose is to make evidence easier to inspect. The application does not certify materials, predict safe operating conditions or replace experimental and engineering review.
 
 ## Implemented workflow
 
@@ -27,7 +27,7 @@ The purpose is to make evidence easier to inspect. The application does not cert
 
 ![Compatible measured-series comparison](presentation/screenshots/desktop/39-compare-two-compatible-chart.png)
 
-Timofey supplied these captures before the project branding refresh. They are application screenshots, not fabricated measurements or proof of a new live Ask. See the [screenshot review](docs/SCREENSHOT_REVIEW.md).
+Tymofii supplied these original captures. They show the flame identity, which is used again in the application. They are application screenshots, not fabricated measurements or proof of a new live Ask. See the [screenshot review](docs/SCREENSHOT_REVIEW.md).
 
 ## Data and verification
 
@@ -35,9 +35,11 @@ The frozen snapshot contains 10 investigations, 9 experimental tables, 1,132 rec
 
 Corpus SHA256: `90be248ab23b24f6eaa51e3923ba5937631493630fd4833e18a2dbb51897bc52`.
 
-The last operator-confirmed backend release is `969cb9460de9115fe0a16016bd02bf168aa7175e`. Timofey reported healthy readiness, preserved state and enabled Gemini. New installations still disable generation by default. Shared application limits are 10 reservations per rolling 24 hours, 3 per minute and one active call, with no automatic retry or paid fallback. Remaining quota is transient.
+The last operator-confirmed backend release is `969cb9460de9115fe0a16016bd02bf168aa7175e`. Tymofii reported healthy readiness, preserved state and enabled Gemini. New installations still disable generation by default. Shared application limits are 10 reservations per rolling 24 hours, 3 per minute and one active call, with no automatic retry or paid fallback. Remaining quota is transient.
 
 At PR22, 163 backend tests and a 15-question offline inspection passed; 45/45 frozen anchors matched. **These are technical checks, not a 15/15 scientific answer score. The full new-release live answer evaluation and independent scientific review are unfinished.** [Evidence and limitations](docs/RELEASE_STATUS.md).
+
+The 17 November review records 44 passing frontend tests. On 22 November the full frontend dependency audit passed with zero reported vulnerabilities after GitHub withdrew the Picomatch advisory. The full audit is required in CI. [Dependency audit record](docs/DEPENDENCY_SECURITY.md)
 
 ## Run locally
 
@@ -82,16 +84,18 @@ Open <http://127.0.0.1:5173/>. Browsing, search, charts and sources require no G
 
 | Member | Contribution |
 | --- | --- |
-| Denis Voloshyn / [Denofix](https://github.com/Denofix) | Coordination, scope, architecture, source-data preparation, SI integration, retrieval/validation, evaluation tooling and submission material |
-| Timofey / [Tymofii1912](https://github.com/Tymofii1912) | Infrastructure, Docker/CI, VPS delivery, monitoring, verified backups, PR review, interface checks, screenshots and SI-assisted branding |
+| Denys Voloshyn / [Denofix](https://github.com/Denofix) | Coordination, scope, architecture, source-data preparation, SI integration, retrieval/validation, evaluation tooling and submission material |
+| Tymofii Chernoivanov / [Tymofii1912](https://github.com/Tymofii1912) | Infrastructure, Docker/CI, VPS delivery, monitoring, verified backups, PR review, interface checks, screenshots and SI-assisted branding |
 
 We practised full-stack integration, provenance, scientific-data handling, bounded LLM integration, tests, Git review, Linux operations, deployment, backup recovery, responsive verification and English technical communication. [Practical contributions and learning](docs/TEAM_AND_LEARNING.md) records concrete outcomes without claiming scientific accreditation.
 
-Code, text and parts of the design were developed with neural-network assistance. Gemini can generate runtime interpretations from selected context. [SI_USAGE.md](SI_USAGE.md) discloses tools, uses, human responsibilities and visible logo markings. Original measurements are not represented as generated data.
+Code, text and parts of the design were developed with neural-network assistance. Gemini can generate runtime interpretations from selected context. [SI_USAGE.md](SI_USAGE.md) discloses tools, uses and human responsibilities. The [branding record](design/BRANDING.md) documents the restored flame and retired orbital F. Original measurements are not represented as generated data.
 
-## Submission materials and scope
+## Documentation and historical submission material
 
-[English form text](docs/submission/FIELD_TEXT.md), [submission checklist](docs/submission/CHECKLIST.md), [NASA source register](docs/NASA_DATA.md), [screenshot walkthrough](presentation/DEMO.md), [seven-slide plan](presentation/SLIDES_7.md) and [three-minute pitch](presentation/PITCH_3MIN.md) are included. A walkthrough or source repository does not replace the required public slide file/PDF or short video.
+Current work and limitations are tracked in [the roadmap](docs/ROADMAP.md) and [repository review](docs/REPOSITORY_REVIEW_2026-11-17.md).
+
+Historical [English form text](docs/submission/FIELD_TEXT.md), [submission checklist](docs/submission/CHECKLIST.md), [NASA source register](docs/NASA_DATA.md), [screenshot walkthrough](presentation/DEMO.md), [seven-slide plan](presentation/SLIDES_7.md) and [three-minute pitch](presentation/PITCH_3MIN.md) are included. These remain historical preparation materials; they are not proof of a completed submission or a pitch.
 
 Independent hackathon project. NASA has not reviewed or endorsed FlareLedger or its interpretations. Original code and project documentation use the [MIT License](LICENSE); third-party data and media retain their own terms under [DATA_LICENSES.md](DATA_LICENSES.md).
 

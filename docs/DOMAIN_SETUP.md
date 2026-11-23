@@ -1,54 +1,40 @@
-# Connect flareledger.fun
+# Domains and project routing
 
-The domain is registered with Vercel. Its address and nameservers exist, while the application still needs a hosting destination. Choose one route below after the corresponding application is ready.
+Account inspection on 17 November 2026 confirmed the registered apex domain **flareledger.fun** in the Vercel team **denofix-2940**. Domain registration, project assignment, authoritative DNS and application routing are different settings.
 
-## Frontend on Vercel
+## Existing assignments
 
-The current frontend directory contains a layout scaffold rather than a buildable Vite application. The first frontend PR must add package.json, package-lock.json, application source, and a verified build before these deployment steps can succeed.
+| Hostname | Vercel project | State at inspection |
+| --- | --- | --- |
+| flareledger.fun | flareledger | Verified |
+| flareledger.vercel.app | flareledger | Verified |
+| pulseboard.flareledger.fun | pulse-board | Verified |
+| servermedic.flareledger.fun | servermedic | Verified |
+| download-convert.flareledger.fun | download-convert | Verified |
 
-1. Open [Vercel New Project](https://vercel.com/new).
-2. Import Denofix/flareledger from GitHub.
-3. If the repository is not listed, configure the Vercel GitHub integration to grant access to this selected repository.
-4. Select frontend as Root Directory and Vite as Framework Preset.
-5. Use the verified npm ci installation command, npm run build build command, and dist output directory.
-6. Deploy and confirm that the provided vercel.app address serves the application.
-7. Open that project's Settings > Domains and choose Add Existing or Add Domain.
-8. Enter flareledger.fun without a scheme or path. Use the same Vercel team that owns the domain.
-9. Follow the exact DNS instructions shown for that project. With Vercel-managed DNS, configuration can be applied through the dashboard. Existing records should match the project's required values.
-10. Wait for valid domain configuration and certificate issuance, then verify the HTTPS address from another device.
+The FlareLedger project uses the `frontend` Vite application. Its same-origin `/api` routes forward to the existing VPS API at `https://api.flareledger.fun`; SQLite and runtime credentials remain on that backend. The API hostname must continue to point to the VPS, not to a static frontend.
 
-The domain-level Connected Projects > Connect button can attach an existing project. If there is no project yet, deploy one first. Keep the existing Vercel nameservers for this route. Values shown as form placeholders are not saved DNS records.
+## Independent names and reuse
 
-The API still needs a verified backend deployment and an explicit /api route. Secrets, SQLite state, and source-corpus originals remain on the backend. Full backend hosting on Vercel would require a separate persistence and runtime decision.
+Registering `flareledger.fun` gives control over that name and its subdomains. It does not register the `.fun` top-level domain or unrelated names such as `pulseboard.fun`. Each independent name requires separate availability, registration and renewal. No additional purchase or renewal is performed by this repository change.
 
-## Whole application on QResto infrastructure
+Existing projects can instead use their own `vercel.app` aliases without a FlareLedger subdomain. Paths such as `flareledger.fun/projects/pulseboard` would require explicit route/base-path integration, not a DNS rename. Moving the apex to another project would change the current FlareLedger website and is not needed to use subdomains on other projects.
 
-For the current FastAPI and SQLite architecture, QResto reuse remains a candidate after Timofey confirms access, capacity, and the existing ingress. Domain registration can stay with Vercel.
+Existing independent platform aliases returned HTTP 200 at inspection: [PulseBoard](https://pulse-board-gilt.vercel.app/), [ServerMedic](https://servermedic.vercel.app/) and [Download & Convert](https://download-convert.vercel.app/). These are `vercel.app` addresses, not separately registered `.fun` domains.
 
-1. Obtain the actual public server IPv4 and the approved deployment route.
-2. Deploy and check isolated FlareLedger services behind the existing server ingress.
-3. Open the [Vercel domain dashboard](https://vercel.com/denofix-2940/~/domains/flareledger.fun).
-4. Set the root-domain A record to the verified IPv4. The dashboard may represent the root as @ or an empty name. Resolve any conflicting root record deliberately rather than stacking two different hosting destinations.
-5. Add IPv6 only after end-to-end IPv6 access is verified. Keep the existing CAA records unless a concrete certificate issue requires a change.
-6. Timofey configures flareledger.fun and its certificate in the existing host ingress. Public 80/443 ownership stays with that ingress.
-7. Verify external DNS, HTTPS, frontend routes, and API readiness.
+## Routine verification
 
-This route does not require a Vercel application project. Do not use an example Vercel IP as the QResto address. An external server obtains its certificate through its own ingress.
+Use the existing Vercel project rather than the original project-creation/bootstrap instructions. Resolve the expected project and team before a domain mutation. Inspect the required DNS values for that exact hostname; preserve unrelated records and existing certificates.
 
-## Verify from Ubuntu
-
-```bash
-sudo apt install -y dnsutils curl
-dig +short NS flareledger.fun
-dig @1.1.1.1 +short A flareledger.fun
-dig @1.1.1.1 +short AAAA flareledger.fun
-curl -I https://flareledger.fun
+```sh
+curl --fail --silent --show-error https://flareledger.fun/api/health/ready
+curl --fail --silent --show-error https://api.flareledger.fun/api/health/ready
 ```
 
-Compare DNS results with the chosen hosting destination. Application health checks become meaningful after the actual API implementation and deployment exist.
+Both returned HTTP 200 and `ready` on 17 November 2026. This checks corpus readiness, not a Gemini model call or current quota. The domain review made no DNS or domain-assignment changes.
 
 ## References
 
-- [Vercel custom domains](https://vercel.com/docs/domains/working-with-domains/add-a-domain)
+- [Vercel domain assignment](https://vercel.com/docs/domains/working-with-domains/add-a-domain)
 - [Vercel DNS records](https://vercel.com/docs/domains/managing-dns-records)
-- [Vercel monorepos](https://vercel.com/docs/monorepos)
+- [Vercel rewrites](https://vercel.com/docs/routing/rewrites)

@@ -1,6 +1,6 @@
 # Demo and presentation materials
 
-**FlareLedger**, by **Proofonauts: Denis Voloshyn and Timofey**. Challenge: **Flame in Freefall: SI-Powered Fire Safety Insights from Microgravity Combustion Data**.
+**FlareLedger**, by **Proofonauts: Denys Voloshyn and Tymofii Chernoivanov**. Challenge: **Flame in Freefall: SI-Powered Fire Safety Insights from Microgravity Combustion Data**.
 
 - [DEMO.md](DEMO.md): real screenshot walkthrough with capture limitations.
 - [SLIDES_7.md](SLIDES_7.md): content for exactly seven English slides, title included.

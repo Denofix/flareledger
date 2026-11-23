@@ -1,6 +1,12 @@
-# SI evidence evaluation: 15 candidate questions
+# AI evidence evaluation: 15 candidate questions
 
-Prepared on 15 November 2026. Owner: Denis; a second team reviewer is still required.
+Prepared on 15 November 2026. Owner: Denys; a second team reviewer is still required.
+
+Current technical baseline: backend `969cb9460de9115fe0a16016bd02bf168aa7175e`
+(merged/deployed PR22), Gemini 3.6 Flash explicitly enabled in production. A
+separate journal for that release has been prepared with 45/45 anchors matched;
+all 15 live outcomes remain `NOT_RUN`. Live attempts are deferred by the operator.
+Earlier receipts remain separate. See [release audit](RELEASE_AUDIT.md).
 
 This is a small manual acceptance set for evidence use, units, limitations and
 honest abstention. The candidate expectations were checked against the frozen
@@ -25,10 +31,11 @@ dependencies, CI, credentials, deployment or the database.
 - Optional enabled Ask contract: [PR15](https://github.com/Denofix/flareledger/pull/15),
   inspected source `f7bf4e50815a826d9ac0260e08201ec0fd1cc67f`.
 
-This documentation can merge independently of PR15. The baseline main does not
-provide that enabled-generation feature. Recheck the reviewed application commit
-and its actual readiness/configuration before a later run. This task does not
-enable generation or establish that production has been updated.
+The baseline identifiers above record the original criteria preparation, before
+PR15–22 were merged. They are historical provenance, not the current deployment.
+The frozen questions and expected source values remain unchanged. Recheck the
+actual release and readiness/configuration before any separately authorized run;
+updating this documentation does not enable generation or spend quota.
 
 An original table/text file, a parsed series, a project-authored quality note and
 a historical card are different evidence layers. The companion JSON labels each

@@ -1,11 +1,11 @@
 # Team contributions and practical learning
 
-**Proofonauts consists of two people: Denis Voloshyn (Denofix) and Timofey (Tymofii1912).** Earlier coordination proposals naming other possible participants are superseded. Model assistance is disclosed in [SI_USAGE.md](../SI_USAGE.md); models are not team members.
+**Proofonauts consists of two people: Denys Voloshyn (Denofix) and Tymofii Chernoivanov (Tymofii1912).** Earlier coordination proposals naming other possible participants are superseded. Model assistance is disclosed in [SI_USAGE.md](../SI_USAGE.md); models are not team members.
 
 | Member | Practical contribution |
 | --- | --- |
-| Denis Voloshyn | Product coordination, architecture and scope; source-data preparation; SI adapter, retrieval and citation work; evaluation tooling; repository and submission preparation |
-| Timofey | Docker/CI, deployment, monitoring, verified backup/recovery, PR reviews, responsive interface checks, screenshots and SI-assisted FlareLedger project branding |
+| Denys Voloshyn | Product coordination, architecture and scope; source-data preparation; SI adapter, retrieval and citation work; evaluation tooling; repository and submission preparation |
+| Tymofii Chernoivanov | Docker/CI, deployment, monitoring, verified backup/recovery, PR reviews, responsive interface checks, screenshots and SI-assisted FlareLedger project branding |
 
 Both reviewed evidence and coordinated releases. These descriptions follow project changes and operator reports, rather than assigning work to absent participants.
 

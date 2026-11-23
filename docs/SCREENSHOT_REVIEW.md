@@ -1,6 +1,6 @@
 # Screenshot coverage and next captures
 
-Timofey supplied **66 PNGs**: desktop screens, 360/390 px mobile screens, filter/search sequences, point selection and chart enlargement/scrolling at 390/1024 px. Originals are preserved in [presentation/screenshots](../presentation/screenshots) with a [hash/dimension manifest](../presentation/screenshots/manifest.json).
+Tymofii supplied **66 PNGs**: desktop screens, 360/390 px mobile screens, filter/search sequences, point selection and chart enlargement/scrolling at 390/1024 px. Originals are preserved in [presentation/screenshots](../presentation/screenshots) with a [hash/dimension manifest](../presentation/screenshots/manifest.json).
 
 This is sufficient for drafting README, project details, demonstration documentation and a seven-slide story. It does not establish a current deployment SHA, completed live Ask, scientific answer quality or full interaction audit. The supplied images show the earlier flame branding. Use readable viewport shots rather than very tall full-page images in slides.
 

@@ -1,12 +1,12 @@
 # SI use and human responsibility
 
-SI means neural-network assistance in this project's public materials. The submission guide names the field **Use of Super Intelligence (SI)**. The accountable human team is **Denis Voloshyn and Timofey**; a model is a tool, not a third member.
+SI means neural-network assistance in this project's public materials. The submission guide names the field **Use of Super Intelligence (SI)**. The accountable human team is **Denys Voloshyn and Tymofii Chernoivanov**; a model is a tool, not a third member.
 
 ## Development and text
 
 ChatGPT/Codex assistance was used for planning and architecture options, implementation drafts for the Python/FastAPI backend and Vue/TypeScript frontend, source-data parsing and provenance tooling, tests, debugging, retrieval/citation fixes, operational scripts, documentation and submission text. SI-assisted brainstorming refined the selected challenge solution; we do not claim every idea or line of code was produced without assistance.
 
-The team selected scope, ran checks, reviewed changes and made integration decisions. Timofey performed production operations and reported deployment and backup evidence. A generated patch or explanation was not accepted as proof that it worked. Additional tools should be listed only after the relevant member confirms actual use; access to a subscription is not evidence of use.
+The team selected scope, ran checks, reviewed changes and made integration decisions. Tymofii performed production operations and reported deployment and backup evidence. A generated patch or explanation was not accepted as proof that it worked. Additional tools should be listed only after the relevant member confirms actual use; access to a subscription is not evidence of use.
 
 ## Runtime interpretation
 
@@ -20,7 +20,7 @@ The frozen snapshot records zero synthetic numerical values. Original measuremen
 
 ## Visuals and audio
 
-Timofey supplied the FlareLedger F-logo and confirmed its final spelling. Codex assisted the SVG path composition and lettering outlines. Served variants contain visible SI markings, and the application also displays **SI-generated logo** beside the team credit. [Branding provenance](design/BRANDING.md) records the source and transformation. No NASA insignia, flag or mission logo was generated or modified for project branding.
+The application uses the original FlareLedger flame, restored on 17 November 2026 at the project owner's request. The favicon is byte-identical to the pre-branding revision; wordmarks use that flame and system fonts. No image model was called for this restoration. The SI-assisted orbital F supplied by Tymofii Chernoivanov is retired, with its source and hashes retained in Git history and the [branding manifest](design/branding-manifest.json). It is not presented as a newly hand-drawn asset. There is no generation badge in the active navigation logo. Code, text and layout assistance remain disclosed here. No NASA insignia, flag or mission logo is used as project branding.
 
 Application screenshots capture the implemented interface; they are not generated mockups or invented measurements. Captions identify their limits. A typed question is not a generated answer. The implemented software and original decorative CSS were developed with SI assistance.
 
